@@ -1,0 +1,26 @@
+# Production-specific docker-compose overrides
+version: '3.8'
+
+services:
+  postgres:
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  # Production optimizations
+  wiki:
+    environment:
+      - FLASK_ENV=production
+      - FLASK_DEBUG=0
+
+  game-server:
+    environment:
+      - GO_ENV=production
+
+  client:
+    build:
+      target: production
+    environment:
+      - NODE_ENV=production
+

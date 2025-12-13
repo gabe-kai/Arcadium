@@ -1,0 +1,170 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: arcadium-postgres
+    environment:
+      POSTGRES_USER: arcadium
+      POSTGRES_PASSWORD: arcadium_dev
+      POSTGRES_DB: arcadium
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U arcadium"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  wiki:
+    build:
+      context: ./services/wiki
+      dockerfile: Dockerfile
+    container_name: arcadium-wiki
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_ENV=development
+      - DATABASE_URL=postgresql://arcadium:arcadium_dev@postgres:5432/arcadium
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./services/wiki:/app
+      - ./shared:/shared
+
+  game-server:
+    build:
+      context: ./services/game-server
+      dockerfile: Dockerfile
+    container_name: arcadium-game-server
+    ports:
+      - "8080:8080"
+      - "8081:8081"  # WebSocket port
+    environment:
+      - DATABASE_URL=postgresql://arcadium:arcadium_dev@postgres:5432/arcadium
+      - AUTH_SERVICE_URL=http://auth:8000
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./services/game-server:/app
+      - ./shared:/shared
+
+  auth:
+    build:
+      context: ./services/auth
+      dockerfile: Dockerfile
+    container_name: arcadium-auth
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://arcadium:arcadium_dev@postgres:5432/arcadium
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./services/auth:/app
+      - ./shared:/shared
+
+  presence:
+    build:
+      context: ./services/presence
+      dockerfile: Dockerfile
+    container_name: arcadium-presence
+    ports:
+      - "8001:8001"
+    environment:
+      - DATABASE_URL=postgresql://arcadium:arcadium_dev@postgres:5432/arcadium
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./services/presence:/app
+      - ./shared:/shared
+
+  chat:
+    build:
+      context: ./services/chat
+      dockerfile: Dockerfile
+    container_name: arcadium-chat
+    ports:
+      - "8002:8002"
+    environment:
+      - DATABASE_URL=postgresql://arcadium:arcadium_dev@postgres:5432/arcadium
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./services/chat:/app
+      - ./shared:/shared
+
+  leaderboard:
+    build:
+      context: ./services/leaderboard
+      dockerfile: Dockerfile
+    container_name: arcadium-leaderboard
+    ports:
+      - "8003:8003"
+    environment:
+      - DATABASE_URL=postgresql://arcadium:arcadium_dev@postgres:5432/arcadium
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./services/leaderboard:/app
+      - ./shared:/shared
+
+  assets:
+    build:
+      context: ./services/assets
+      dockerfile: Dockerfile
+    container_name: arcadium-assets
+    ports:
+      - "8004:8004"
+    environment:
+      - DATABASE_URL=postgresql://arcadium:arcadium_dev@postgres:5432/arcadium
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./services/assets:/app
+      - ./shared:/shared
+      - assets_storage:/storage
+
+  admin:
+    build:
+      context: ./services/admin
+      dockerfile: Dockerfile
+    container_name: arcadium-admin
+    ports:
+      - "8005:8005"
+    environment:
+      - DATABASE_URL=postgresql://arcadium:arcadium_dev@postgres:5432/arcadium
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./services/admin:/app
+      - ./shared:/shared
+
+  client:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    container_name: arcadium-client
+    ports:
+      - "3000:3000"
+    environment:
+      - REACT_APP_API_URL=http://localhost:8080
+      - REACT_APP_WIKI_URL=http://localhost:5000
+    volumes:
+      - ./client:/app
+      - /app/node_modules
+
+volumes:
+  postgres_data:
+  assets_storage:
+

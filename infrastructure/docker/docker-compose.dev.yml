@@ -1,0 +1,33 @@
+# Development-specific docker-compose overrides
+version: '3.8'
+
+services:
+  postgres:
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_PASSWORD: arcadium_dev
+
+  # Enable hot-reload for development
+  wiki:
+    volumes:
+      - ./services/wiki:/app
+      - ./shared:/shared
+    environment:
+      - FLASK_ENV=development
+      - FLASK_DEBUG=1
+
+  game-server:
+    volumes:
+      - ./services/game-server:/app
+      - ./shared:/shared
+    environment:
+      - GO_ENV=development
+
+  client:
+    volumes:
+      - ./client:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+
