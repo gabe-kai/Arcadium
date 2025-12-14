@@ -467,23 +467,28 @@ class PageService:
             try:
                 page_id = page.id
             except (AttributeError, TypeError):
-                # SQLite UUID conversion issue - query by slug as fallback
+                # SQLite UUID conversion issue - use raw SQL to get page ID
                 if page_slug:
                     try:
-                        page_from_db = Page.query.filter_by(slug=page_slug).first()
-                        if page_from_db:
-                            page_id = page_from_db.id
-                    except:
-                        page_id = None
+                        # Use raw SQL to avoid SQLAlchemy UUID conversion issues
+                        result = db.session.execute(
+                            db.text("SELECT id FROM pages WHERE slug = :slug"),
+                            {"slug": page_slug}
+                        ).first()
+                        if result:
+                            # Convert string UUID to UUID object
+                            import uuid
+                            page_id = uuid.UUID(result[0]) if isinstance(result[0], str) else result[0]
+                    except Exception as e:
+                        # If raw SQL also fails, try one more time with Page.query
+                        try:
+                            page_from_db = Page.query.filter_by(slug=page_slug).first()
+                            if page_from_db:
+                                page_id = page_from_db.id
+                        except:
+                            page_id = None
                 else:
-                    # Try to get slug from page object as last resort
-                    try:
-                        page_slug = page.slug
-                        page_from_db = Page.query.filter_by(slug=page_slug).first()
-                        if page_from_db:
-                            page_id = page_from_db.id
-                    except:
-                        page_id = None
+                    page_id = None
         
         if not page_id:
             raise ValueError(f"Page ID not available (slug: {page_slug or 'unknown'})")
