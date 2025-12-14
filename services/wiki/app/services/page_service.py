@@ -561,32 +561,42 @@ class PageService:
             }
         
         # Get page attributes, using stored values if provided, otherwise try to access from page object
+        # Only access page object if we're missing values
         if page_title is None or page_content is None or page_version is None:
+            # Use raw SQL first to avoid SQLite UUID conversion issues
             try:
-                if page_title is None:
-                    page_title = page.title
-                if page_content is None:
-                    page_content = page.content
-                if page_version is None:
-                    page_version = page.version
-            except (AttributeError, TypeError):
-                # SQLite UUID conversion issue - use raw SQL to get page attributes
-                try:
-                    # Use raw SQL to avoid SQLAlchemy UUID conversion issues
-                    result = db.session.execute(
-                        db.text("SELECT title, content, version FROM pages WHERE id = :page_id"),
-                        {"page_id": str(page_id)}
-                    ).first()
-                    if result:
+                result = db.session.execute(
+                    db.text("SELECT title, content, version FROM pages WHERE id = :page_id"),
+                    {"page_id": str(page_id)}
+                ).first()
+                if result:
+                    if page_title is None:
+                        page_title = result[0]
+                    if page_content is None:
+                        page_content = result[1]
+                    if page_version is None:
+                        page_version = result[2]
+                else:
+                    # Fallback to page object access if raw SQL fails
+                    try:
                         if page_title is None:
-                            page_title = result[0]
+                            page_title = page.title
                         if page_content is None:
-                            page_content = result[1]
+                            page_content = page.content
                         if page_version is None:
-                            page_version = result[2]
-                    else:
-                        raise ValueError(f"Page not found: {page_id}")
-                except Exception as e:
+                            page_version = page.version
+                    except (AttributeError, TypeError):
+                        raise ValueError(f"Could not access page attributes: {page_id}")
+            except Exception as e:
+                # Last resort: try page object access
+                try:
+                    if page_title is None:
+                        page_title = page.title
+                    if page_content is None:
+                        page_content = page.content
+                    if page_version is None:
+                        page_version = page.version
+                except (AttributeError, TypeError):
                     raise ValueError(f"Could not access page attributes: {page_id} - {str(e)}")
         
         # Create version with current page version number
