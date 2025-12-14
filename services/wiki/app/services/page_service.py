@@ -110,7 +110,9 @@ class PageService:
         FileService.write_page_file(page, file_content, file_path=stored_file_path)
         
         # Create initial version
-        PageService._create_version(page, user_id, "Initial version")
+        # Store page.id before commit to avoid SQLite UUID issues
+        stored_page_id = page.id
+        PageService._create_version(page, user_id, "Initial version", page_id=stored_page_id)
         
         return page
     
@@ -459,11 +461,26 @@ class PageService:
         return f"---\n{frontmatter_yaml}---\n{markdown_content}"
     
     @staticmethod
-    def _create_version(page: Page, user_id: uuid.UUID, change_summary: str):
+    def _create_version(page: Page, user_id: uuid.UUID, change_summary: str, page_id: Optional[uuid.UUID] = None):
         """Create a version record for a page"""
+        # Get page_id, handling SQLite UUID conversion issues
+        if not page_id:
+            try:
+                page_id = page.id
+            except (AttributeError, TypeError):
+                # SQLite UUID conversion issue - try to get from session
+                try:
+                    page_obj = db.session.get(Page, page.id)
+                    page_id = page_obj.id if page_obj else None
+                except:
+                    page_id = None
+        
+        if not page_id:
+            raise ValueError(f"Page ID not available: {page}")
+        
         # Get previous version for diff calculation
         prev_version = PageVersion.query.filter_by(
-            page_id=page.id
+            page_id=page_id
         ).order_by(PageVersion.version.desc()).first()
         
         # Calculate simple diff data (store as JSON)
@@ -479,14 +496,32 @@ class PageService:
                 'lines_removed': max(0, len(old_lines) - len(new_lines))
             }
         
+        # Get page attributes, handling SQLite UUID conversion issues
+        try:
+            page_title = page.title
+            page_content = page.content
+            page_version = page.version
+        except (AttributeError, TypeError):
+            # SQLite UUID conversion issue - try to get from session
+            try:
+                page_obj = db.session.get(Page, page_id)
+                if page_obj:
+                    page_title = page_obj.title
+                    page_content = page_obj.content
+                    page_version = page_obj.version
+                else:
+                    raise ValueError(f"Page not found: {page_id}")
+            except:
+                raise ValueError(f"Could not access page attributes: {page_id}")
+        
         # Create version with current page version number
         version = PageVersion(
-            page_id=page.id,
-            title=page.title,
-            content=page.content,
+            page_id=page_id,
+            title=page_title,
+            content=page_content,
             change_summary=change_summary,
             changed_by=user_id,
-            version=page.version,
+            version=page_version,
             diff_data=diff_data
         )
         
