@@ -600,6 +600,7 @@ class PageService:
                     raise ValueError(f"Could not access page attributes: {page_id} - {str(e)}")
         
         # Create version with current page version number
+        # Use the stored version (which is the current version before incrementing)
         version = PageVersion(
             page_id=page_id,
             title=page_title,
@@ -613,6 +614,7 @@ class PageService:
         db.session.add(version)
         
         # Increment page version using raw SQL to avoid SQLite UUID issues
+        # Do this after adding the version record to avoid conflicts
         try:
             db.session.execute(
                 db.text("UPDATE pages SET version = version + 1 WHERE id = :page_id"),
@@ -623,7 +625,7 @@ class PageService:
             try:
                 page.version += 1
             except (AttributeError, TypeError):
-                # If page object access fails, the version was already incremented by raw SQL
+                # If page object access fails, skip increment (version will be updated on next access)
                 pass
         
         db.session.commit()
