@@ -1,22 +1,8 @@
-from flask import render_template, request, jsonify
-from app.routes import main
+from flask import Blueprint, jsonify
 
-@main.route('/')
-def index():
-    return render_template('index.html')
+wiki_bp = Blueprint('wiki', __name__)
 
-@main.route('/api/pages', methods=['GET'])
-def list_pages():
-    # TODO: Implement page listing
-    return jsonify([])
-
-@main.route('/api/pages/<page_id>', methods=['GET'])
-def get_page(page_id):
-    # TODO: Implement page retrieval
-    return jsonify({'id': page_id, 'content': ''})
-
-@main.route('/api/pages', methods=['POST'])
-def create_page():
-    # TODO: Implement page creation
-    return jsonify({'id': 'new', 'status': 'created'}), 201
-
+@wiki_bp.route('/health', methods=['GET'])
+def health_check():
+    """Health check endpoint"""
+    return jsonify({'status': 'healthy', 'service': 'wiki'}), 200
