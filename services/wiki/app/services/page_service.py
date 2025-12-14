@@ -99,11 +99,20 @@ class PageService:
             db.session.rollback()
             raise ValueError(f"Failed to create page: slug may already exist")
         
-        # Get page_id after commit using slug (avoid SQLite UUID issues)
-        page_from_db = Page.query.filter_by(slug=slug).first()
-        if not page_from_db:
-            raise ValueError(f"Could not retrieve page after creation: {slug}")
-        stored_page_id = page_from_db.id
+        # Get page_id after commit using raw SQL (avoid SQLite UUID issues)
+        try:
+            result = db.session.execute(
+                db.text("SELECT id FROM pages WHERE slug = :slug"),
+                {"slug": slug}
+            ).first()
+            if result:
+                # Convert string UUID to UUID object if needed
+                import uuid
+                stored_page_id = uuid.UUID(result[0]) if isinstance(result[0], str) else result[0]
+            else:
+                raise ValueError(f"Could not retrieve page after creation: {slug}")
+        except Exception as e:
+            raise ValueError(f"Could not retrieve page ID after creation: {slug} - {str(e)}")
         
         # Write file to disk
         # Use values we already have to avoid SQLAlchemy lazy loading issues
