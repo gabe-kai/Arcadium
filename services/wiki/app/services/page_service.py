@@ -92,12 +92,13 @@ class PageService:
         
         try:
             db.session.commit()
+            # Refresh page to reload with correct UUID type (SQLite compatibility)
+            db.session.refresh(page)
         except IntegrityError:
             db.session.rollback()
             raise ValueError(f"Failed to create page: slug may already exist")
         
-        # Get page.id after commit (before it expires)
-        # Access it immediately after commit to avoid SQLite UUID conversion issues
+        # Get page.id after refresh
         stored_page_id = page.id
         
         # Write file to disk
