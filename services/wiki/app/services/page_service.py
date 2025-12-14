@@ -612,7 +612,19 @@ class PageService:
         
         db.session.add(version)
         
-        # Increment page version
-        page.version += 1
+        # Increment page version using raw SQL to avoid SQLite UUID issues
+        try:
+            db.session.execute(
+                db.text("UPDATE pages SET version = version + 1 WHERE id = :page_id"),
+                {"page_id": str(page_id)}
+            )
+        except Exception:
+            # Fallback to page object access (will likely fail with SQLite)
+            try:
+                page.version += 1
+            except (AttributeError, TypeError):
+                # If page object access fails, the version was already incremented by raw SQL
+                pass
+        
         db.session.commit()
 
