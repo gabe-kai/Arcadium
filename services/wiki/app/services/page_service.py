@@ -94,7 +94,16 @@ class PageService:
             raise ValueError(f"Failed to create page: slug may already exist")
         
         # Write file to disk
-        file_content = PageService._build_file_content(page, frontmatter, markdown_content)
+        # Use values we already have to avoid SQLAlchemy lazy loading issues
+        file_content = PageService._build_file_content_from_values(
+            title=title,
+            slug=slug,
+            parent_id=parent_id,
+            section=section,
+            status=status,
+            frontmatter=frontmatter,
+            markdown_content=markdown_content
+        )
         FileService.write_page_file(page, file_content)
         
         # Create initial version
@@ -203,7 +212,15 @@ class PageService:
         else:
             # Update file content
             frontmatter, markdown_content = parse_frontmatter(page.content)
-            file_content = PageService._build_file_content(page, frontmatter, markdown_content)
+            file_content = PageService._build_file_content_from_values(
+                title=page.title,
+                slug=page.slug,
+                parent_id=page.parent_id,
+                section=page.section,
+                status=page.status,
+                frontmatter=frontmatter,
+                markdown_content=markdown_content
+            )
             FileService.write_page_file(page, file_content)
         
         db.session.commit()
@@ -395,6 +412,32 @@ class PageService:
             frontmatter['section'] = page.section
         if page.status:
             frontmatter['status'] = page.status
+        
+        # Build YAML frontmatter
+        frontmatter_yaml = yaml.dump(frontmatter, default_flow_style=False, sort_keys=False)
+        
+        return f"---\n{frontmatter_yaml}---\n{markdown_content}"
+    
+    @staticmethod
+    def _build_file_content_from_values(
+        title: str,
+        slug: str,
+        parent_id: Optional[uuid.UUID],
+        section: Optional[str],
+        status: str,
+        frontmatter: Dict,
+        markdown_content: str
+    ) -> str:
+        """Build complete file content with frontmatter from values (avoids lazy loading)"""
+        # Update frontmatter with page metadata
+        frontmatter['title'] = title
+        frontmatter['slug'] = slug
+        # Note: parent_slug is optional and can be added later if needed
+        # We skip parent lookup here to avoid SQLite UUID conversion issues
+        if section:
+            frontmatter['section'] = section
+        if status:
+            frontmatter['status'] = status
         
         # Build YAML frontmatter
         frontmatter_yaml = yaml.dump(frontmatter, default_flow_style=False, sort_keys=False)

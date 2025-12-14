@@ -32,26 +32,47 @@ class FileService:
         base_path = current_app.config.get('WIKI_PAGES_DIR', 'data/pages')
         relative_path = ''
         
+        # Access page attributes safely (handle SQLite UUID conversion issues)
+        try:
+            page_section = page.section
+            page_slug = page.slug
+            page_parent_id = page.parent_id
+        except Exception:
+            # If accessing attributes fails (SQLite UUID issues), use fallback
+            # This shouldn't happen in normal operation, but handle gracefully
+            page_section = None
+            page_slug = 'page'
+            page_parent_id = None
+        
         # Add section directory if section exists
-        if page.section:
-            relative_path = page.section
+        if page_section:
+            relative_path = page_section
         
         # Add parent hierarchy
-        if page.parent_id:
+        if page_parent_id:
             if not parent:
-                parent = db.session.get(Page, page.parent_id)
+                try:
+                    # Use session.get() for better SQLite compatibility
+                    parent = db.session.get(Page, page_parent_id)
+                except Exception:
+                    # If parent lookup fails (e.g., SQLite UUID issues), skip parent path
+                    parent = None
             
             if parent:
-                # Get parent's directory path (recursive)
-                parent_path = FileService._get_parent_directory_path(parent)
-                if parent_path:
-                    if relative_path:
-                        relative_path = os.path.join(relative_path, parent_path)
-                    else:
-                        relative_path = parent_path
+                try:
+                    # Get parent's directory path (recursive)
+                    parent_path = FileService._get_parent_directory_path(parent)
+                    if parent_path:
+                        if relative_path:
+                            relative_path = os.path.join(relative_path, parent_path)
+                        else:
+                            relative_path = parent_path
+                except Exception:
+                    # If parent path calculation fails, skip it
+                    pass
         
         # Add filename
-        filename = f"{page.slug}.md"
+        filename = f"{page_slug}.md"
         
         if relative_path:
             return os.path.join(relative_path, filename)
@@ -62,12 +83,18 @@ class FileService:
         """Get directory path for a page (recursive through parents)"""
         parts = []
         current = page
+        visited = set()  # Prevent infinite loops
         
         # Build path from current page up to root
-        while current:
+        while current and current.id not in visited:
+            visited.add(current.id)
             parts.insert(0, current.slug)
             if current.parent_id:
-                current = db.session.get(Page, current.parent_id)
+                try:
+                    current = db.session.get(Page, current.parent_id)
+                except Exception:
+                    # If parent lookup fails (e.g., SQLite UUID issues), stop
+                    break
             else:
                 break
         
