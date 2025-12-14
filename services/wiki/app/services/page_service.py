@@ -85,6 +85,9 @@ class PageService:
         # Calculate and set file path
         page.file_path = FileService.calculate_file_path(page)
         
+        # Store file_path before commit to avoid SQLite UUID issues
+        stored_file_path = page.file_path
+        
         db.session.add(page)
         
         try:
@@ -94,9 +97,6 @@ class PageService:
             raise ValueError(f"Failed to create page: slug may already exist")
         
         # Write file to disk
-        # Store file_path before commit to avoid SQLite UUID issues
-        stored_file_path = page.file_path
-        
         # Use values we already have to avoid SQLAlchemy lazy loading issues
         file_content = PageService._build_file_content_from_values(
             title=title,
