@@ -172,38 +172,42 @@ def test_manual_vs_auto_keywords()
 
 ---
 
-### Phase 3: File System Integration
+### Phase 3: File System Integration ✅ COMPLETE
 
-#### 3.1 File Storage Service
-- [ ] Implement file path calculation (section + parent hierarchy)
-- [ ] Create file structure mirroring hierarchy
-- [ ] Handle file moves when page structure changes
-- [ ] Implement YAML frontmatter parsing
+#### 3.1 File Storage Service ✅
+- [x] Implement file path calculation (section + parent hierarchy)
+- [x] Create file structure mirroring hierarchy
+- [x] Handle file moves when page structure changes
+- [x] Implement YAML frontmatter parsing
 
 **Testing:**
 ```python
 # tests/test_services/test_file_service.py
-def test_file_path_calculation()
-def test_directory_structure_creation()
-def test_file_move_on_parent_change()
-def test_frontmatter_parsing()
+def test_file_path_calculation() ✅
+def test_directory_structure_creation() ✅
+def test_file_move_on_parent_change() ✅
+def test_frontmatter_parsing() ✅
 ```
 
 **Validation:** Check against `docs/architecture/wiki-architecture.md` File Path Calculation
 
-#### 3.2 Markdown Processing
-- [ ] Implement Markdown to HTML conversion
-- [ ] Extract headings for TOC (H2-H6)
-- [ ] Generate anchors from headings
-- [ ] Preserve formatting
+#### 3.2 Markdown Processing ✅
+- [x] Implement Markdown to HTML conversion
+- [x] Extract headings for TOC (H2-H6)
+- [x] Generate anchors from headings
+- [x] Preserve formatting
+- [x] Implement slug generation and validation
+- [x] Implement size/word count calculators
 
 **Testing:**
 ```python
-# tests/test_services/test_markdown_service.py
-def test_markdown_to_html()
-def test_toc_generation()
-def test_anchor_generation()
-def test_heading_levels()
+# tests/test_utils/test_markdown_service.py
+def test_markdown_to_html() ✅
+def test_toc_generation() ✅
+def test_anchor_generation() ✅
+def test_heading_levels() ✅
+def test_slug_generation() ✅
+def test_size_calculations() ✅
 ```
 
 **Validation:** Check against `docs/wiki-service-specification.md` TOC Generation
@@ -672,10 +676,11 @@ After each phase, validate against design documents:
 ### ✅ Completed Phases
 - **Phase 1**: Foundation Setup (Flask app, config, test infrastructure, shared Python venv)
 - **Phase 2**: Core Data Models (all models implemented and tested - 11/11 tests passing)
+- **Phase 3**: File System Integration (file service, markdown processing, TOC generation, utilities - 31/31 tests passing)
 
 ### ⏳ Next Steps
 - **Phase 1.2**: Database migrations (Flask-Migrate setup and initial migration)
-- **Phase 3**: File System Integration (file service, markdown processing, TOC generation)
+- **Phase 4**: Core Business Logic (Page Service, Orphanage Service, Link Service, Search Index Service, Version Service)
 
 ---
 
