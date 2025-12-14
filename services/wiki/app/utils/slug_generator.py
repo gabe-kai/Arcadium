@@ -36,12 +36,25 @@ def generate_slug(text: str, existing_slugs: Optional[list] = None) -> str:
     if not slug:
         slug = 'page'
     
+    # Truncate to reasonable length (255 chars for database compatibility)
+    if len(slug) > 255:
+        slug = slug[:255]
+        # Remove trailing hyphen if truncation created one
+        slug = slug.rstrip('-')
+    
     # Ensure uniqueness
     if existing_slugs:
         base_slug = slug
         counter = 1
         while slug in existing_slugs:
-            slug = f"{base_slug}-{counter}"
+            # When adding counter, ensure we don't exceed 255 chars
+            new_slug = f"{base_slug}-{counter}"
+            if len(new_slug) > 255:
+                # Truncate base_slug to make room for counter
+                max_base_len = 255 - len(str(counter)) - 1  # -1 for hyphen
+                base_slug = base_slug[:max_base_len].rstrip('-')
+                new_slug = f"{base_slug}-{counter}"
+            slug = new_slug
             counter += 1
     
     return slug
