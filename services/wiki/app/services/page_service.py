@@ -97,16 +97,11 @@ class PageService:
             raise ValueError(f"Failed to create page: slug may already exist")
         
         # Get page.id after commit, handling SQLite UUID conversion issues
-        try:
-            stored_page_id = page.id
-        except (AttributeError, TypeError):
-            # SQLite UUID conversion issue - page.id may be an integer
-            # Try to get it from the database using the slug
-            page_from_db = Page.query.filter_by(slug=slug).first()
-            if page_from_db:
-                stored_page_id = page_from_db.id
-            else:
-                raise ValueError(f"Could not retrieve page ID after creation: {slug}")
+        # Query by slug to avoid SQLite UUID conversion issues when accessing page.id
+        page_from_db = Page.query.filter_by(slug=slug).first()
+        if not page_from_db:
+            raise ValueError(f"Could not retrieve page after creation: {slug}")
+        stored_page_id = page_from_db.id
         
         # Write file to disk
         # Use values we already have to avoid SQLAlchemy lazy loading issues
