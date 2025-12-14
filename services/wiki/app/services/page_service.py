@@ -87,6 +87,9 @@ class PageService:
         
         # Store values before commit to avoid SQLite UUID issues
         stored_file_path = page.file_path
+        stored_title = page.title
+        stored_content = page.content
+        stored_version = page.version
         
         db.session.add(page)
         
@@ -95,6 +98,12 @@ class PageService:
         except IntegrityError:
             db.session.rollback()
             raise ValueError(f"Failed to create page: slug may already exist")
+        
+        # Get page_id after commit using slug (avoid SQLite UUID issues)
+        page_from_db = Page.query.filter_by(slug=slug).first()
+        if not page_from_db:
+            raise ValueError(f"Could not retrieve page after creation: {slug}")
+        stored_page_id = page_from_db.id
         
         # Write file to disk
         # Use values we already have to avoid SQLAlchemy lazy loading issues
@@ -110,8 +119,15 @@ class PageService:
         FileService.write_page_file(page, file_content, file_path=stored_file_path)
         
         # Create initial version
-        # Pass None for page_id and slug for fallback query to handle SQLite UUID issues
-        PageService._create_version(page, user_id, "Initial version", page_id=None, page_slug=slug)
+        # Pass stored values to avoid SQLite UUID issues
+        PageService._create_version(
+            page, user_id, "Initial version",
+            page_id=stored_page_id,
+            page_slug=slug,
+            page_title=stored_title,
+            page_content=stored_content,
+            page_version=stored_version
+        )
         
         return page
     
@@ -460,7 +476,14 @@ class PageService:
         return f"---\n{frontmatter_yaml}---\n{markdown_content}"
     
     @staticmethod
-    def _create_version(page: Page, user_id: uuid.UUID, change_summary: str, page_id: Optional[uuid.UUID] = None, page_slug: Optional[str] = None):
+    def _create_version(
+        page: Page, user_id: uuid.UUID, change_summary: str,
+        page_id: Optional[uuid.UUID] = None,
+        page_slug: Optional[str] = None,
+        page_title: Optional[str] = None,
+        page_content: Optional[str] = None,
+        page_version: Optional[int] = None
+    ):
         """Create a version record for a page"""
         # Get page_id, handling SQLite UUID conversion issues
         if not page_id:
@@ -511,27 +534,34 @@ class PageService:
                 'lines_removed': max(0, len(old_lines) - len(new_lines))
             }
         
-        # Get page attributes, handling SQLite UUID conversion issues
-        try:
-            page_title = page.title
-            page_content = page.content
-            page_version = page.version
-        except (AttributeError, TypeError):
-            # SQLite UUID conversion issue - use raw SQL to get page attributes
+        # Get page attributes, using stored values if provided, otherwise try to access from page object
+        if page_title is None or page_content is None or page_version is None:
             try:
-                # Use raw SQL to avoid SQLAlchemy UUID conversion issues
-                result = db.session.execute(
-                    db.text("SELECT title, content, version FROM pages WHERE id = :page_id"),
-                    {"page_id": str(page_id)}
-                ).first()
-                if result:
-                    page_title = result[0]
-                    page_content = result[1]
-                    page_version = result[2]
-                else:
-                    raise ValueError(f"Page not found: {page_id}")
-            except Exception as e:
-                raise ValueError(f"Could not access page attributes: {page_id} - {str(e)}")
+                if page_title is None:
+                    page_title = page.title
+                if page_content is None:
+                    page_content = page.content
+                if page_version is None:
+                    page_version = page.version
+            except (AttributeError, TypeError):
+                # SQLite UUID conversion issue - use raw SQL to get page attributes
+                try:
+                    # Use raw SQL to avoid SQLAlchemy UUID conversion issues
+                    result = db.session.execute(
+                        db.text("SELECT title, content, version FROM pages WHERE id = :page_id"),
+                        {"page_id": str(page_id)}
+                    ).first()
+                    if result:
+                        if page_title is None:
+                            page_title = result[0]
+                        if page_content is None:
+                            page_content = result[1]
+                        if page_version is None:
+                            page_version = result[2]
+                    else:
+                        raise ValueError(f"Page not found: {page_id}")
+                except Exception as e:
+                    raise ValueError(f"Could not access page attributes: {page_id} - {str(e)}")
         
         # Create version with current page version number
         version = PageVersion(
