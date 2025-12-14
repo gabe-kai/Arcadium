@@ -44,10 +44,10 @@ class ProductionConfig(Config):
 class TestingConfig(Config):
     """Testing configuration"""
     TESTING = True
-    # Test database - uses SQLite for faster test execution
-    # Can be overridden via TEST_DATABASE_URL for PostgreSQL testing
+    # Test database - uses PostgreSQL for accurate testing (matches production)
+    # Can be overridden via TEST_DATABASE_URL environment variable
     # Override the base class database URI (which requires DATABASE_URL in non-testing)
-    SQLALCHEMY_DATABASE_URI = os.environ.get('TEST_DATABASE_URL') or 'sqlite:///:memory:'
+    SQLALCHEMY_DATABASE_URI = os.environ.get('TEST_DATABASE_URL') or 'postgresql://postgres:Le555ecure@localhost:5432/wiki_test'
     WIKI_DATA_DIR = 'test_data'
 
 config = {

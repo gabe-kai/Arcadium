@@ -254,9 +254,16 @@ class PageService:
         
         db.session.commit()
         
+        # Store original version before version creation
+        original_version = page.version
+        
         # Create version if content changed
         if content is not None and content != old_content:
             PageService._create_version(page, user_id, "Page updated")
+            # The version was incremented in the database via raw SQL in _create_version
+            # Manually increment the page object's version to reflect the database change
+            # This is necessary because the page object is stale after _create_version commits
+            page.version = original_version + 1
         
         return page
     
@@ -599,15 +606,26 @@ class PageService:
                 except (AttributeError, TypeError):
                     raise ValueError(f"Could not access page attributes: {page_id} - {str(e)}")
         
-        # Create version with current page version number
-        # Use the stored version (which is the current version before incrementing)
+        # Get the next version number by querying existing versions
+        # This avoids issues with page.version being stale after commits
+        latest_version = PageVersion.query.filter_by(
+            page_id=page_id
+        ).order_by(PageVersion.version.desc()).first()
+        
+        if latest_version:
+            next_version = latest_version.version + 1
+        else:
+            # No versions exist yet, use page_version (should be 1 for new pages)
+            next_version = page_version if page_version > 0 else 1
+        
+        # Create version with the next version number
         version = PageVersion(
             page_id=page_id,
             title=page_title,
             content=page_content,
             change_summary=change_summary,
             changed_by=user_id,
-            version=page_version,
+            version=next_version,
             diff_data=diff_data
         )
         
@@ -617,13 +635,13 @@ class PageService:
         # Do this after adding the version record to avoid conflicts
         try:
             db.session.execute(
-                db.text("UPDATE pages SET version = version + 1 WHERE id = :page_id"),
-                {"page_id": str(page_id)}
+                db.text("UPDATE pages SET version = :next_version WHERE id = :page_id"),
+                {"page_id": str(page_id), "next_version": next_version + 1}
             )
         except Exception:
             # Fallback to page object access (will likely fail with SQLite)
             try:
-                page.version += 1
+                page.version = next_version + 1
             except (AttributeError, TypeError):
                 # If page object access fails, skip increment (version will be updated on next access)
                 pass
