@@ -293,12 +293,12 @@ def test_search_relevance()
 
 **Validation:** Check against `docs/architecture/wiki-architecture.md` Search Indexing
 
-#### 4.5 Version Service
-- [ ] Create version on every edit
-- [ ] Store full content (not just diffs)
-- [ ] Calculate diff data
-- [ ] Support version comparison
-- [ ] Implement rollback (Writers for own pages, Admins for any)
+#### 4.5 Version Service ✅
+- [x] Create version on every edit (integrated with PageService)
+- [x] Store full content (not just diffs)
+- [x] Calculate diff data
+- [x] Support version comparison
+- [x] Implement rollback (Writers for own pages, Admins for any)
 
 **Testing:**
 ```python
