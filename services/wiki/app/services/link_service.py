@@ -39,11 +39,12 @@ class LinkService:
         
         # Also handle wiki-style links: [[slug]] or [[text|slug]]
         # Pattern matches: [[slug]] or [[text|slug]]
-        # Group 1 captures the slug (either after | or the whole thing if no |)
+        # Group 1: optional text before |
+        # Group 2: slug (always group 2, whether or not there's a |)
         wiki_link_pattern = re.compile(r'\[\[(?:([^|\]]+)\|)?([^|\]]+)\]\]')
         for match in wiki_link_pattern.finditer(content):
-            # If there's a pipe, group 2 is the slug; otherwise group 1 is the slug
-            slug = match.group(2) if match.group(1) else match.group(1)
+            # Group 2 is always the slug
+            slug = match.group(2)
             if slug:
                 # Normalize slug (lowercase, replace spaces with hyphens)
                 slug = slug.strip().lower().replace(' ', '-')
@@ -134,14 +135,35 @@ class LinkService:
             new_slug: New slug of the page
             page_id: ID of the page whose slug changed
         """
-        # Get all pages that link to this page
-        incoming_links = PageLink.query.filter_by(to_page_id=page_id).all()
+        import re
         
-        if not incoming_links:
+        # Get all pages that link to this page (via PageLink table)
+        incoming_links = PageLink.query.filter_by(to_page_id=page_id).all()
+        from_page_ids = {link.from_page_id for link in incoming_links}
+        
+        # Also search all pages for references to the old slug in content
+        # This catches wiki-style links and other formats not in PageLink table
+        all_pages = Page.query.all()
+        pages_with_old_slug = []
+        for page in all_pages:
+            if page.id == page_id:
+                continue  # Skip the page itself
+            # Check if content contains old slug in any link format
+            if old_slug in page.content:
+                # Check for standard markdown links
+                if re.search(r'\[([^\]]+)\]\(/?{}(?:#[^\]]+)?\)'.format(re.escape(old_slug)), page.content, re.IGNORECASE):
+                    pages_with_old_slug.append(page.id)
+                # Check for wiki-style links
+                elif re.search(r'\[\[([^|\]]+\|)?{}\]\]'.format(re.escape(old_slug)), page.content, re.IGNORECASE):
+                    pages_with_old_slug.append(page.id)
+        
+        # Combine both sets
+        from_page_ids.update(pages_with_old_slug)
+        
+        if not from_page_ids:
             return  # No pages link to this one
         
         # Get all pages that need updating
-        from_page_ids = [link.from_page_id for link in incoming_links]
         pages_to_update = Page.query.filter(Page.id.in_(from_page_ids)).all()
         
         # Update content in each linking page

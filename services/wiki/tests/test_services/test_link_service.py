@@ -28,7 +28,7 @@ def test_extract_links_with_anchors(app):
 def test_extract_links_wiki_format(app):
     """Test extracting wiki-style links"""
     with app.app_context():
-        content = "Link to [[Page Five]] and [[Display Text|page-six]]."
+        content = "Link to [[Page-Five]] and [[Display Text|page-six]]."
         links = LinkService.extract_links_from_content(content)
         assert 'page-five' in links
         assert 'page-six' in links
