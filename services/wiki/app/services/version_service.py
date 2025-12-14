@@ -69,9 +69,11 @@ class VersionService:
         
         db.session.add(version)
         
-        # Update page.version to match the new version number
+        # Update page.version to the next version number (next_version + 1)
         # This ensures consistency with PageService's version management
-        page.version = next_version
+        # PageService uses page.version as the version number, then increments it
+        # So we need to set it to next_version + 1 so the next version will be next_version + 1
+        page.version = next_version + 1
         
         db.session.commit()
         
