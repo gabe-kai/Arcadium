@@ -133,7 +133,7 @@ class FileService:
             return f.read()
     
     @staticmethod
-    def write_page_file(page: Page, content: str):
+    def write_page_file(page: Page, content: str, file_path: str = None):
         """
         Write page content to file system.
         Creates directory structure if needed.
@@ -141,8 +141,24 @@ class FileService:
         Args:
             page: Page model instance
             content: Markdown content with YAML frontmatter
+            file_path: Optional file path (if not provided, uses page.file_path)
         """
-        full_path = FileService.get_full_path(page.file_path)
+        # Get file_path, handling SQLite UUID conversion issues
+        if not file_path:
+            try:
+                file_path = page.file_path
+            except (AttributeError, TypeError):
+                # SQLite UUID conversion issue - try to get from session
+                try:
+                    page_obj = db.session.get(Page, page.id)
+                    file_path = page_obj.file_path if page_obj else None
+                except:
+                    file_path = None
+        
+        if not file_path:
+            raise ValueError(f"Page file_path not set: {page.id}")
+        
+        full_path = FileService.get_full_path(file_path)
         FileService.ensure_directory_exists(full_path)
         
         with open(full_path, 'w', encoding='utf-8') as f:

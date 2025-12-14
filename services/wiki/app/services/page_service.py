@@ -94,6 +94,9 @@ class PageService:
             raise ValueError(f"Failed to create page: slug may already exist")
         
         # Write file to disk
+        # Store file_path before commit to avoid SQLite UUID issues
+        stored_file_path = page.file_path
+        
         # Use values we already have to avoid SQLAlchemy lazy loading issues
         file_content = PageService._build_file_content_from_values(
             title=title,
@@ -104,7 +107,7 @@ class PageService:
             frontmatter=frontmatter,
             markdown_content=markdown_content
         )
-        FileService.write_page_file(page, file_content)
+        FileService.write_page_file(page, file_content, file_path=stored_file_path)
         
         # Create initial version
         PageService._create_version(page, user_id, "Initial version")
