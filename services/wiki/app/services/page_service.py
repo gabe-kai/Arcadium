@@ -272,6 +272,10 @@ class PageService:
                 'slug': child.slug
             })
         
+        # Clean up links before deletion
+        from app.services.link_service import LinkService
+        LinkService.handle_page_deletion(page_id)
+        
         # Delete file
         FileService.delete_page_file(page)
         
