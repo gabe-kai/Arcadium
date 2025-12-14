@@ -85,7 +85,7 @@ class PageService:
         # Calculate and set file path
         page.file_path = FileService.calculate_file_path(page)
         
-        # Store file_path before commit to avoid SQLite UUID issues
+        # Store values before commit to avoid SQLite UUID issues
         stored_file_path = page.file_path
         
         db.session.add(page)
@@ -95,6 +95,10 @@ class PageService:
         except IntegrityError:
             db.session.rollback()
             raise ValueError(f"Failed to create page: slug may already exist")
+        
+        # Get page.id after commit (before it expires)
+        # Access it immediately after commit to avoid SQLite UUID conversion issues
+        stored_page_id = page.id
         
         # Write file to disk
         # Use values we already have to avoid SQLAlchemy lazy loading issues
@@ -110,8 +114,7 @@ class PageService:
         FileService.write_page_file(page, file_content, file_path=stored_file_path)
         
         # Create initial version
-        # Store page.id before commit to avoid SQLite UUID issues
-        stored_page_id = page.id
+        # Use stored_page_id to avoid SQLite UUID issues
         PageService._create_version(page, user_id, "Initial version", page_id=stored_page_id)
         
         return page
