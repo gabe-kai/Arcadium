@@ -385,17 +385,20 @@ class PageService:
         if user_role == 'admin':
             return True
         if user_role == 'writer':
-            return True
+            # Writers can only edit pages they created
+            return user_id is not None and page.created_by == user_id
         return False
     
     @staticmethod
     def can_delete(page: Page, user_role: str, user_id: Optional[uuid.UUID]) -> bool:
         """Check if user can delete a page"""
+        if page.is_system_page:
+            return False  # System pages cannot be deleted
         if user_role == 'admin':
             return True
         if user_role == 'writer':
-            # Writers can only delete pages they didn't create
-            return page.created_by != user_id
+            # Writers can only delete pages they created
+            return user_id is not None and page.created_by == user_id
         return False
     
     @staticmethod

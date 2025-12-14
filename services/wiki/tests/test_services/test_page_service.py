@@ -347,6 +347,7 @@ def test_can_edit_permissions(app):
     """Test edit permission checking"""
     with app.app_context():
         user_id = uuid.uuid4()
+        other_user_id = uuid.uuid4()
         
         page = PageService.create_page(
             title="Test Page",
@@ -354,8 +355,15 @@ def test_can_edit_permissions(app):
             user_id=user_id
         )
         
+        # Admin can edit any page
         assert PageService.can_edit(page, 'admin', user_id) == True
-        assert PageService.can_edit(page, 'writer', user_id) == True
+        assert PageService.can_edit(page, 'admin', other_user_id) == True
+        
+        # Writer can only edit pages they created
+        assert PageService.can_edit(page, 'writer', user_id) == True  # Own page
+        assert PageService.can_edit(page, 'writer', other_user_id) == False  # Other's page
+        
+        # Player and viewer cannot edit
         assert PageService.can_edit(page, 'player', user_id) == False
         assert PageService.can_edit(page, 'viewer', user_id) == False
 
@@ -382,9 +390,9 @@ def test_can_delete_permissions(app):
         assert PageService.can_delete(my_page, 'admin', user_id) == True
         assert PageService.can_delete(other_page, 'admin', user_id) == True
         
-        # Writer can delete pages they didn't create
-        assert PageService.can_delete(other_page, 'writer', user_id) == True
-        assert PageService.can_delete(my_page, 'writer', user_id) == False
+        # Writer can only delete pages they created
+        assert PageService.can_delete(my_page, 'writer', user_id) == True  # Own page
+        assert PageService.can_delete(other_page, 'writer', user_id) == False  # Other's page
         
         # Others cannot delete
         assert PageService.can_delete(my_page, 'player', user_id) == False
