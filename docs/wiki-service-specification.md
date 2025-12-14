@@ -4,6 +4,34 @@
 
 The Wiki Service is a comprehensive documentation and planning system for the Arcadium game project. It provides a book-like reading experience with hierarchical organization, role-based access control, and collaborative editing capabilities.
 
+## Setup and Configuration
+
+### Python Environment
+
+This project uses a **shared virtual environment** for all Python services (monorepo approach). See the [root README](../../README.md) for setup instructions.
+
+**Quick Setup:**
+```bash
+# From project root
+python -m venv venv
+venv\Scripts\activate  # Windows
+# or: source venv/bin/activate  # Linux/Mac
+pip install -r requirements.txt
+```
+
+### Database
+
+The Wiki Service uses **PostgreSQL** for development and production. Tests use SQLite in-memory for faster execution.
+
+**Database Setup:**
+1. Create PostgreSQL database: `CREATE DATABASE wiki;`
+2. Configure `DATABASE_URL` in `.env` file
+3. See [Database Configuration](../architecture/database-configuration.md) for details
+
+**Configuration:**
+- Development/Production: Requires `DATABASE_URL` environment variable
+- Testing: Uses SQLite in-memory (or `TEST_DATABASE_URL` for PostgreSQL testing)
+
 ## Core Requirements
 
 ### Storage Format

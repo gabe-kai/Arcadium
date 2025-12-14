@@ -4,33 +4,74 @@ This guide provides a step-by-step approach to implementing the Wiki Service, in
 
 ## Prerequisites
 
-- Python 3.9+
-- PostgreSQL 14+
+- Python 3.11+ (for Python services)
+- PostgreSQL 14+ (for databases)
 - Docker and Docker Compose (for local development)
 - Node.js 18+ (for client development, if needed)
 
+### Initial Setup
+
+**Python Environment:**
+This project uses a **shared virtual environment** for all Python services (monorepo approach):
+
+```bash
+# From project root, create virtual environment
+python -m venv venv
+
+# Activate virtual environment
+# On Windows:
+venv\Scripts\activate
+# On Linux/Mac:
+source venv/bin/activate
+
+# Install dependencies
+pip install -r requirements.txt
+```
+
+**Database Setup:**
+Each service uses its own PostgreSQL database. See [Database Configuration](../architecture/database-configuration.md) for details.
+
+```sql
+-- Create wiki database
+CREATE DATABASE wiki;
+```
+
+**Environment Variables:**
+Each service requires a `.env` file. Copy from `.env.example`:
+
+```bash
+cd services/wiki
+cp .env.example .env
+# Edit .env with your database credentials
+```
+
+**Note:** Never commit `.env` files with real passwords. They are automatically excluded by `.gitignore`.
+
 ## Implementation Phases
 
-### Phase 1: Foundation Setup
+### Phase 1: Foundation Setup ✅ COMPLETE
 
-#### 1.1 Project Structure
-- [ ] Set up Flask application structure
-- [ ] Configure database connection
-- [ ] Set up environment variables
-- [ ] Create base configuration files
+#### 1.1 Project Structure ✅
+- [x] Set up Flask application structure
+- [x] Configure database connection (PostgreSQL)
+- [x] Set up environment variables (.env with DATABASE_URL)
+- [x] Create base configuration files (config.py)
+- [x] Set up shared Python virtual environment (monorepo)
+- [x] Configure test infrastructure (pytest, SQLite for tests)
 
-#### 1.2 Database Setup
-- [ ] Create database migrations for all tables:
-  - `pages` (with `is_system_page` field)
-  - `comments` (with `thread_depth` field)
-  - `page_links`
-  - `index_entries` (with `is_manual` field)
-  - `page_versions`
-  - `images` and `page_images`
-  - `wiki_config`
-  - `oversized_page_notifications`
-- [ ] Create indexes as specified in architecture doc
-- [ ] Set up database connection pooling
+#### 1.2 Database Setup ⚠️ PARTIAL
+- [x] Database models created (all tables):
+  - `pages` (with `is_system_page` field) ✅
+  - `comments` (with `thread_depth` field) ✅
+  - `page_links` ✅
+  - `index_entries` (with `is_manual` field) ✅
+  - `page_versions` ✅
+  - `images` and `page_images` ✅
+  - `wiki_config` ✅
+  - `oversized_page_notifications` ✅
+- [ ] Create database migrations (Flask-Migrate) - **TODO: Phase 1.2**
+- [ ] Create indexes as specified in architecture doc - **TODO: Phase 1.2**
+- [ ] Set up database connection pooling - **TODO: Phase 1.2**
 
 **Testing:**
 ```bash
@@ -45,14 +86,14 @@ python scripts/verify_schema.py
 
 ---
 
-### Phase 2: Core Data Models
+### Phase 2: Core Data Models ✅ COMPLETE
 
-#### 2.1 Page Model
-- [ ] Implement Page model with all fields from specification
-- [ ] Add validation for slug uniqueness
-- [ ] Implement parent-child relationships
-- [ ] Add `is_system_page` flag handling
-- [ ] Implement orphanage detection
+#### 2.1 Page Model ✅
+- [x] Implement Page model with all fields from specification
+- [x] Add validation for slug uniqueness
+- [x] Implement parent-child relationships
+- [x] Add `is_system_page` flag handling
+- [x] Implement orphanage detection (is_orphaned, orphaned_from fields)
 
 **Testing:**
 ```python
@@ -66,11 +107,11 @@ def test_section_independence()
 
 **Validation:** Check against `docs/wiki-service-specification.md` Page Structure
 
-#### 2.2 Comment Model
-- [ ] Implement Comment model
-- [ ] Add thread depth calculation
-- [ ] Enforce maximum depth (5 levels)
-- [ ] Support recommendations flag
+#### 2.2 Comment Model ✅
+- [x] Implement Comment model
+- [x] Add thread depth calculation
+- [x] Enforce maximum depth (5 levels) - database constraint
+- [x] Support recommendations flag
 
 **Testing:**
 ```python
@@ -83,10 +124,10 @@ def test_recommendation_flag()
 
 **Validation:** Check against `docs/wiki-service-specification.md` Comments System
 
-#### 2.3 Link Tracking Model
-- [ ] Implement PageLink model
-- [ ] Support bidirectional link tracking
-- [ ] Validate link targets exist
+#### 2.3 Link Tracking Model ✅
+- [x] Implement PageLink model
+- [x] Support bidirectional link tracking (from_page, to_page relationships)
+- [ ] Validate link targets exist - **TODO: Phase 4.3 (Link Service)**
 
 **Testing:**
 ```python
@@ -98,11 +139,11 @@ def test_invalid_link_handling()
 
 **Validation:** Check against `docs/architecture/wiki-architecture.md` Link Tracking
 
-#### 2.4 Version History Model
-- [ ] Implement PageVersion model
-- [ ] Store full content (not just diffs)
-- [ ] Calculate and store diff data
-- [ ] Support change summaries
+#### 2.4 Version History Model ✅
+- [x] Implement PageVersion model
+- [x] Store full content (not just diffs)
+- [x] Calculate and store diff data (JSON field)
+- [x] Support change summaries
 
 **Testing:**
 ```python
@@ -114,10 +155,10 @@ def test_version_retention()
 
 **Validation:** Check against `docs/wiki-version-history.md`
 
-#### 2.5 Index Model
-- [ ] Implement IndexEntry model
-- [ ] Support both full-text and keyword entries
-- [ ] Track manual vs auto-extracted keywords
+#### 2.5 Index Model ✅
+- [x] Implement IndexEntry model
+- [x] Support both full-text and keyword entries (is_keyword flag)
+- [x] Track manual vs auto-extracted keywords (is_manual flag)
 
 **Testing:**
 ```python
@@ -568,7 +609,12 @@ def test_lazy_loading()
 
 ### Continuous Testing
 ```bash
+# Activate virtual environment first (from project root)
+# Windows: venv\Scripts\activate
+# Linux/Mac: source venv/bin/activate
+
 # Run all tests
+cd services/wiki
 pytest tests/
 
 # Run with coverage
@@ -579,6 +625,8 @@ pytest tests/test_models/
 pytest tests/test_services/
 pytest tests/test_api/
 ```
+
+**Note:** Tests use SQLite in-memory by default for fast execution. To use PostgreSQL for testing, set `TEST_DATABASE_URL` environment variable.
 
 ---
 
