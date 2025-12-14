@@ -531,11 +531,28 @@ class PageService:
         ).order_by(PageVersion.version.desc()).first()
         
         # Calculate simple diff data (store as JSON)
+        # Use page_content if provided, otherwise try to get from page object
+        content_for_diff = page_content
+        if content_for_diff is None:
+            try:
+                content_for_diff = page.content
+            except (AttributeError, TypeError):
+                # SQLite UUID conversion issue - use raw SQL
+                try:
+                    result = db.session.execute(
+                        db.text("SELECT content FROM pages WHERE id = :page_id"),
+                        {"page_id": str(page_id)}
+                    ).first()
+                    if result:
+                        content_for_diff = result[0]
+                except:
+                    content_for_diff = ""
+        
         diff_data = {}
         if prev_version:
             # Simple diff: store line-by-line comparison
             old_lines = prev_version.content.split('\n')
-            new_lines = page.content.split('\n')
+            new_lines = content_for_diff.split('\n')
             diff_data = {
                 'old_line_count': len(old_lines),
                 'new_line_count': len(new_lines),
