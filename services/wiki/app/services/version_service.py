@@ -34,11 +34,19 @@ class VersionService:
             raise ValueError(f"Page not found: {page_id}")
         
         # Get the next version number
+        # Use page.version which is already incremented by PageService
+        # If no versions exist yet, start at 1
         latest_version = PageVersion.query.filter_by(
             page_id=page_id
         ).order_by(PageVersion.version.desc()).first()
         
-        next_version = (latest_version.version + 1) if latest_version else 1
+        if latest_version:
+            next_version = latest_version.version + 1
+        else:
+            # No versions exist, check page.version
+            # If page.version is 1, that means PageService hasn't created version 1 yet
+            # So we should create version 1
+            next_version = max(1, page.version)
         
         # Calculate diff if previous version exists
         diff_data = None
