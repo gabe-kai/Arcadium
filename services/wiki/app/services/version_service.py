@@ -68,6 +68,11 @@ class VersionService:
         )
         
         db.session.add(version)
+        
+        # Update page.version to match the new version number
+        # This ensures consistency with PageService's version management
+        page.version = next_version
+        
         db.session.commit()
         
         return version
