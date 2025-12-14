@@ -9,3 +9,7 @@ Architecture decisions, diagrams, and system design documents.
 - Data flow diagrams
 - Technology choices and rationale
 
+## Service Architectures
+
+- [Wiki Service Architecture](wiki-architecture.md) - Detailed architecture for the wiki service
+
