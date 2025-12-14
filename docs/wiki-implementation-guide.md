@@ -256,12 +256,12 @@ def test_grouping_by_parent() ⚠️ (fails due to SQLite UUID issues)
 
 **Validation:** Check against `docs/wiki-orphanage-system.md`
 
-#### 4.3 Link Service
-- [ ] Parse Markdown for internal links
-- [ ] Support formats: `[text](slug)`, `[text](slug#anchor)`, `[text](/wiki/pages/slug)`
-- [ ] Track external links (not stored)
-- [ ] Update bidirectional relationships
-- [ ] Handle slug changes
+#### 4.3 Link Service ✅
+- [x] Parse Markdown for internal links
+- [x] Support formats: `[text](slug)`, `[text](slug#anchor)`, `[text](/wiki/pages/slug)`, `[[slug]]`, `[[text|slug]]`
+- [x] Track external links (not stored)
+- [x] Update bidirectional relationships
+- [x] Handle slug changes
 
 **Testing:**
 ```python
