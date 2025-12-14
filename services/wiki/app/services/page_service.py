@@ -96,13 +96,6 @@ class PageService:
             db.session.rollback()
             raise ValueError(f"Failed to create page: slug may already exist")
         
-        # Get page.id after commit, handling SQLite UUID conversion issues
-        # Query by slug to avoid SQLite UUID conversion issues when accessing page.id
-        page_from_db = Page.query.filter_by(slug=slug).first()
-        if not page_from_db:
-            raise ValueError(f"Could not retrieve page after creation: {slug}")
-        stored_page_id = page_from_db.id
-        
         # Write file to disk
         # Use values we already have to avoid SQLAlchemy lazy loading issues
         file_content = PageService._build_file_content_from_values(
@@ -117,8 +110,9 @@ class PageService:
         FileService.write_page_file(page, file_content, file_path=stored_file_path)
         
         # Create initial version
-        # Use stored_page_id to avoid SQLite UUID issues
-        PageService._create_version(page, user_id, "Initial version", page_id=stored_page_id)
+        # Pass None for page_id and let _create_version handle SQLite UUID issues
+        # It will query by slug as a fallback
+        PageService._create_version(page, user_id, "Initial version", page_id=None)
         
         return page
     
@@ -474,10 +468,13 @@ class PageService:
             try:
                 page_id = page.id
             except (AttributeError, TypeError):
-                # SQLite UUID conversion issue - try to get from session
+                # SQLite UUID conversion issue - query by slug as fallback
                 try:
-                    page_obj = db.session.get(Page, page.id)
-                    page_id = page_obj.id if page_obj else None
+                    # Try to get slug from page object
+                    page_slug = page.slug
+                    page_from_db = Page.query.filter_by(slug=page_slug).first()
+                    if page_from_db:
+                        page_id = page_from_db.id
                 except:
                     page_id = None
         
