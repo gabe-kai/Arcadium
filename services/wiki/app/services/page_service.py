@@ -517,17 +517,21 @@ class PageService:
             page_content = page.content
             page_version = page.version
         except (AttributeError, TypeError):
-            # SQLite UUID conversion issue - try to get from session
+            # SQLite UUID conversion issue - use raw SQL to get page attributes
             try:
-                page_obj = db.session.get(Page, page_id)
-                if page_obj:
-                    page_title = page_obj.title
-                    page_content = page_obj.content
-                    page_version = page_obj.version
+                # Use raw SQL to avoid SQLAlchemy UUID conversion issues
+                result = db.session.execute(
+                    db.text("SELECT title, content, version FROM pages WHERE id = :page_id"),
+                    {"page_id": str(page_id)}
+                ).first()
+                if result:
+                    page_title = result[0]
+                    page_content = result[1]
+                    page_version = result[2]
                 else:
                     raise ValueError(f"Page not found: {page_id}")
-            except:
-                raise ValueError(f"Could not access page attributes: {page_id}")
+            except Exception as e:
+                raise ValueError(f"Could not access page attributes: {page_id} - {str(e)}")
         
         # Create version with current page version number
         version = PageVersion(
