@@ -287,8 +287,12 @@ class PageService:
         db.session.delete(page)
         db.session.commit()
         
-        # Handle orphans (will be done by OrphanageService in Phase 4.2)
-        # For now, just return the list
+        # Handle orphans using OrphanageService
+        if orphaned_pages:
+            from app.services.orphanage_service import OrphanageService
+            child_ids = [uuid.UUID(child['id']) for child in orphaned_pages]
+            OrphanageService.orphan_pages(child_ids, user_id)
+        
         return {
             'deleted_page': page_info,
             'orphaned_pages': orphaned_pages
