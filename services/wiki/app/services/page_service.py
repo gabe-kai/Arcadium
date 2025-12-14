@@ -563,12 +563,21 @@ class PageService:
         # Get page attributes, using stored values if provided, otherwise try to access from page object
         # Only access page object if we're missing values
         if page_title is None or page_content is None or page_version is None:
-            # Use raw SQL first to avoid SQLite UUID conversion issues
+            # Use raw SQL to avoid SQLite UUID conversion issues
             try:
-                result = db.session.execute(
-                    db.text("SELECT title, content, version FROM pages WHERE id = :page_id"),
-                    {"page_id": str(page_id)}
-                ).first()
+                # For SQLite, we need to handle UUID conversion
+                # Try querying by slug if we have it, otherwise by ID
+                if page_slug:
+                    result = db.session.execute(
+                        db.text("SELECT title, content, version FROM pages WHERE slug = :slug"),
+                        {"slug": page_slug}
+                    ).first()
+                else:
+                    result = db.session.execute(
+                        db.text("SELECT title, content, version FROM pages WHERE id = :page_id"),
+                        {"page_id": str(page_id)}
+                    ).first()
+                
                 if result:
                     if page_title is None:
                         page_title = result[0]
@@ -577,18 +586,9 @@ class PageService:
                     if page_version is None:
                         page_version = result[2]
                 else:
-                    # Fallback to page object access if raw SQL fails
-                    try:
-                        if page_title is None:
-                            page_title = page.title
-                        if page_content is None:
-                            page_content = page.content
-                        if page_version is None:
-                            page_version = page.version
-                    except (AttributeError, TypeError):
-                        raise ValueError(f"Could not access page attributes: {page_id}")
+                    raise ValueError(f"Page not found in database (id: {page_id}, slug: {page_slug})")
             except Exception as e:
-                # Last resort: try page object access
+                # Last resort: try page object access (will likely fail with SQLite)
                 try:
                     if page_title is None:
                         page_title = page.title
