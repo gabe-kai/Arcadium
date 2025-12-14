@@ -110,9 +110,8 @@ class PageService:
         FileService.write_page_file(page, file_content, file_path=stored_file_path)
         
         # Create initial version
-        # Pass None for page_id and let _create_version handle SQLite UUID issues
-        # It will query by slug as a fallback
-        PageService._create_version(page, user_id, "Initial version", page_id=None)
+        # Pass None for page_id and slug for fallback query to handle SQLite UUID issues
+        PageService._create_version(page, user_id, "Initial version", page_id=None, page_slug=slug)
         
         return page
     
@@ -461,7 +460,7 @@ class PageService:
         return f"---\n{frontmatter_yaml}---\n{markdown_content}"
     
     @staticmethod
-    def _create_version(page: Page, user_id: uuid.UUID, change_summary: str, page_id: Optional[uuid.UUID] = None):
+    def _create_version(page: Page, user_id: uuid.UUID, change_summary: str, page_id: Optional[uuid.UUID] = None, page_slug: Optional[str] = None):
         """Create a version record for a page"""
         # Get page_id, handling SQLite UUID conversion issues
         if not page_id:
@@ -469,17 +468,25 @@ class PageService:
                 page_id = page.id
             except (AttributeError, TypeError):
                 # SQLite UUID conversion issue - query by slug as fallback
-                try:
-                    # Try to get slug from page object
-                    page_slug = page.slug
-                    page_from_db = Page.query.filter_by(slug=page_slug).first()
-                    if page_from_db:
-                        page_id = page_from_db.id
-                except:
-                    page_id = None
+                if page_slug:
+                    try:
+                        page_from_db = Page.query.filter_by(slug=page_slug).first()
+                        if page_from_db:
+                            page_id = page_from_db.id
+                    except:
+                        page_id = None
+                else:
+                    # Try to get slug from page object as last resort
+                    try:
+                        page_slug = page.slug
+                        page_from_db = Page.query.filter_by(slug=page_slug).first()
+                        if page_from_db:
+                            page_id = page_from_db.id
+                    except:
+                        page_id = None
         
         if not page_id:
-            raise ValueError(f"Page ID not available: {page}")
+            raise ValueError(f"Page ID not available (slug: {page_slug or 'unknown'})")
         
         # Get previous version for diff calculation
         prev_version = PageVersion.query.filter_by(
