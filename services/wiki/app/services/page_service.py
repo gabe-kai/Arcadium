@@ -291,7 +291,7 @@ class PageService:
         if orphaned_pages:
             from app.services.orphanage_service import OrphanageService
             child_ids = [uuid.UUID(child['id']) for child in orphaned_pages]
-            OrphanageService.orphan_pages(child_ids, user_id)
+            OrphanageService.orphan_pages(child_ids, page_id)  # page_id is the deleted parent
         
         return {
             'deleted_page': page_info,

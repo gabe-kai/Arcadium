@@ -144,21 +144,22 @@ def test_slug_change_updates_links_and_versions(app):
         # Create link
         LinkService.update_page_links(page1.id, page1.content)
         
-        # Change page2's slug
+        # Change page2's slug and content to trigger version creation
         PageService.update_page(
             page_id=page2.id,
             user_id=user_id,
-            slug="new-page-2"
+            slug="new-page-2",
+            content="Content 2 updated"
         )
         
-        # Handle slug change
+        # Handle slug change (updates links in other pages)
         LinkService.handle_slug_change("page-2", "new-page-2", page2.id)
         
         # Page1 content should be updated
         page1 = Page.query.get(page1.id)
         assert "new-page-2" in page1.content or "page-2" in page1.content
         
-        # Should have new version for page2
+        # Should have new version for page2 (initial + update with content change)
         versions = VersionService.get_all_versions(page2.id)
         assert len(versions) >= 2
 
