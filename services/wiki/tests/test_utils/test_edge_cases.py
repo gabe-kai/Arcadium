@@ -12,14 +12,15 @@ def test_slug_generation_edge_cases():
     with pytest.raises(ValueError):
         generate_slug("")
     
-    # Only special characters
+    # Only special characters - should default to "page"
     slug = generate_slug("!@#$%^&*()")
-    assert slug == "page" or len(slug) > 0  # Should handle gracefully (defaults to "page")
+    assert slug == "page"  # Defaults to "page" when no valid characters
     
     # Very long text
     long_text = "A" * 1000
     slug = generate_slug(long_text)
     assert len(slug) <= 255  # Should be reasonable length
+    assert slug.startswith("a")  # Should be lowercase
     
     # Multiple spaces
     assert generate_slug("word    word") == "word-word"
