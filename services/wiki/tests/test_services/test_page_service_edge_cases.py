@@ -1,6 +1,7 @@
 """Edge case and error condition tests for PageService"""
 import uuid
 import pytest
+from sqlalchemy.exc import IntegrityError
 from app.services.page_service import PageService
 from app.models.page import Page
 from app import db
