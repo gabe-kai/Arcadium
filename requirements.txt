@@ -1,0 +1,16 @@
+# Arcadium Project - Shared Python Dependencies
+# This file contains dependencies for all Python services in the monorepo
+
+# Wiki Service
+Flask==3.0.0
+Flask-SQLAlchemy==3.1.1
+Flask-Migrate==4.0.5
+# psycopg2-binary - Install manually if needed for PostgreSQL
+# Note: psycopg2-binary may have issues with Python 3.14
+# Alternative: Use psycopg2 (requires PostgreSQL dev libraries) or install from wheel
+python-dotenv==1.0.0
+pytest==7.4.3
+pytest-cov==4.1.0
+
+# Add other service dependencies here as services are added
+

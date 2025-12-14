@@ -13,3 +13,7 @@ Architecture decisions, diagrams, and system design documents.
 
 - [Wiki Service Architecture](wiki-architecture.md) - Detailed architecture for the wiki service
 
+## Infrastructure
+
+- [Database Configuration](database-configuration.md) - Database setup and configuration for all services
+

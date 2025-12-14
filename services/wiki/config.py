@@ -7,8 +7,10 @@ class Config:
     """Base configuration"""
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'dev-secret-key-change-in-production'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    # Database configuration - can be overridden via DATABASE_URL environment variable
+    # Format: postgresql://username:password@host:port/database
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or \
-        'postgresql://postgres:postgres@localhost:5432/wiki'
+        'postgresql://postgres:Le555ecure@localhost:5432/wiki'
     
     # Wiki-specific settings
     WIKI_DATA_DIR = os.environ.get('WIKI_DATA_DIR') or 'data'
@@ -34,8 +36,10 @@ class ProductionConfig(Config):
 class TestingConfig(Config):
     """Testing configuration"""
     TESTING = True
+    # Test database - uses SQLite for faster test execution
+    # Can be overridden via TEST_DATABASE_URL for PostgreSQL testing
     SQLALCHEMY_DATABASE_URI = os.environ.get('TEST_DATABASE_URL') or \
-        'postgresql://postgres:postgres@localhost:5432/wiki_test'
+        'sqlite:///:memory:'
     WIKI_DATA_DIR = 'test_data'
 
 config = {

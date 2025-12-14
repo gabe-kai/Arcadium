@@ -4,8 +4,17 @@ Documentation and planning wiki service built with Python/Flask.
 
 ## Setup
 
-1. Install dependencies:
+1. Activate the project virtual environment (from project root):
 ```bash
+# On Windows:
+..\venv\Scripts\activate
+# On Linux/Mac:
+source ../venv/bin/activate
+```
+
+2. Install dependencies (if not already installed):
+```bash
+# From project root:
 pip install -r requirements.txt
 ```
 
