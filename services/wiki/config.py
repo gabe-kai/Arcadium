@@ -7,10 +7,16 @@ class Config:
     """Base configuration"""
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'dev-secret-key-change-in-production'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    # Database configuration - can be overridden via DATABASE_URL environment variable
+    # Database configuration - MUST be set via DATABASE_URL environment variable
     # Format: postgresql://username:password@host:port/database
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or \
-        'postgresql://postgres:Le555ecure@localhost:5432/wiki'
+    # Never hardcode passwords in source code!
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL')
+    if not SQLALCHEMY_DATABASE_URI:
+        raise ValueError(
+            "DATABASE_URL environment variable is required. "
+            "Set it in your .env file or environment. "
+            "Example: postgresql://postgres:password@localhost:5432/wiki"
+        )
     
     # Wiki-specific settings
     WIKI_DATA_DIR = os.environ.get('WIKI_DATA_DIR') or 'data'

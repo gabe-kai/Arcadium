@@ -32,10 +32,19 @@ go.work
 *~
 .DS_Store
 
-# Environment variables
+# Environment variables and secrets
 .env
-.env.local
-.env.*.local
+.env.*
+!.env.example
+!.env*.example
+*.env
+!*.env.example
+# Service-specific env files
+services/*/.env
+services/*/.env.*
+# But allow .env.example files
+!services/*/.env.example
+!services/*/.env*.example
 
 # Logs
 *.log
