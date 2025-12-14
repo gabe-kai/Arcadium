@@ -10,13 +10,15 @@ class Config:
     # Database configuration - MUST be set via DATABASE_URL environment variable
     # Format: postgresql://username:password@host:port/database
     # Never hardcode passwords in source code!
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL')
-    if not SQLALCHEMY_DATABASE_URI:
+    # Note: TestingConfig overrides this attribute, so validation is skipped for tests
+    _database_url = os.environ.get('DATABASE_URL')
+    if not _database_url and os.environ.get('FLASK_ENV') != 'testing':
         raise ValueError(
             "DATABASE_URL environment variable is required. "
             "Set it in your .env file or environment. "
             "Example: postgresql://postgres:password@localhost:5432/wiki"
         )
+    SQLALCHEMY_DATABASE_URI = _database_url or 'sqlite:///:memory:'  # Fallback for testing
     
     # Wiki-specific settings
     WIKI_DATA_DIR = os.environ.get('WIKI_DATA_DIR') or 'data'
@@ -44,8 +46,8 @@ class TestingConfig(Config):
     TESTING = True
     # Test database - uses SQLite for faster test execution
     # Can be overridden via TEST_DATABASE_URL for PostgreSQL testing
-    SQLALCHEMY_DATABASE_URI = os.environ.get('TEST_DATABASE_URL') or \
-        'sqlite:///:memory:'
+    # Override the base class database URI (which requires DATABASE_URL in non-testing)
+    SQLALCHEMY_DATABASE_URI = os.environ.get('TEST_DATABASE_URL') or 'sqlite:///:memory:'
     WIKI_DATA_DIR = 'test_data'
 
 config = {
