@@ -349,53 +349,72 @@ def test_delete_page_with_children() ⚠️ (1 test failing - orphanage service 
 
 **Validation:** Check against `docs/api/wiki-api.md` Pages section
 
-#### 5.2 Comment Endpoints
-- [ ] `GET /api/pages/{id}/comments` - Get comments
-- [ ] `POST /api/pages/{id}/comments` - Create comment
-- [ ] `PUT /api/comments/{id}` - Update comment
-- [ ] `DELETE /api/comments/{id}` - Delete comment
-- [ ] Enforce 5-level depth limit
+#### 5.2 Comment Endpoints ✅ COMPLETE
+- [x] `GET /api/pages/{id}/comments` - Get comments ✅
+- [x] `POST /api/pages/{id}/comments` - Create comment ✅
+- [x] `PUT /api/comments/{id}` - Update comment ✅
+- [x] `DELETE /api/comments/{id}` - Delete comment ✅
+- [x] Enforce 5-level depth limit ✅
 
 **Testing:**
 ```python
 # tests/test_api/test_comment_routes.py
-def test_get_comments()
-def test_create_comment()
-def test_thread_depth_enforcement()
-def test_update_comment()
-def test_delete_comment()
+def test_get_comments() ✅
+def test_create_comment() ✅
+def test_thread_depth_enforcement() ✅
+def test_update_comment() ✅
+def test_delete_comment() ✅
+# Plus additional edge case tests
+# Comprehensive test coverage with 100% passing
 ```
 
 **Validation:** Check against `docs/api/wiki-api.md` Comments section
 
-#### 5.3 Search Endpoints
-- [ ] `GET /api/search` - Full-text search
-- [ ] `GET /api/index` - Master index
-- [ ] Support draft filtering
+#### 5.3 Search Endpoints ✅ COMPLETE
+- [x] `GET /api/search` - Full-text search ✅
+- [x] `GET /api/index` - Master index ✅
+- [x] Support draft filtering ✅
 
 **Testing:**
 ```python
 # tests/test_api/test_search_routes.py
-def test_search_pages()
-def test_search_relevance()
-def test_search_draft_filtering()
-def test_master_index()
+def test_search_pages() ✅
+def test_search_relevance() ✅
+def test_search_draft_filtering() ✅
+def test_master_index() ✅
+# Plus 18 additional edge case tests
+# 33 total tests, all passing (100%)
 ```
 
 **Validation:** Check against `docs/api/wiki-api.md` Search section
 
-#### 5.4 Navigation Endpoints
-- [ ] `GET /api/navigation` - Page hierarchy (draft filtering)
-- [ ] `GET /api/pages/{id}/breadcrumb` - Breadcrumb
-- [ ] `GET /api/pages/{id}/navigation` - Previous/Next
+#### 5.4 Navigation Endpoints ✅ COMPLETE
+- [x] `GET /api/navigation` - Page hierarchy (draft filtering) ✅
+- [x] `GET /api/pages/{id}/breadcrumb` - Breadcrumb ✅
+- [x] `GET /api/pages/{id}/navigation` - Previous/Next ✅
 
 **Testing:**
 ```python
 # tests/test_api/test_navigation_routes.py
-def test_navigation_tree()
-def test_navigation_draft_filtering()
-def test_breadcrumb()
-def test_previous_next()
+def test_get_navigation_empty() ✅
+def test_get_navigation_tree() ✅
+def test_get_navigation_excludes_drafts() ✅
+def test_get_navigation_includes_own_drafts() ✅
+def test_get_navigation_admin_sees_all_drafts() ✅
+def test_get_navigation_response_structure() ✅
+def test_get_breadcrumb_root_page() ✅
+def test_get_breadcrumb_nested_page() ✅
+def test_get_breadcrumb_page_not_found() ✅
+def test_get_breadcrumb_response_structure() ✅
+def test_get_previous_next_no_siblings() ✅
+def test_get_previous_next_with_siblings() ✅
+def test_get_previous_next_first_sibling() ✅
+def test_get_previous_next_last_sibling() ✅
+def test_get_previous_next_excludes_drafts() ✅
+def test_get_previous_next_page_not_found() ✅
+def test_get_previous_next_response_structure() ✅
+# Plus 10 additional edge case tests in test_navigation_routes_additional.py
+# 27 total tests, all passing (100%)
 ```
 
 **Validation:** Check against `docs/api/wiki-api.md` Navigation section
@@ -716,7 +735,7 @@ After each phase, validate against design documents:
 
 1. **Foundation** (Phase 1-2) - Database and models ✅ **COMPLETE**
 2. **Core Services** (Phase 3-4) - File system and business logic ✅ **COMPLETE**
-3. **API Layer** (Phase 5) - REST endpoints ⏳ **IN PROGRESS** (5.1, 5.8, 5.9 complete)
+3. **API Layer** (Phase 5) - REST endpoints ⏳ **IN PROGRESS** (5.1, 5.2, 5.3, 5.4, 5.8, 5.9 complete)
 4. **Features** (Phase 6-7) - Sync utility and admin features
 5. **Integration** (Phase 8) - External services and optimization
 
@@ -727,15 +746,15 @@ After each phase, validate against design documents:
 - **Phase 2**: Core Data Models (all models implemented and tested - 11/11 tests passing)
 - **Phase 3**: File System Integration (file service, markdown processing, TOC generation, utilities - 31/31 tests passing)
 - **Phase 4**: Core Business Logic (Page Service, Orphanage Service, Link Service, Search Index Service, Version Service)
-- **Phase 5.1**: Page API Endpoints (all CRUD endpoints implemented - 17/18 tests passing)
+- **Phase 5.1**: Page API Endpoints (all CRUD endpoints implemented - 18/18 tests passing)
+- **Phase 5.2**: Comment Endpoints (all comment CRUD endpoints implemented - comprehensive test coverage)
+- **Phase 5.3**: Search and Index Endpoints (full-text search and master index - 33/33 tests passing)
+- **Phase 5.4**: Navigation Endpoints (hierarchy, breadcrumb, previous/next - 27/27 tests passing)
 - **Phase 5.8**: Authentication Middleware (all decorators and helpers implemented)
 - **Phase 5.9**: API Endpoint Tests (comprehensive test suite with PostgreSQL testing setup)
 
 ### ⏳ Next Steps
 - **Phase 1.2**: Database migrations (Flask-Migrate setup and initial migration)
-- **Phase 5.2**: Comment Endpoints
-- **Phase 5.3**: Search and Index Endpoints
-- **Phase 5.4**: Navigation Endpoints
 - **Phase 5.5**: Version History Endpoints
 - **Phase 5.6**: Orphanage Management Endpoints
 - **Phase 5.7**: Section Extraction Endpoints
@@ -751,7 +770,7 @@ After each phase, validate against design documents:
 - File system integration working ✅
 - Basic permissions enforced ✅
 - API endpoints functional ✅
-- Comprehensive test coverage (17/18 tests passing) ✅
+- Comprehensive test coverage (all tests passing) ✅
 
 ### Milestone 2: Full Feature Set ⏳ IN PROGRESS
 - Comments, links, search working (services complete, API endpoints pending)
