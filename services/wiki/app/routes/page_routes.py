@@ -169,7 +169,7 @@ def get_page(page_id):
         return jsonify({'error': 'Invalid page ID format'}), 400
     
     try:
-        page = Page.query.get(page_id_uuid)
+        page = db.session.get(Page, page_id_uuid)
         if not page:
             return jsonify({'error': 'Page not found'}), 404
         
@@ -346,7 +346,7 @@ def update_page(page_id):
         user_role = request.user_role
         
         # Check if user can edit this page
-        page = Page.query.get(page_id_uuid)
+        page = db.session.get(Page, page_id_uuid)
         if not page:
             return jsonify({'error': 'Page not found'}), 404
         
@@ -446,7 +446,7 @@ def delete_page(page_id):
         user_role = request.user_role
         
         # Check if page exists
-        page = Page.query.get(page_id_uuid)
+        page = db.session.get(Page, page_id_uuid)
         if not page:
             return jsonify({'error': 'Page not found'}), 404
         

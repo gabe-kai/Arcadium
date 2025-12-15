@@ -172,7 +172,7 @@ class PageService:
         Raises:
             ValueError: If page not found or slug invalid/duplicate
         """
-        page = Page.query.get(page_id)
+        page = db.session.get(Page, page_id)
         if not page:
             raise ValueError(f"Page not found: {page_id}")
         
@@ -282,7 +282,7 @@ class PageService:
         Raises:
             ValueError: If page not found or is system page
         """
-        page = Page.query.get(page_id)
+        page = db.session.get(Page, page_id)
         if not page:
             raise ValueError(f"Page not found: {page_id}")
         
@@ -325,10 +325,11 @@ class PageService:
         
         # Handle orphans using OrphanageService
         orphaned_page_objects = []
-        if orphaned_pages:
+        if children:
             from app.services.orphanage_service import OrphanageService
-            child_ids = [uuid.UUID(child['id']) for child in orphaned_pages]
-            orphaned_page_objects = OrphanageService.orphan_pages(child_ids, page_id)  # page_id is the deleted parent
+            child_ids = [child.id for child in children]
+            # Pass children directly to avoid re-querying after parent deletion
+            orphaned_page_objects = OrphanageService.orphan_pages(child_ids, page_id, pages=children)  # page_id is the deleted parent
         
         return {
             'deleted_page': page_info,

@@ -86,13 +86,14 @@ class OrphanageService:
         return orphanage
     
     @staticmethod
-    def orphan_pages(page_ids: List[uuid.UUID], deleted_parent_id: uuid.UUID) -> List[Page]:
+    def orphan_pages(page_ids: List[uuid.UUID], deleted_parent_id: uuid.UUID, pages: Optional[List[Page]] = None) -> List[Page]:
         """
         Mark pages as orphaned and assign them to the orphanage.
         
         Args:
             page_ids: List of page IDs to orphan
             deleted_parent_id: ID of the deleted parent page
+            pages: Optional list of Page objects (if provided, avoids re-querying)
             
         Returns:
             List of orphaned Page instances
@@ -104,98 +105,106 @@ class OrphanageService:
         
         orphaned_pages = []
         
-        for page_id in page_ids:
+        # If pages are provided, use them directly; otherwise query by ID
+        if pages:
+            pages_to_process = pages
+        else:
+            pages_to_process = []
+            for page_id in page_ids:
+                from app import db
+                page = db.session.get(Page, page_id)
+                if page:
+                    pages_to_process.append(page)
+        
+        for page in pages_to_process:
             from app import db
-            # Store IDs as strings for SQL to avoid UUID conversion issues
-            page_id_str = str(page_id)
-            orphanage_id_str = str(orphanage.id)
-            deleted_parent_id_str = str(deleted_parent_id) if deleted_parent_id else None
-            
-            # Get page slug and file_path first using raw SQL to avoid UUID conversion
+            # Try to update the page directly
             try:
-                result = db.session.execute(
-                    db.text("SELECT slug, file_path FROM pages WHERE id = :page_id"),
-                    {"page_id": page_id_str}
-                ).first()
-                if not result:
-                    # Page not found - might have been deleted or doesn't exist
-                    continue
-                page_slug = result[0]
-                old_file_path = result[1]
-            except Exception as e:
-                # Log error but continue to next page
-                continue
-            
-            # Mark as orphaned using raw SQL to avoid UUID conversion issues
-            try:
-                # Update page using raw SQL
-                db.session.execute(
-                    db.text("""
-                        UPDATE pages 
-                        SET is_orphaned = :is_orphaned,
-                            orphaned_from = :orphaned_from,
-                            parent_id = :parent_id
-                        WHERE id = :page_id
-                    """),
-                    {
-                        "is_orphaned": True,
-                        "orphaned_from": deleted_parent_id_str,
-                        "parent_id": orphanage_id_str,
-                        "page_id": page_id_str
-                    }
-                )
+                # Merge the page back into the session if it's detached
+                # This is important after parent deletion when objects might be detached
+                page = db.session.merge(page)
+                
+                # Store old values before update
+                old_file_path = page.file_path
+                page_slug = page.slug
+                
+                # Update page attributes directly
+                page.is_orphaned = True
+                # Set orphaned_from to None since the parent was deleted and can't be referenced
+                # The foreign key constraint prevents referencing a deleted page
+                page.orphaned_from = None
+                page.parent_id = orphanage.id
+                
+                # Recalculate file path (now under orphanage)
+                new_file_path = FileService.calculate_file_path(page, parent=orphanage)
+                if old_file_path != new_file_path:
+                    page.file_path = new_file_path
+                
                 db.session.commit()
                 
-                # Re-query page by slug to get updated object (avoiding UUID conversion)
-                page = db.session.query(Page).filter_by(slug=page_slug).first()
-                if page:
-                    # Recalculate file path (now under orphanage)
-                    # Pass orphanage as parent to avoid SQLite UUID lookup issues
-                    new_file_path = FileService.calculate_file_path(page, parent=orphanage)
-                    
-                    # Update file_path in database if it changed
-                    if old_file_path != new_file_path:
-                        db.session.execute(
-                            db.text("UPDATE pages SET file_path = :file_path WHERE id = :page_id"),
-                            {"file_path": new_file_path, "page_id": page_id_str}
-                        )
-                        db.session.commit()
-                        # Move file on disk
-                        try:
-                            FileService.move_page_file(page, old_file_path, new_file_path)
-                        except Exception:
-                            pass  # File move may fail, but database is updated
-                    
-                    orphaned_pages.append(page)
+                # Move file on disk if path changed
+                if old_file_path != new_file_path:
+                    try:
+                        FileService.move_page_file(page, old_file_path, new_file_path)
+                    except Exception:
+                        pass  # File move may fail, but database is updated
+                
+                orphaned_pages.append(page)
+                
             except Exception as e:
-                # Rollback and try fallback approach
+                # Rollback and try raw SQL approach as fallback
                 db.session.rollback()
                 try:
-                    # Try to get page by slug
+                    # Store IDs as strings for SQL
+                    page_id_str = str(page_id)
+                    orphanage_id_str = str(orphanage.id)
+                    deleted_parent_id_str = str(deleted_parent_id) if deleted_parent_id else None
+                    
+                    # Get page slug and file_path first
+                    result = db.session.execute(
+                        db.text("SELECT slug, file_path FROM pages WHERE id = CAST(:page_id AS uuid)"),
+                        {"page_id": page_id_str}
+                    ).first()
+                    if not result:
+                        continue
+                    page_slug = result[0]
+                    old_file_path = result[1]
+                    
+                    # Update page using raw SQL
+                    # Set orphaned_from to NULL since the parent was deleted and can't be referenced
+                    db.session.execute(
+                        db.text("""
+                            UPDATE pages 
+                            SET is_orphaned = :is_orphaned,
+                                orphaned_from = NULL,
+                                parent_id = CAST(:parent_id AS uuid)
+                            WHERE id = CAST(:page_id AS uuid)
+                        """),
+                        {
+                            "is_orphaned": True,
+                            "parent_id": orphanage_id_str,
+                            "page_id": page_id_str
+                        }
+                    )
+                    db.session.commit()
+                    
+                    # Re-query page by slug to get updated object
                     page = db.session.query(Page).filter_by(slug=page_slug).first()
                     if page:
-                        # Try direct assignment (may fail with SQLite UUID conversion)
-                        try:
-                            page.is_orphaned = True
-                            page.orphaned_from = deleted_parent_id
-                            page.parent_id = orphanage.id
-                            
-                            # Recalculate file path
-                            new_file_path = FileService.calculate_file_path(page, parent=orphanage)
-                            if old_file_path != new_file_path:
-                                page.file_path = new_file_path
-                                try:
-                                    FileService.move_page_file(page, old_file_path, new_file_path)
-                                except Exception:
-                                    pass
-                            
+                        # Recalculate file path
+                        new_file_path = FileService.calculate_file_path(page, parent=orphanage)
+                        if old_file_path != new_file_path:
+                            db.session.execute(
+                                db.text("UPDATE pages SET file_path = :file_path WHERE id = CAST(:page_id AS uuid)"),
+                                {"file_path": new_file_path, "page_id": page_id_str}
+                            )
                             db.session.commit()
-                            orphaned_pages.append(page)
-                        except (AttributeError, TypeError):
-                            # SQLite UUID conversion issue - skip this page
-                            # This is acceptable for testing, will work fine in production with PostgreSQL
-                            db.session.rollback()
-                            continue
+                            try:
+                                FileService.move_page_file(page, old_file_path, new_file_path)
+                            except Exception:
+                                pass
+                        
+                        orphaned_pages.append(page)
                 except Exception:
                     db.session.rollback()
                     continue

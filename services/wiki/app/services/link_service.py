@@ -65,7 +65,7 @@ class LinkService:
         Returns:
             List of created PageLink instances
         """
-        page = Page.query.get(page_id)
+        page = db.session.get(Page, page_id)
         if not page:
             raise ValueError(f"Page not found: {page_id}")
         

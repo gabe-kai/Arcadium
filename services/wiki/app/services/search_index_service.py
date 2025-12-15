@@ -27,7 +27,7 @@ class SearchIndexService:
         """
         # Get page if title not provided
         if not title:
-            page = Page.query.get(page_id)
+            page = db.session.get(Page, page_id)
             if not page:
                 raise ValueError(f"Page not found: {page_id}")
             title = page.title
