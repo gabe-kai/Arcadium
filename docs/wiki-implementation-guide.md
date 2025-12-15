@@ -482,18 +482,32 @@ def test_reassign_orphaned_pages_response_structure() ✅
 
 **Validation:** Check against `docs/api/wiki-api.md` Orphanage Management section
 
-#### 5.7 Section Extraction Endpoints
-- [ ] `POST /api/pages/{id}/extract` - Extract selection
-- [ ] `POST /api/pages/{id}/extract-heading` - Extract heading
-- [ ] `POST /api/pages/{id}/promote-section` - Promote from TOC
+#### 5.7 Section Extraction Endpoints ✅ COMPLETE
+- [x] `POST /api/pages/{id}/extract` - Extract selection ✅
+- [x] `POST /api/pages/{id}/extract-heading` - Extract heading ✅
+- [x] `POST /api/pages/{id}/promote-section` - Promote from TOC ✅
 
 **Testing:**
 ```python
 # tests/test_api/test_extraction_routes.py
-def test_extract_selection()
-def test_extract_heading()
-def test_promote_section()
-def test_link_replacement()
+def test_extract_selection_requires_auth() ✅
+def test_extract_selection_requires_writer() ✅
+def test_extract_selection_success() ✅
+def test_extract_selection_missing_fields() ✅
+def test_extract_selection_invalid_bounds() ✅
+def test_extract_heading_section_requires_auth() ✅
+def test_extract_heading_section_success() ✅
+def test_extract_heading_section_not_found() ✅
+def test_extract_heading_section_invalid_level() ✅
+def test_promote_section_from_toc_requires_auth() ✅
+def test_promote_section_from_toc_success() ✅
+def test_promote_section_from_toc_anchor_not_found() ✅
+def test_extract_selection_with_parent() ✅
+def test_extract_selection_replace_with_link_false() ✅
+def test_extract_heading_promote_as_sibling() ✅
+def test_extract_selection_response_structure() ✅
+# Plus 13 additional edge case tests in test_extraction_routes_additional.py
+# 29 total tests, all passing (100%)
 ```
 
 **Validation:** Check against `docs/api/wiki-api.md` Section Extraction section
@@ -764,7 +778,7 @@ After each phase, validate against design documents:
 
 1. **Foundation** (Phase 1-2) - Database and models ✅ **COMPLETE**
 2. **Core Services** (Phase 3-4) - File system and business logic ✅ **COMPLETE**
-3. **API Layer** (Phase 5) - REST endpoints ⏳ **IN PROGRESS** (5.1, 5.2, 5.3, 5.4, 5.5, 5.6, 5.8, 5.9 complete)
+3. **API Layer** (Phase 5) - REST endpoints ⏳ **IN PROGRESS** (5.1, 5.2, 5.3, 5.4, 5.5, 5.6, 5.7, 5.8, 5.9 complete)
 4. **Features** (Phase 6-7) - Sync utility and admin features
 5. **Integration** (Phase 8) - External services and optimization
 
@@ -781,12 +795,12 @@ After each phase, validate against design documents:
 - **Phase 5.4**: Navigation Endpoints (hierarchy, breadcrumb, previous/next - 27/27 tests passing)
 - **Phase 5.5**: Version History Endpoints (version list, get version, compare, restore - 27/27 tests passing)
 - **Phase 5.6**: Orphanage Management Endpoints (get orphanage, reassign, clear - 36/36 tests passing)
+- **Phase 5.7**: Section Extraction Endpoints (extract selection, extract heading, promote from TOC - 29/29 tests passing)
 - **Phase 5.8**: Authentication Middleware (all decorators and helpers implemented)
 - **Phase 5.9**: API Endpoint Tests (comprehensive test suite with PostgreSQL testing setup)
 
 ### ⏳ Next Steps
 - **Phase 1.2**: Database migrations (Flask-Migrate setup and initial migration)
-- **Phase 5.7**: Section Extraction Endpoints
 - **Phase 5.10**: Admin Endpoints
 - **Phase 5.11**: File Upload Endpoints
 
