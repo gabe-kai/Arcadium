@@ -29,14 +29,14 @@ class VersionService:
         Returns:
             Created PageVersion instance
         """
-        page = Page.query.get(page_id)
+        page = db.session.get(Page, page_id)
         if not page:
             raise ValueError(f"Page not found: {page_id}")
         
         # Get the next version number
         # Use page.version which is already incremented by PageService
         # If no versions exist yet, start at 1
-        latest_version = PageVersion.query.filter_by(
+        latest_version = db.session.query(PageVersion).filter_by(
             page_id=page_id
         ).order_by(PageVersion.version.desc()).first()
         
@@ -134,7 +134,7 @@ class VersionService:
         Returns:
             PageVersion instance or None if not found
         """
-        return PageVersion.query.filter_by(
+        return db.session.query(PageVersion).filter_by(
             page_id=page_id,
             version=version
         ).first()
@@ -150,7 +150,7 @@ class VersionService:
         Returns:
             List of PageVersion instances
         """
-        return PageVersion.query.filter_by(
+        return db.session.query(PageVersion).filter_by(
             page_id=page_id
         ).order_by(PageVersion.version.desc()).all()
     
@@ -165,7 +165,7 @@ class VersionService:
         Returns:
             Latest PageVersion instance or None if no versions exist
         """
-        return PageVersion.query.filter_by(
+        return db.session.query(PageVersion).filter_by(
             page_id=page_id
         ).order_by(PageVersion.version.desc()).first()
     
@@ -224,7 +224,7 @@ class VersionService:
         Raises:
             ValueError: If version not found or user lacks permission
         """
-        page = Page.query.get(page_id)
+        page = db.session.get(Page, page_id)
         if not page:
             raise ValueError(f"Page not found: {page_id}")
         
@@ -326,7 +326,7 @@ class VersionService:
         Returns:
             Number of versions
         """
-        return PageVersion.query.filter_by(page_id=page_id).count()
+        return db.session.query(PageVersion).filter_by(page_id=page_id).count()
     
     @staticmethod
     def delete_version(page_id: uuid.UUID, version: int) -> bool:

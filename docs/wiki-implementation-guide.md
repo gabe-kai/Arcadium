@@ -419,23 +419,37 @@ def test_get_previous_next_response_structure() ✅
 
 **Validation:** Check against `docs/api/wiki-api.md` Navigation section
 
-#### 5.5 Version History Endpoints
-- [ ] `GET /api/pages/{id}/versions` - Version list
-- [ ] `GET /api/pages/{id}/versions/{version}` - Get version
-- [ ] `GET /api/pages/{id}/versions/compare` - Compare versions
-- [ ] `POST /api/pages/{id}/versions/{version}/restore` - Rollback
+#### 5.5 Version History Endpoints ✅ COMPLETE
+- [x] `GET /api/pages/{id}/versions` - Version list ✅
+- [x] `GET /api/pages/{id}/versions/{version}` - Get version ✅
+- [x] `GET /api/pages/{id}/versions/compare` - Compare versions ✅
+- [x] `POST /api/pages/{id}/versions/{version}/restore` - Rollback ✅
 
 **Testing:**
 ```python
 # tests/test_api/test_version_routes.py
-def test_get_version_history()
-def test_get_specific_version()
-def test_compare_versions()
-def test_restore_version()
-def test_restore_permissions()
+def test_get_version_history_empty() ✅
+def test_get_version_history_with_versions() ✅
+def test_get_version_history_response_structure() ✅
+def test_get_version_history_page_not_found() ✅
+def test_get_specific_version() ✅
+def test_get_specific_version_not_found() ✅
+def test_get_specific_version_page_not_found() ✅
+def test_compare_versions() ✅
+def test_compare_versions_missing_params() ✅
+def test_compare_versions_invalid_version_numbers() ✅
+def test_compare_versions_not_found() ✅
+def test_restore_version_requires_auth() ✅
+def test_restore_version_viewer_forbidden() ✅
+def test_restore_version_success() ✅
+def test_restore_version_wrong_owner() ✅
+def test_restore_version_admin_can_restore_any() ✅
+def test_restore_version_not_found() ✅
+# Plus 10 additional edge case tests in test_version_routes_additional.py
+# 27 total tests, all passing (100%)
 ```
 
-**Validation:** Check against `docs/api/wiki-api.md` Version History section
+**Validation:** Check against `docs/wiki-version-history.md` API Endpoints section
 
 #### 5.6 Orphanage Endpoints
 - [ ] `GET /api/orphanage` - Get orphanage
@@ -735,7 +749,7 @@ After each phase, validate against design documents:
 
 1. **Foundation** (Phase 1-2) - Database and models ✅ **COMPLETE**
 2. **Core Services** (Phase 3-4) - File system and business logic ✅ **COMPLETE**
-3. **API Layer** (Phase 5) - REST endpoints ⏳ **IN PROGRESS** (5.1, 5.2, 5.3, 5.4, 5.8, 5.9 complete)
+3. **API Layer** (Phase 5) - REST endpoints ⏳ **IN PROGRESS** (5.1, 5.2, 5.3, 5.4, 5.5, 5.8, 5.9 complete)
 4. **Features** (Phase 6-7) - Sync utility and admin features
 5. **Integration** (Phase 8) - External services and optimization
 
@@ -750,12 +764,12 @@ After each phase, validate against design documents:
 - **Phase 5.2**: Comment Endpoints (all comment CRUD endpoints implemented - comprehensive test coverage)
 - **Phase 5.3**: Search and Index Endpoints (full-text search and master index - 33/33 tests passing)
 - **Phase 5.4**: Navigation Endpoints (hierarchy, breadcrumb, previous/next - 27/27 tests passing)
+- **Phase 5.5**: Version History Endpoints (version list, get version, compare, restore - 27/27 tests passing)
 - **Phase 5.8**: Authentication Middleware (all decorators and helpers implemented)
 - **Phase 5.9**: API Endpoint Tests (comprehensive test suite with PostgreSQL testing setup)
 
 ### ⏳ Next Steps
 - **Phase 1.2**: Database migrations (Flask-Migrate setup and initial migration)
-- **Phase 5.5**: Version History Endpoints
 - **Phase 5.6**: Orphanage Management Endpoints
 - **Phase 5.7**: Section Extraction Endpoints
 - **Phase 5.10**: Admin Endpoints
