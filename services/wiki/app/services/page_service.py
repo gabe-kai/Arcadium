@@ -324,14 +324,15 @@ class PageService:
         db.session.commit()
         
         # Handle orphans using OrphanageService
+        orphaned_page_objects = []
         if orphaned_pages:
             from app.services.orphanage_service import OrphanageService
             child_ids = [uuid.UUID(child['id']) for child in orphaned_pages]
-            OrphanageService.orphan_pages(child_ids, page_id)  # page_id is the deleted parent
+            orphaned_page_objects = OrphanageService.orphan_pages(child_ids, page_id)  # page_id is the deleted parent
         
         return {
             'deleted_page': page_info,
-            'orphaned_pages': orphaned_pages
+            'orphaned_pages': orphaned_page_objects  # Return Page objects, not dicts
         }
     
     @staticmethod

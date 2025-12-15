@@ -61,9 +61,12 @@ def app():
         db.create_all()
         yield app
         # Clean up after each test
-        db.session.remove()
+        # Close any open transactions first
+        db.session.rollback()
+        # Drop all tables (DDL operation, doesn't need commit)
         db.drop_all()
-        db.session.commit()
+        # Remove the session
+        db.session.remove()
 
 @pytest.fixture
 def client(app):

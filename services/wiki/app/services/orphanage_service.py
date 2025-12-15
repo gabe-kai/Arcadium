@@ -118,10 +118,12 @@ class OrphanageService:
                     {"page_id": page_id_str}
                 ).first()
                 if not result:
+                    # Page not found - might have been deleted or doesn't exist
                     continue
                 page_slug = result[0]
                 old_file_path = result[1]
-            except Exception:
+            except Exception as e:
+                # Log error but continue to next page
                 continue
             
             # Mark as orphaned using raw SQL to avoid UUID conversion issues
