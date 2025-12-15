@@ -244,7 +244,14 @@ class SearchIndexService:
         return words
     
     @staticmethod
-    def search(query: str, limit: int = 20) -> List[Dict]:
+    def search(
+        query: str,
+        limit: int = 20,
+        section: Optional[str] = None,
+        include_drafts: bool = False,
+        user_role: str = 'viewer',
+        user_id: Optional[uuid.UUID] = None
+    ) -> List[Dict]:
         """
         Search pages by query string.
         Uses both full-text and keyword matching.
@@ -252,6 +259,10 @@ class SearchIndexService:
         Args:
             query: Search query string
             limit: Maximum number of results to return
+            section: Optional section filter
+            include_drafts: Whether to include draft pages
+            user_role: Role of requesting user (for draft filtering)
+            user_id: Optional user ID (for draft filtering)
             
         Returns:
             List of result dictionaries with page info and relevance score
@@ -302,18 +313,45 @@ class SearchIndexService:
             reverse=True
         )[:limit]
         
-        # Fetch page details
+        # Fetch page details with filtering
         results = []
         for result in sorted_results:
-            page = Page.query.get(result['page_id'])
-            if page:
-                results.append({
-                    'page_id': str(page.id),
-                    'title': page.title,
-                    'slug': page.slug,
-                    'score': result['score'],
-                    'matches': result['matches']
-                })
+            page = db.session.get(Page, result['page_id'])
+            if not page:
+                continue
+            
+            # Filter by section
+            if section and page.section != section:
+                continue
+            
+            # Filter drafts based on permissions
+            if page.status == 'draft':
+                if not include_drafts:
+                    continue
+                # Check if user can see this draft
+                if user_role not in ['writer', 'admin']:
+                    continue
+                if user_role == 'writer' and user_id and page.created_by != user_id:
+                    continue
+            
+            # Get snippet from first match context
+            snippet = ""
+            if result['matches']:
+                snippet = result['matches'][0].get('context', '')[:200]
+            
+            # Normalize score to 0-1 range for relevance_score
+            max_score = max([r['score'] for r in sorted_results]) if sorted_results else 1
+            relevance_score = min(result['score'] / max_score, 1.0) if max_score > 0 else 0.0
+            
+            results.append({
+                'page_id': str(page.id),
+                'title': page.title,
+                'slug': page.slug,
+                'section': page.section,
+                'status': page.status,
+                'snippet': snippet,
+                'relevance_score': round(relevance_score, 2)
+            })
         
         return results
     
@@ -477,4 +515,50 @@ class SearchIndexService:
             'unique_terms': unique_terms,
             'indexed_pages': indexed_pages
         }
+    
+    @staticmethod
+    def get_master_index(letter: Optional[str] = None, section: Optional[str] = None) -> Dict[str, List[Dict]]:
+        """
+        Get master index organized by first letter of page titles.
+        
+        Args:
+            letter: Optional filter by starting letter (case-insensitive)
+            section: Optional filter by section name
+            
+        Returns:
+            Dictionary with letters as keys and lists of page info as values
+        """
+        # Build query for pages
+        query = Page.query.filter_by(status='published')
+        
+        # Filter by section if provided
+        if section:
+            query = query.filter_by(section=section)
+        
+        # Get all published pages
+        pages = query.order_by(Page.title).all()
+        
+        # Organize by first letter
+        index = {}
+        for page in pages:
+            if not page.title:
+                continue
+            
+            first_letter = page.title[0].upper()
+            
+            # Filter by letter if provided
+            if letter and first_letter != letter.upper():
+                continue
+            
+            if first_letter not in index:
+                index[first_letter] = []
+            
+            index[first_letter].append({
+                'page_id': str(page.id),
+                'title': page.title,
+                'slug': page.slug,
+                'section': page.section
+            })
+        
+        return index
 
