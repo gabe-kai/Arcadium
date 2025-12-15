@@ -11,6 +11,7 @@ from app.routes.version_routes import version_bp
 from app.routes.orphanage_routes import orphanage_bp
 from app.routes.extraction_routes import extraction_bp
 from app.routes.admin_routes import admin_bp
+from app.routes.upload_routes import upload_bp
 
 # Register blueprints
 wiki_bp.register_blueprint(page_bp)
@@ -21,6 +22,7 @@ wiki_bp.register_blueprint(version_bp)
 wiki_bp.register_blueprint(orphanage_bp)
 wiki_bp.register_blueprint(extraction_bp)
 wiki_bp.register_blueprint(admin_bp)
+wiki_bp.register_blueprint(upload_bp)
 
 
 @wiki_bp.route("/health", methods=["GET"])

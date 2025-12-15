@@ -343,8 +343,8 @@ def test_update_page_wrong_owner() ✅
 def test_update_page_admin_can_edit_any() ✅
 def test_delete_page_requires_auth() ✅
 def test_delete_page_success() ✅
-def test_delete_page_with_children() ⚠️ (1 test failing - orphanage service issue)
-# 18 total tests, 17 passing (94.4%)
+def test_delete_page_with_children() ✅
+# 18 total tests, all passing (100%)
 ```
 
 **Validation:** Check against `docs/api/wiki-api.md` Pages section
@@ -526,55 +526,72 @@ def test_extract_selection_response_structure() ✅
 **Validation:** Check against `docs/services/service-dependencies.md` Auth Integration
 
 #### 5.9 API Endpoint Tests ✅ COMPLETE
-- [x] Comprehensive test suite for page endpoints ✅
+- [x] Comprehensive test suite for all endpoints ✅
 - [x] Authentication mocking utilities ✅
 - [x] Test fixtures for API testing ✅
 - [x] PostgreSQL test database setup ✅
-- [x] 17/18 tests passing (94.4%) ✅
+- [x] 219 tests, all passing (100%) ✅
 
 **Test Coverage:**
-- Page CRUD operations: ✅ Complete
+- Page CRUD operations: ✅ Complete (18 tests)
+- Comment operations: ✅ Complete (32 tests)
+- Search and index: ✅ Complete (33 tests)
+- Navigation: ✅ Complete (27 tests)
+- Version history: ✅ Complete (27 tests)
+- Orphanage management: ✅ Complete (36 tests)
+- Section extraction: ✅ Complete (29 tests)
+- Admin endpoints: ✅ Complete (7 tests)
+- File upload: ✅ Complete (10 tests)
 - Authentication requirements: ✅ Complete
 - Permission enforcement: ✅ Complete
 - Draft visibility: ✅ Complete
 - Error handling: ✅ Complete
 
-**Known Issues:**
-- 1 test failing: `test_delete_page_with_children` - OrphanageService returning empty list (service logic issue, not test issue)
-
-#### 5.10 Admin Endpoints
-- [ ] `GET /api/admin/dashboard/stats` - Dashboard stats
-- [ ] `GET /api/admin/dashboard/size-distribution` - Size charts
-- [ ] `POST /api/admin/config/upload-size` - File upload config
-- [ ] `POST /api/admin/config/page-size` - Page size config
-- [ ] `GET /api/admin/oversized-pages` - Oversized pages list
-- [ ] `PUT /api/admin/oversized-pages/{id}/status` - Update status
+#### 5.10 Admin Endpoints ✅ COMPLETE
+- [x] `GET /api/admin/dashboard/stats` - Dashboard stats ✅
+- [x] `GET /api/admin/dashboard/size-distribution` - Size charts ✅
+- [x] `POST /api/admin/config/upload-size` - File upload config ✅
+- [x] `POST /api/admin/config/page-size` - Page size config ✅
+- [x] `GET /api/admin/oversized-pages` - Oversized pages list ✅
+- [x] `PUT /api/admin/oversized-pages/{id}/status` - Update status ✅
 
 **Testing:**
 ```python
 # tests/test_api/test_admin_routes.py
-def test_dashboard_stats()
-def test_size_distribution()
-def test_upload_size_config()
-def test_page_size_config()
-def test_oversized_pages_list()
-def test_admin_permissions()
+def test_get_dashboard_stats_requires_auth() ✅
+def test_get_dashboard_stats_requires_admin() ✅
+def test_get_dashboard_stats_basic() ✅
+def test_get_size_distribution_requires_auth() ✅
+def test_get_size_distribution_requires_admin() ✅
+def test_get_size_distribution_buckets() ✅
+def test_configure_upload_size_success() ✅
+def test_configure_page_size_success() ✅
+def test_get_oversized_pages_and_update_status() ✅
+# 7 total tests, all passing (100%)
 ```
 
 **Validation:** Check against `docs/api/wiki-api.md` Admin Dashboard section
 
-#### 5.11 File Upload Endpoints
-- [ ] `POST /api/upload/image` - Upload image (UUID naming)
-- [ ] Validate file size against config
-- [ ] Store metadata in database
+#### 5.11 File Upload Endpoints ✅ COMPLETE
+- [x] `POST /api/upload/image` - Upload image (UUID naming) ✅
+- [x] Validate file size against config ✅
+- [x] Store metadata in database ✅
+- [x] Edge cases: missing file field, empty filename, invalid config fallback ✅
 
 **Testing:**
 ```python
 # tests/test_api/test_upload_routes.py
-def test_image_upload()
-def test_file_size_validation()
-def test_uuid_naming()
-def test_metadata_storage()
+def test_upload_image_requires_auth() ✅
+def test_upload_image_requires_writer_or_admin() ✅
+def test_upload_image_success_basic() ✅
+def test_upload_image_with_page_id() ✅
+def test_upload_image_invalid_page_id_format() ✅
+def test_upload_image_page_not_found() ✅
+def test_upload_image_file_size_validation() ✅
+def test_upload_image_missing_file_field() ✅
+def test_upload_image_empty_filename() ✅
+def test_upload_image_invalid_config_falls_back_to_default() ✅
+# 10 total tests, all passing (100%)
 ```
 
 **Validation:** Check against `docs/api/wiki-api.md` File Upload section
@@ -778,8 +795,8 @@ After each phase, validate against design documents:
 
 1. **Foundation** (Phase 1-2) - Database and models ✅ **COMPLETE**
 2. **Core Services** (Phase 3-4) - File system and business logic ✅ **COMPLETE**
-3. **API Layer** (Phase 5) - REST endpoints ⏳ **IN PROGRESS** (5.1, 5.2, 5.3, 5.4, 5.5, 5.6, 5.7, 5.8, 5.9 complete)
-4. **Features** (Phase 6-7) - Sync utility and admin features
+3. **API Layer** (Phase 5) - REST endpoints ✅ **COMPLETE** (all 11 sub-phases: 5.1-5.11)
+4. **Features** (Phase 6-7) - Sync utility and admin features ⏳ **NEXT**
 5. **Integration** (Phase 8) - External services and optimization
 
 ## Current Progress
@@ -789,20 +806,25 @@ After each phase, validate against design documents:
 - **Phase 2**: Core Data Models (all models implemented and tested - 11/11 tests passing)
 - **Phase 3**: File System Integration (file service, markdown processing, TOC generation, utilities - 31/31 tests passing)
 - **Phase 4**: Core Business Logic (Page Service, Orphanage Service, Link Service, Search Index Service, Version Service)
-- **Phase 5.1**: Page API Endpoints (all CRUD endpoints implemented - 18/18 tests passing)
-- **Phase 5.2**: Comment Endpoints (all comment CRUD endpoints implemented - comprehensive test coverage)
-- **Phase 5.3**: Search and Index Endpoints (full-text search and master index - 33/33 tests passing)
-- **Phase 5.4**: Navigation Endpoints (hierarchy, breadcrumb, previous/next - 27/27 tests passing)
-- **Phase 5.5**: Version History Endpoints (version list, get version, compare, restore - 27/27 tests passing)
-- **Phase 5.6**: Orphanage Management Endpoints (get orphanage, reassign, clear - 36/36 tests passing)
-- **Phase 5.7**: Section Extraction Endpoints (extract selection, extract heading, promote from TOC - 29/29 tests passing)
-- **Phase 5.8**: Authentication Middleware (all decorators and helpers implemented)
-- **Phase 5.9**: API Endpoint Tests (comprehensive test suite with PostgreSQL testing setup)
+- **Phase 5**: API Endpoints - **COMPLETE** ✅
+  - **Phase 5.1**: Page API Endpoints (all CRUD endpoints - 18/18 tests passing)
+  - **Phase 5.2**: Comment Endpoints (all comment CRUD endpoints - 32/32 tests passing)
+  - **Phase 5.3**: Search and Index Endpoints (full-text search and master index - 33/33 tests passing)
+  - **Phase 5.4**: Navigation Endpoints (hierarchy, breadcrumb, previous/next - 27/27 tests passing)
+  - **Phase 5.5**: Version History Endpoints (version list, get version, compare, restore - 27/27 tests passing)
+  - **Phase 5.6**: Orphanage Management Endpoints (get orphanage, reassign, clear - 36/36 tests passing)
+  - **Phase 5.7**: Section Extraction Endpoints (extract selection, extract heading, promote from TOC - 29/29 tests passing)
+  - **Phase 5.8**: Authentication Middleware (all decorators and helpers implemented)
+  - **Phase 5.9**: API Endpoint Tests (comprehensive test suite with PostgreSQL testing setup)
+  - **Phase 5.10**: Admin Endpoints (dashboard stats, size distribution, config, oversized pages - 7/7 tests passing)
+  - **Phase 5.11**: File Upload Endpoints (image upload with validation - 10/10 tests passing)
+- **Total API Tests:** 219 tests, all passing (100%)
 
 ### ⏳ Next Steps
 - **Phase 1.2**: Database migrations (Flask-Migrate setup and initial migration)
-- **Phase 5.10**: Admin Endpoints
-- **Phase 5.11**: File Upload Endpoints
+- **Phase 6**: Sync Utility (AI Content)
+- **Phase 7**: Admin Dashboard Features
+- **Phase 8**: Integration & Polish
 
 ---
 
@@ -815,10 +837,11 @@ After each phase, validate against design documents:
 - API endpoints functional ✅
 - Comprehensive test coverage (all tests passing) ✅
 
-### Milestone 2: Full Feature Set ⏳ IN PROGRESS
-- Comments, links, search working (services complete, API endpoints pending)
+### Milestone 2: Full Feature Set ✅ ACHIEVED
+- Comments, links, search working (services and API endpoints complete) ✅
 - Version history implemented ✅
-- Orphanage system working ✅ (service complete, API endpoints pending)
+- Orphanage system working ✅ (service and API endpoints complete)
+- All API endpoints implemented and tested (219 tests, 100% passing) ✅
 
 ### Milestone 3: Admin Features
 - Admin dashboard functional
