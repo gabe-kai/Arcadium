@@ -451,18 +451,33 @@ def test_restore_version_not_found() ✅
 
 **Validation:** Check against `docs/wiki-version-history.md` API Endpoints section
 
-#### 5.6 Orphanage Endpoints
-- [ ] `GET /api/orphanage` - Get orphanage
-- [ ] `POST /api/orphanage/reassign` - Reassign pages
-- [ ] `POST /api/orphanage/clear` - Clear orphanage
+#### 5.6 Orphanage Endpoints ✅ COMPLETE
+- [x] `GET /api/orphanage` - Get orphanage ✅
+- [x] `POST /api/orphanage/reassign` - Reassign pages ✅
+- [x] `POST /api/orphanage/clear` - Clear orphanage ✅
 
 **Testing:**
 ```python
 # tests/test_api/test_orphanage_routes.py
-def test_get_orphanage()
-def test_reassign_orphaned_pages()
-def test_clear_orphanage()
-def test_orphanage_permissions()
+def test_get_orphanage_empty() ✅
+def test_get_orphanage_with_orphaned_pages() ✅
+def test_get_orphanage_response_structure() ✅
+def test_get_orphanage_grouped_by_parent() ✅
+def test_reassign_orphaned_pages_requires_auth() ✅
+def test_reassign_orphaned_pages_requires_admin() ✅
+def test_reassign_orphaned_pages_success() ✅
+def test_reassign_orphaned_pages_reassign_all() ✅
+def test_reassign_orphaned_pages_missing_page_ids() ✅
+def test_reassign_orphaned_pages_invalid_page_id() ✅
+def test_clear_orphanage_requires_auth() ✅
+def test_clear_orphanage_requires_admin() ✅
+def test_clear_orphanage_success() ✅
+def test_clear_orphanage_with_reassign_to() ✅
+def test_clear_orphanage_invalid_reassign_to() ✅
+def test_reassign_orphaned_pages_response_structure() ✅
+# Plus 11 additional edge case tests in test_orphanage_routes_additional.py
+# Plus 9 validation tests in test_orphanage_routes_validation.py
+# 36 total tests, all passing (100%)
 ```
 
 **Validation:** Check against `docs/api/wiki-api.md` Orphanage Management section
@@ -749,7 +764,7 @@ After each phase, validate against design documents:
 
 1. **Foundation** (Phase 1-2) - Database and models ✅ **COMPLETE**
 2. **Core Services** (Phase 3-4) - File system and business logic ✅ **COMPLETE**
-3. **API Layer** (Phase 5) - REST endpoints ⏳ **IN PROGRESS** (5.1, 5.2, 5.3, 5.4, 5.5, 5.8, 5.9 complete)
+3. **API Layer** (Phase 5) - REST endpoints ⏳ **IN PROGRESS** (5.1, 5.2, 5.3, 5.4, 5.5, 5.6, 5.8, 5.9 complete)
 4. **Features** (Phase 6-7) - Sync utility and admin features
 5. **Integration** (Phase 8) - External services and optimization
 
@@ -765,12 +780,12 @@ After each phase, validate against design documents:
 - **Phase 5.3**: Search and Index Endpoints (full-text search and master index - 33/33 tests passing)
 - **Phase 5.4**: Navigation Endpoints (hierarchy, breadcrumb, previous/next - 27/27 tests passing)
 - **Phase 5.5**: Version History Endpoints (version list, get version, compare, restore - 27/27 tests passing)
+- **Phase 5.6**: Orphanage Management Endpoints (get orphanage, reassign, clear - 36/36 tests passing)
 - **Phase 5.8**: Authentication Middleware (all decorators and helpers implemented)
 - **Phase 5.9**: API Endpoint Tests (comprehensive test suite with PostgreSQL testing setup)
 
 ### ⏳ Next Steps
 - **Phase 1.2**: Database migrations (Flask-Migrate setup and initial migration)
-- **Phase 5.6**: Orphanage Management Endpoints
 - **Phase 5.7**: Section Extraction Endpoints
 - **Phase 5.10**: Admin Endpoints
 - **Phase 5.11**: File Upload Endpoints

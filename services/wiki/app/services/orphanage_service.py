@@ -273,7 +273,7 @@ class OrphanageService:
         
         # Validate new parent if provided
         if new_parent_id:
-            new_parent = Page.query.get(new_parent_id)
+            new_parent = db.session.get(Page, new_parent_id)
             if not new_parent:
                 raise ValueError(f"New parent not found: {new_parent_id}")
             
