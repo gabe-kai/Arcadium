@@ -5,7 +5,7 @@ This service:
 - Detects pages exceeding size limits
 - Creates oversized page notifications
 - Tracks resolution status
-- Integrates with notification service (future)
+- Integrates with notification service
 """
 import uuid
 from datetime import datetime, timezone
@@ -15,6 +15,7 @@ from app import db
 from app.models.page import Page
 from app.models.wiki_config import WikiConfig
 from app.models.oversized_page_notification import OversizedPageNotification
+from app.services.notification_service_client import get_notification_client
 
 
 class SizeMonitoringService:
@@ -116,6 +117,30 @@ class SizeMonitoringService:
                 notifications.append(notification)
         
         db.session.commit()
+        
+        # Send notifications via Notification Service
+        notification_client = get_notification_client()
+        due_date_str = resolution_due_date.isoformat() if resolution_due_date else None
+        
+        for notification in notifications:
+            page = db.session.query(Page).filter_by(id=notification.page_id).first()
+            if page:
+                # Send notification to each user in notified_users
+                for user_id_str in notification.notified_users:
+                    try:
+                        user_id = uuid.UUID(user_id_str)
+                        notification_client.send_oversized_page_notification(
+                            recipient_id=user_id_str,
+                            page_title=page.title,
+                            page_slug=page.slug,
+                            current_size_kb=notification.current_size_kb,
+                            max_size_kb=notification.max_size_kb,
+                            due_date=due_date_str
+                        )
+                    except (ValueError, TypeError) as e:
+                        # Invalid UUID, skip this user
+                        continue
+        
         return notifications
     
     @staticmethod

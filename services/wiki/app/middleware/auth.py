@@ -3,6 +3,7 @@ import uuid
 from functools import wraps
 from flask import request, jsonify, current_app
 from typing import Optional, Callable, List
+from app.services.auth_service_client import get_auth_client
 
 
 def get_auth_token() -> Optional[str]:
@@ -22,10 +23,7 @@ def get_user_from_token(token: str) -> Optional[dict]:
     """
     Validate JWT token and extract user information.
     
-    For now, this is a placeholder that will be replaced with actual
-    Auth Service integration. In production, this should:
-    1. Call Auth Service /api/auth/verify endpoint, OR
-    2. Use shared JWT validation library from shared/auth/
+    Calls Auth Service /api/auth/verify endpoint to validate token.
     
     Args:
         token: JWT token string
@@ -33,10 +31,8 @@ def get_user_from_token(token: str) -> Optional[dict]:
     Returns:
         Dict with user_id, username, role if valid, None otherwise
     """
-    # TODO: Integrate with Auth Service
-    # For now, return None to indicate no authentication
-    # This allows public endpoints to work
-    return None
+    auth_client = get_auth_client()
+    return auth_client.verify_token(token)
 
 
 def require_auth(f: Callable) -> Callable:

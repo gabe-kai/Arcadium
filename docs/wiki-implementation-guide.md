@@ -953,30 +953,67 @@ def test_refresh_service_status_page_success() ✅
 
 ### Phase 8: Integration & Polish
 
-#### 8.1 Auth Service Integration
-- [ ] JWT token validation
-- [ ] Role-based access control middleware
-- [ ] User profile retrieval
+#### 8.1 Auth Service Integration ✅ COMPLETE
+- [x] JWT token validation ✅
+- [x] Role-based access control middleware ✅
+- [x] User profile retrieval ✅
+
+**Implementation:**
+- Created `AuthServiceClient` for Auth Service integration
+- Implemented JWT token verification via `/api/auth/verify` endpoint
+- Added user profile retrieval (`get_user_profile`, `get_user_by_username`)
+- Updated `get_user_from_token` in auth middleware to use Auth Service
+- Comprehensive error handling (timeouts, connection errors)
 
 **Testing:**
 ```python
-# tests/test_integration/test_auth_integration.py
-def test_jwt_validation()
-def test_role_enforcement()
-def test_user_profile_retrieval()
+# tests/test_services/test_auth_service_client.py (10 tests)
+def test_verify_token_success() ✅
+def test_verify_token_invalid() ✅
+def test_verify_token_401() ✅
+def test_verify_token_timeout() ✅
+def test_verify_token_connection_error() ✅
+def test_get_user_profile_success() ✅
+def test_get_user_profile_not_found() ✅
+def test_get_user_by_username_success() ✅
+def test_get_user_by_username_not_found() ✅
+def test_get_auth_client_singleton() ✅
+
+# tests/test_integration/test_auth_integration.py (3 tests)
+def test_get_user_from_token_integration() ✅
+def test_get_user_from_token_invalid() ✅
+def test_auth_service_client_user_profile() ✅
+# 13 total tests, all passing (100%)
 ```
 
 **Validation:** Check against `docs/services/service-dependencies.md`
 
-#### 8.2 Notification Service Integration
-- [ ] Send oversized page notifications
-- [ ] Internal messaging integration
+#### 8.2 Notification Service Integration ✅ COMPLETE
+- [x] Send oversized page notifications ✅
+- [x] Internal messaging integration ✅
+
+**Implementation:**
+- Created `NotificationServiceClient` for Notification Service integration
+- Integrated with `SizeMonitoringService` to send notifications when oversized pages are detected
+- Supports service token authentication
+- Comprehensive error handling (non-blocking failures)
+- Notification format includes subject, content, action URL, and metadata
 
 **Testing:**
 ```python
-# tests/test_integration/test_notification_integration.py
-def test_oversized_page_notification()
-def test_internal_messaging()
+# tests/test_services/test_notification_service_client.py (7 tests)
+def test_send_notification_success() ✅
+def test_send_notification_with_action_url() ✅
+def test_send_notification_timeout() ✅
+def test_send_notification_connection_error() ✅
+def test_send_oversized_page_notification() ✅
+def test_send_oversized_page_notification_without_due_date() ✅
+def test_get_notification_client_singleton() ✅
+
+# tests/test_integration/test_notification_integration.py (2 tests)
+def test_oversized_page_notification_integration() ✅
+def test_notification_service_client_integration() ✅
+# 9 total tests, all passing (100%)
 ```
 
 **Validation:** Check against `docs/services/notification-service.md`
