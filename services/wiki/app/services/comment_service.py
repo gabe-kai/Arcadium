@@ -16,6 +16,9 @@ class CommentService:
         """
         Get all comments for a page, optionally including nested replies.
         
+        Optimized to reduce N+1 queries by loading all comments for the page
+        in a single query when replies are included.
+        
         Args:
             page_id: ID of the page
             include_replies: Whether to include nested replies in the response
@@ -23,25 +26,77 @@ class CommentService:
         Returns:
             List of comment dictionaries with nested replies
         """
-        # Get all top-level comments (no parent)
-        top_level_comments = db.session.query(Comment).filter_by(
-            page_id=page_id,
-            parent_comment_id=None
-        ).order_by(Comment.created_at.asc()).all()
+        if include_replies:
+            # Optimized: Load all comments for the page in one query
+            all_comments = db.session.query(Comment).filter_by(
+                page_id=page_id
+            ).order_by(Comment.created_at.asc()).all()
+            
+            # Build a map of comment_id -> comment for quick lookup
+            comments_map = {comment.id: comment for comment in all_comments}
+            
+            # Build parent-child relationships
+            comments_by_parent = {}
+            for comment in all_comments:
+                parent_id = comment.parent_comment_id
+                if parent_id not in comments_by_parent:
+                    comments_by_parent[parent_id] = []
+                comments_by_parent[parent_id].append(comment)
+            
+            # Build comment tree starting from top-level (parent_id=None)
+            top_level_comments = comments_by_parent.get(None, [])
+            comments_list = []
+            for comment in top_level_comments:
+                comment_dict = CommentService._comment_to_dict(comment)
+                comment_dict['replies'] = CommentService._build_replies_tree(
+                    comment.id, comments_by_parent
+                )
+                comments_list.append(comment_dict)
+            
+            return comments_list
+        else:
+            # Simple case: just top-level comments
+            top_level_comments = db.session.query(Comment).filter_by(
+                page_id=page_id,
+                parent_comment_id=None
+            ).order_by(Comment.created_at.asc()).all()
+            
+            comments_list = []
+            for comment in top_level_comments:
+                comment_dict = CommentService._comment_to_dict(comment)
+                comments_list.append(comment_dict)
+            
+            return comments_list
+    
+    @staticmethod
+    def _build_replies_tree(parent_comment_id: uuid.UUID, comments_by_parent: dict) -> List[Dict]:
+        """
+        Build replies tree from pre-loaded comments map.
         
-        comments_list = []
-        for comment in top_level_comments:
-            comment_dict = CommentService._comment_to_dict(comment)
-            if include_replies:
-                comment_dict['replies'] = CommentService._get_replies(comment.id)
-            comments_list.append(comment_dict)
+        Args:
+            parent_comment_id: ID of the parent comment
+            comments_by_parent: Dictionary mapping parent_id -> list of comments
+            
+        Returns:
+            List of reply dictionaries (nested)
+        """
+        replies = comments_by_parent.get(parent_comment_id, [])
+        replies_list = []
+        for reply in replies:
+            reply_dict = CommentService._comment_to_dict(reply)
+            # Recursively build nested replies
+            reply_dict['replies'] = CommentService._build_replies_tree(reply.id, comments_by_parent)
+            replies_list.append(reply_dict)
         
-        return comments_list
+        return replies_list
     
     @staticmethod
     def _get_replies(parent_comment_id: uuid.UUID) -> List[Dict]:
         """
         Recursively get all replies to a comment.
+        
+        NOTE: This method is kept for backward compatibility but is less efficient
+        than using _build_replies_tree with pre-loaded comments.
         
         Args:
             parent_comment_id: ID of the parent comment

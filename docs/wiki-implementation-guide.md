@@ -1018,21 +1018,59 @@ def test_notification_service_client_integration() ✅
 
 **Validation:** Check against `docs/services/notification-service.md`
 
-#### 8.3 Performance Optimization
-- [ ] Cache rendered HTML
-- [ ] Cache TOC generation
-- [ ] Lazy-load comments
-- [ ] Database query optimization
+#### 8.3 Performance Optimization ✅ COMPLETE
+- [x] Cache rendered HTML ✅
+- [x] Cache TOC generation ✅
+- [x] Lazy-load comments ✅ (already implemented via separate endpoint)
+- [x] Database query optimization ✅
+
+**Implementation:**
+- Created `CacheService` for HTML and TOC caching
+  - Content-based cache keys (SHA256 hash)
+  - Configurable TTL (default 1 hour)
+  - Automatic expiration and cleanup
+  - Cache invalidation on content updates
+- Integrated caching into page routes
+  - HTML caching in `get_page` and version routes
+  - TOC caching in `get_page`
+  - Cache invalidation on page updates
+- Optimized comment queries
+  - Reduced N+1 queries by loading all comments in single query
+  - Build comment tree in memory instead of recursive queries
+  - Maintains backward compatibility
+- Comments already lazy-loaded via separate endpoint (`GET /api/pages/{page_id}/comments`)
 
 **Testing:**
 ```python
-# tests/test_performance/test_caching.py
-def test_html_caching()
-def test_toc_caching()
-def test_lazy_loading()
+# tests/test_services/test_cache_service.py (11 tests)
+def test_get_html_cache_not_found() ✅
+def test_set_and_get_html_cache() ✅
+def test_get_toc_cache_not_found() ✅
+def test_set_and_get_toc_cache() ✅
+def test_html_cache_expiration() ✅
+def test_toc_cache_expiration() ✅
+def test_invalidate_cache_html() ✅
+def test_invalidate_cache_toc() ✅
+def test_invalidate_cache_both() ✅
+def test_cache_key_generation() ✅
+def test_clear_all_caches() ✅
+
+# tests/test_performance/test_caching.py (5 tests)
+def test_html_caching_performance() ✅
+def test_toc_caching_performance() ✅
+def test_cache_invalidation_on_update() ✅
+def test_lazy_loading_comments() ✅
+def test_comment_query_optimization() ✅
+# 16 total tests, all passing (100%)
 ```
 
 **Validation:** Check against `docs/architecture/wiki-architecture.md` Performance Optimizations
+
+**Performance Improvements:**
+- HTML rendering: Cached after first generation (reduces CPU usage)
+- TOC generation: Cached after first generation (reduces processing time)
+- Comment queries: Reduced from N+1 queries to single query (significant DB load reduction)
+- Cache TTL: Configurable via `cache_ttl_seconds` config (default 3600 seconds)
 
 ---
 
@@ -1185,9 +1223,9 @@ After each phase, validate against design documents:
 - **Total Phase 7 Tests:** 54 tests (27 service + 27 API), all passing (100%)
 
 **Overall Test Summary:**
-- **Total Tests:** 529 tests across all phases
+- **Total Tests:** 545 tests across all phases
 - **Test Status:** All passing (100%)
-- **Coverage:** Comprehensive coverage including happy paths, error handling, edge cases, integration, CLI testing, file watcher functionality, admin dashboard features, and service status monitoring
+- **Coverage:** Comprehensive coverage including happy paths, error handling, edge cases, integration, CLI testing, file watcher functionality, admin dashboard features, service status monitoring, service integration, and performance optimizations
 
 ### ⏳ Next Steps
 - **Phase 1.2**: Database migrations (Flask-Migrate setup and initial migration)

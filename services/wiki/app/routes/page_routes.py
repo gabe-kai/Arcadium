@@ -8,6 +8,7 @@ from app.services.page_service import PageService
 from app.services.link_service import LinkService
 from app.services.search_index_service import SearchIndexService
 from app.services.version_service import VersionService
+from app.services.cache_service import CacheService
 from app.utils.toc_service import generate_toc
 from app.utils.markdown_service import markdown_to_html
 
@@ -185,11 +186,17 @@ def get_page(page_id):
             if user_role == 'writer' and page.created_by != user_id:
                 return jsonify({'error': 'Page not found'}), 404
         
-        # Generate TOC
-        toc = generate_toc(page.content)
+        # Get or generate TOC (with caching)
+        toc = CacheService.get_toc_cache(page.content)
+        if toc is None:
+            toc = generate_toc(page.content)
+            CacheService.set_toc_cache(page.content, toc, str(user_id) if user_id else None)
         
-        # Convert markdown to HTML
-        html_content = markdown_to_html(page.content)
+        # Get or generate HTML (with caching)
+        html_content = CacheService.get_html_cache(page.content)
+        if html_content is None:
+            html_content = markdown_to_html(page.content)
+            CacheService.set_html_cache(page.content, html_content, str(user_id) if user_id else None)
         
         # Get forward links (outgoing)
         forward_links = LinkService.get_outgoing_links(page.id)
@@ -400,9 +407,19 @@ def update_page(page_id):
             
             # Update links if content changed
             if content is not None:
+                # Get old content before update for cache invalidation
+                old_content = None
+                old_page = db.session.get(Page, page_id_uuid)
+                if old_page:
+                    old_content = old_page.content
+                
                 LinkService.update_page_links(page.id, page.content)
                 # Re-index for search
                 SearchIndexService.index_page(page.id, page.content)
+                # Invalidate cache for both old and new content
+                if old_content:
+                    CacheService.invalidate_cache(old_content)
+                CacheService.invalidate_cache(page.content)
             
             # Handle slug change (update links in other pages)
             if slug and slug != old_slug:

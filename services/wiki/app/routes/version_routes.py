@@ -7,6 +7,7 @@ from app.models.page_version import PageVersion
 from app.middleware.auth import optional_auth, require_auth, require_role
 from app.services.version_service import VersionService
 from app.utils.markdown_service import markdown_to_html
+from app.services.cache_service import CacheService
 
 version_bp = Blueprint('versions', __name__)
 
@@ -85,7 +86,12 @@ def get_version(page_id, version):
         
         # Convert to dict and add HTML content
         version_dict = version_obj.to_dict()
-        version_dict['html_content'] = markdown_to_html(version_obj.content)
+        # Get or generate HTML (with caching)
+        html_content = CacheService.get_html_cache(version_obj.content)
+        if html_content is None:
+            html_content = markdown_to_html(version_obj.content)
+            CacheService.set_html_cache(version_obj.content, html_content)
+        version_dict['html_content'] = html_content
         
         # Format changed_by
         version_dict['changed_by'] = {
