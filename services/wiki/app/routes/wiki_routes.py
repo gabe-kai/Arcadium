@@ -1,22 +1,49 @@
-from flask import render_template, request, jsonify
-from app.routes import main
+from flask import Blueprint, jsonify
 
-@main.route('/')
-def index():
-    return render_template('index.html')
+wiki_bp = Blueprint("wiki", __name__)
 
-@main.route('/api/pages', methods=['GET'])
-def list_pages():
-    # TODO: Implement page listing
-    return jsonify([])
+# Import route blueprints
+from app.routes.page_routes import page_bp
+from app.routes.comment_routes import comment_bp
+from app.routes.search_routes import search_bp
+from app.routes.navigation_routes import navigation_bp
+from app.routes.version_routes import version_bp
+from app.routes.orphanage_routes import orphanage_bp
+from app.routes.extraction_routes import extraction_bp
+from app.routes.admin_routes import admin_bp
+from app.routes.upload_routes import upload_bp
 
-@main.route('/api/pages/<page_id>', methods=['GET'])
-def get_page(page_id):
-    # TODO: Implement page retrieval
-    return jsonify({'id': page_id, 'content': ''})
+# Register blueprints
+wiki_bp.register_blueprint(page_bp)
+wiki_bp.register_blueprint(comment_bp)
+wiki_bp.register_blueprint(search_bp)
+wiki_bp.register_blueprint(navigation_bp)
+wiki_bp.register_blueprint(version_bp)
+wiki_bp.register_blueprint(orphanage_bp)
+wiki_bp.register_blueprint(extraction_bp)
+wiki_bp.register_blueprint(admin_bp)
+wiki_bp.register_blueprint(upload_bp)
 
-@main.route('/api/pages', methods=['POST'])
-def create_page():
-    # TODO: Implement page creation
-    return jsonify({'id': 'new', 'status': 'created'}), 201
 
+@wiki_bp.route("/", methods=["GET"])
+def root():
+    """Root endpoint - API information"""
+    return jsonify({
+        "service": "Wiki Service",
+        "version": "1.0.0",
+        "status": "running",
+        "endpoints": {
+            "health": "/api/health",
+            "pages": "/api/pages",
+            "search": "/api/search",
+            "navigation": "/api/navigation",
+            "admin": "/api/admin/dashboard/stats"
+        },
+        "documentation": "See README.md for API documentation"
+    }), 200
+
+
+@wiki_bp.route("/health", methods=["GET"])
+def health_check():
+    """Health check endpoint"""
+    return jsonify({"status": "healthy", "service": "wiki"}), 200

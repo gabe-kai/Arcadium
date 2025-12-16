@@ -1,5 +1,54 @@
 # Wiki AI Content Management
 
+## Quick Reference for AI Agents
+
+**When writing wiki pages, follow these steps:**
+
+1. **Write markdown files** with YAML frontmatter to `services/wiki/data/pages/`
+2. **Required frontmatter:**
+   - `title`: Page title (required)
+   - `slug`: URL-friendly slug (auto-generated from title if omitted)
+   - `parent_slug`: Parent page slug (optional, use slug not UUID)
+   - `section`: Section name (optional)
+   - `order`: Display order (optional, integer)
+   - `status`: "published" or "draft" (default: "published")
+   - `created_by: "admin"` and `updated_by: "admin"` (always use "admin")
+3. **File location:** Mirror hierarchy in filesystem (e.g., `section-name/page.md`)
+4. **After writing:** 
+   - **Option A (Automatic):** If file watcher is running (`python -m app.sync watch`), files sync automatically
+   - **Option B (Manual):** Run `python -m app.sync sync-all` to sync to database
+
+**Example:**
+```markdown
+---
+title: "Combat Mechanics"
+slug: "combat-mechanics"
+parent_slug: "game-mechanics"
+section: "game-mechanics"
+order: 1
+status: "published"
+created_by: "admin"
+updated_by: "admin"
+---
+
+# Combat Mechanics
+
+Content here...
+```
+
+**Important Notes:**
+- Use `parent_slug` (slug string), not `parent_id` (UUID) - easier for AI to reference
+- Always set `created_by: "admin"` and `updated_by: "admin"`
+- File paths should mirror the page hierarchy (e.g., `game-mechanics/combat.md`)
+- The sync utility will automatically:
+  - Resolve `parent_slug` to `parent_id`
+  - Update link tracking
+  - Update search index
+  - Create version history (on updates)
+  - Assign pages to admin user
+
+---
+
 ## Overview
 
 This document describes how AI agents (like Cursor's AI assistant) can write and update wiki pages, ensuring proper integration with the wiki system while maintaining database consistency.
@@ -32,7 +81,7 @@ This document describes how AI agents (like Cursor's AI assistant) can write and
    - Creates version history entries
    - Updates link tracking
    - Updates search index
-4. Sync can run automatically (file watcher) or manually (CLI command)
+4. Sync can run automatically (file watcher) ✅ **IMPLEMENTED** or manually (CLI command)
 
 ## File Format for AI Writing
 
@@ -77,8 +126,14 @@ python -m app.sync sync-file data/pages/section/page.md
 # Sync directory
 python -m app.sync sync-dir data/pages/section/
 
-# Watch mode (auto-sync on file changes)
+# Watch mode (auto-sync on file changes) ✅ IMPLEMENTED
 python -m app.sync watch
+
+# Watch mode with custom debounce time (default: 1.0 seconds)
+python -m app.sync watch --debounce 2.0
+
+# Watch mode with custom admin user ID
+python -m app.sync watch --admin-user-id <uuid>
 ```
 
 ### Sync Process
@@ -102,9 +157,97 @@ python -m app.sync watch
    - Find or create "admin" system user
    - Assign `created_by` and `updated_by` to admin user
 
-### File Watcher (Optional)
+### File Watcher (Automatic Syncing) ✅ IMPLEMENTED
 
-- Watch `data/pages/` directory for changes
+The file watcher automatically syncs markdown files to the database when they are created or modified. This is perfect for AI agent workflows where files are written continuously.
+
+#### Starting the Watcher
+
+```bash
+# From services/wiki directory
+cd services/wiki
+
+# Start watching (runs until Ctrl+C)
+python -m app.sync watch
+
+# With custom debounce time (default: 1.0 seconds)
+# Useful if files are being written very rapidly
+python -m app.sync watch --debounce 2.0
+
+# With custom admin user ID
+python -m app.sync watch --admin-user-id <uuid>
+```
+
+#### How It Works
+
+1. **Monitors Directory**: Watches `data/pages/` and all subdirectories recursively
+2. **Detects Changes**: Triggers on file creation and modification events
+3. **Debouncing**: Waits for a quiet period (default: 1 second) before syncing to avoid rapid-fire syncs
+4. **Automatic Sync**: Calls the sync utility to update the database
+5. **Error Handling**: Logs errors but continues watching
+
+#### Features
+
+- ✅ **Automatic**: No manual sync command needed
+- ✅ **Real-time**: Files sync as soon as they're written (after debounce period)
+- ✅ **Debounced**: Prevents multiple syncs when files are being written rapidly
+- ✅ **Recursive**: Monitors all subdirectories
+- ✅ **Markdown-only**: Only watches `.md` files
+- ✅ **Graceful Shutdown**: Cleanly stops on Ctrl+C or SIGTERM
+- ✅ **Error Resilient**: Continues watching even if individual files fail to sync
+
+#### When to Use
+
+**Use Watch Mode When:**
+- AI agents are writing files continuously
+- You want real-time automatic syncing
+- You're actively developing and editing files
+- You want a "set it and forget it" workflow
+
+**Use Manual Sync When:**
+- You want to batch sync multiple files at once
+- You want to review files before syncing
+- You're doing a one-time import
+- You want more control over when syncing happens
+
+#### Example Workflow
+
+```bash
+# Terminal 1: Start the watcher
+cd services/wiki
+python -m app.sync watch
+
+# Terminal 2: AI agent writes files
+# Files are automatically synced as they're written
+# You'll see output like:
+# [WATCHER] File created: game-mechanics/combat.md
+# [WATCHER] Created: game-mechanics/combat.md (slug: combat-mechanics)
+# [WATCHER] File modified: game-mechanics/combat.md
+# [WATCHER] Updated: game-mechanics/combat.md (slug: combat-mechanics)
+```
+
+#### Stopping the Watcher
+
+Press `Ctrl+C` in the terminal where the watcher is running. The watcher will:
+1. Stop watching for new changes
+2. Finish syncing any pending files
+3. Cleanly shut down
+
+#### Troubleshooting
+
+**Watcher not syncing files:**
+- Check that files are in `data/pages/` directory
+- Verify files have `.md` extension
+- Check that Flask app can connect to database
+- Look for error messages in watcher output
+
+**Files syncing too frequently:**
+- Increase debounce time: `python -m app.sync watch --debounce 3.0`
+
+**Watcher not starting:**
+- Ensure you're in the `services/wiki` directory
+- Check that `watchdog` package is installed: `pip install watchdog`
+- Verify database connection in `.env` file
 - Auto-sync when files are created/modified
 - Debounce rapid changes
 - Log sync operations
@@ -310,10 +453,12 @@ services/wiki/data/pages/
 3. Can batch multiple changes
 4. Avoids race conditions
 
-**Optional auto-sync** for:
-- Development/testing
-- Automated workflows
-- Real-time updates (if needed)
+**Auto-sync (watch mode)** ✅ **IMPLEMENTED**:
+- Run `python -m app.sync watch` to automatically sync files when they change
+- Uses file system watcher to monitor `data/pages/` directory
+- Debouncing prevents multiple syncs of the same file (default: 1 second)
+- Perfect for development/testing and automated workflows
+- Real-time updates as AI agents write files
 
 ## Example: AI Writing a Page
 
@@ -352,11 +497,21 @@ with open(file_path, 'w', encoding='utf-8') as f:
     f.write(markdown_content)
 ```
 
-### Step 3: User Syncs
+### Step 3: Sync to Database
 
+**Option A: Automatic (if watcher is running)**
+```bash
+# If watcher is already running, file syncs automatically
+# No action needed!
+```
+
+**Option B: Manual Sync**
 ```bash
 cd services/wiki
 python -m app.sync sync-file data/pages/game-mechanics/character-creation.md
+
+# Or sync all files at once
+python -m app.sync sync-all
 ```
 
 ### Step 4: Database Updated
@@ -365,16 +520,25 @@ python -m app.sync sync-file data/pages/game-mechanics/character-creation.md
 - Assigned to admin user
 - Links extracted and tracked
 - Search index updated
-- Version history created
+- Version history created (on updates)
 
 ## Integration with Cursor
 
 ### Cursor AI Workflow
 
+**With File Watcher (Recommended):**
+1. User: Starts file watcher (`python -m app.sync watch`) in a terminal
+2. User: "Create a wiki page about magic system"
+3. AI: Writes markdown file with proper frontmatter
+4. AI: Saves to `services/wiki/data/pages/game-mechanics/magic-system.md`
+5. Watcher: Automatically detects file and syncs to database
+6. Wiki: Page appears in wiki with all features working (no manual sync needed!)
+
+**Without File Watcher (Manual):**
 1. User: "Create a wiki page about magic system"
 2. AI: Writes markdown file with proper frontmatter
 3. AI: Saves to `services/wiki/data/pages/game-mechanics/magic-system.md`
-4. User: Runs sync command or triggers auto-sync
+4. User: Runs sync command (`python -m app.sync sync-all`)
 5. Wiki: Page appears in wiki with all features working
 
 ### Cursor Commands
@@ -382,11 +546,19 @@ python -m app.sync sync-file data/pages/game-mechanics/character-creation.md
 Add to Makefile or scripts:
 
 ```makefile
+# Manual sync commands
 wiki-sync:
 	cd services/wiki && python -m app.sync sync-all
 
 wiki-sync-file:
 	cd services/wiki && python -m app.sync sync-file $(FILE)
+
+# File watcher (automatic syncing)
+wiki-watch:
+	cd services/wiki && python -m app.sync watch
+
+wiki-watch-debounce:
+	cd services/wiki && python -m app.sync watch --debounce $(SECONDS)
 ```
 
 ## Summary

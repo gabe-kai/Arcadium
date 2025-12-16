@@ -4,6 +4,16 @@
 
 The Wiki Service uses a hybrid storage approach: Markdown files for content (enabling AI access) and PostgreSQL database for metadata, relationships, and search capabilities.
 
+## Development Environment
+
+### Python Environment
+This project uses a **shared virtual environment** for all Python services (monorepo approach). See the [root README](../../README.md) for setup instructions.
+
+### Database
+- **Development/Production**: PostgreSQL (requires `DATABASE_URL` environment variable)
+- **Testing**: SQLite in-memory (default) or PostgreSQL via `TEST_DATABASE_URL`
+- See [Database Configuration](database-configuration.md) for detailed setup instructions
+
 ## Architecture Diagram
 
 ```

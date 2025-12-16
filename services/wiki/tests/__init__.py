@@ -1,2 +1,1 @@
-# Tests will be added here
-
+"""Test package for wiki service"""
