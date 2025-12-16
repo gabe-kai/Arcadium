@@ -106,6 +106,10 @@ body {
   margin: 0 auto;
 }
 
+.arc-main-with-right-sidebar {
+  grid-template-columns: 260px minmax(0, 1fr) 240px;
+}
+
 .arc-sidebar {
   background: radial-gradient(circle at top, #020617, #020617 55%, #000);
   border-radius: 0.75rem;
@@ -125,6 +129,333 @@ body {
 .arc-sidebar-placeholder p {
   font-size: 0.9rem;
   color: var(--arc-text-subtle);
+}
+
+/* Navigation Tree */
+.arc-nav-tree {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.arc-nav-tree-search {
+  margin-bottom: 1rem;
+}
+
+.arc-nav-tree-search-input {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid var(--arc-border);
+  border-radius: 0.4rem;
+  color: var(--arc-text);
+  font-size: 0.9rem;
+  transition: border-color 0.2s, background 0.2s;
+}
+
+.arc-nav-tree-search-input:focus {
+  outline: none;
+  border-color: var(--arc-accent);
+  background: rgba(15, 23, 42, 0.8);
+}
+
+.arc-nav-tree-search-input::placeholder {
+  color: var(--arc-text-subtle);
+}
+
+.arc-nav-tree-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.arc-nav-tree-list-nested {
+  margin-left: 0;
+  padding-left: 0;
+}
+
+.arc-nav-tree-item {
+  margin: 0;
+  padding: 0;
+}
+
+.arc-nav-tree-node {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin: 0.15rem 0;
+  padding: 0.4rem 0.5rem;
+  border-radius: 0.35rem;
+  transition: background 0.2s;
+}
+
+.arc-nav-tree-node:hover {
+  background: rgba(56, 189, 248, 0.08);
+}
+
+.arc-nav-tree-node-current {
+  background: rgba(56, 189, 248, 0.15);
+}
+
+.arc-nav-tree-toggle {
+  background: transparent;
+  border: none;
+  color: var(--arc-text-subtle);
+  cursor: pointer;
+  padding: 0.15rem 0.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  border-radius: 0.2rem;
+  transition: color 0.2s, background 0.2s;
+  flex-shrink: 0;
+}
+
+.arc-nav-tree-toggle:hover {
+  color: var(--arc-accent);
+  background: rgba(56, 189, 248, 0.1);
+}
+
+.arc-nav-tree-toggle-icon {
+  font-size: 0.7rem;
+  line-height: 1;
+  user-select: none;
+}
+
+.arc-nav-tree-spacer {
+  width: 1.25rem;
+  flex-shrink: 0;
+}
+
+.arc-nav-tree-link {
+  flex: 1;
+  color: var(--arc-text-subtle);
+  text-decoration: none;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: color 0.2s;
+  word-break: break-word;
+}
+
+.arc-nav-tree-link:hover {
+  color: var(--arc-text);
+}
+
+.arc-nav-tree-link-current {
+  color: var(--arc-accent);
+  font-weight: 500;
+}
+
+.arc-nav-tree-draft-badge {
+  font-size: 0.7rem;
+  padding: 0.15rem 0.35rem;
+  background: rgba(251, 191, 36, 0.2);
+  color: #fbbf24;
+  border-radius: 0.2rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  flex-shrink: 0;
+}
+
+/* Scrollbar styling for navigation tree */
+.arc-nav-tree-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.arc-nav-tree-list::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.3);
+  border-radius: 3px;
+}
+
+.arc-nav-tree-list::-webkit-scrollbar-thumb {
+  background: var(--arc-border);
+  border-radius: 3px;
+}
+
+.arc-nav-tree-list::-webkit-scrollbar-thumb:hover {
+  background: var(--arc-accent-soft);
+}
+
+/* Smooth transitions for expand/collapse */
+.arc-nav-tree-list-nested {
+  animation: slideDown 0.2s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    max-height: 0;
+  }
+  to {
+    opacity: 1;
+    max-height: 1000px;
+  }
+}
+
+/* Right Sidebar */
+.arc-sidebar-right {
+  order: 3;
+}
+
+.arc-right-sidebar-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+/* Table of Contents */
+.arc-toc {
+  position: sticky;
+  top: 1rem;
+  max-height: calc(100vh - 2rem);
+  overflow-y: auto;
+}
+
+.arc-toc-title {
+  margin: 0 0 1rem;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--arc-text-subtle);
+  font-weight: 600;
+}
+
+.arc-toc-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.arc-toc-item {
+  margin: 0.25rem 0;
+}
+
+.arc-toc-item-level-2 {
+  padding-left: 0;
+}
+
+.arc-toc-item-level-3 {
+  padding-left: 1rem;
+}
+
+.arc-toc-item-level-4 {
+  padding-left: 2rem;
+}
+
+.arc-toc-item-level-5 {
+  padding-left: 3rem;
+}
+
+.arc-toc-item-level-6 {
+  padding-left: 4rem;
+}
+
+.arc-toc-link {
+  background: transparent;
+  border: none;
+  color: var(--arc-text-subtle);
+  text-decoration: none;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  text-align: left;
+  width: 100%;
+  padding: 0.35rem 0.5rem;
+  border-radius: 0.3rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: block;
+}
+
+.arc-toc-link:hover {
+  color: var(--arc-text);
+  background: rgba(56, 189, 248, 0.08);
+}
+
+.arc-toc-item-active .arc-toc-link {
+  color: var(--arc-accent);
+  background: rgba(56, 189, 248, 0.15);
+  font-weight: 500;
+}
+
+/* Backlinks */
+.arc-backlinks {
+  position: sticky;
+  top: 1rem;
+}
+
+.arc-backlinks-title {
+  margin: 0 0 1rem;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--arc-text-subtle);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.arc-backlinks-count {
+  font-size: 0.75rem;
+  color: var(--arc-accent);
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.arc-backlinks-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.arc-backlinks-item {
+  margin: 0.5rem 0;
+}
+
+.arc-backlinks-link {
+  color: var(--arc-text-subtle);
+  text-decoration: none;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  display: block;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.4rem;
+  transition: all 0.2s;
+  border-left: 2px solid transparent;
+}
+
+.arc-backlinks-link:hover {
+  color: var(--arc-accent);
+  background: rgba(56, 189, 248, 0.08);
+  border-left-color: var(--arc-accent);
+}
+
+/* TOC scrollbar */
+.arc-toc::-webkit-scrollbar {
+  width: 6px;
+}
+
+.arc-toc::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.3);
+  border-radius: 3px;
+}
+
+.arc-toc::-webkit-scrollbar-thumb {
+  background: var(--arc-border);
+  border-radius: 3px;
+}
+
+.arc-toc::-webkit-scrollbar-thumb:hover {
+  background: var(--arc-accent-soft);
 }
 
 .arc-content {

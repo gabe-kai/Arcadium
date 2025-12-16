@@ -1,4 +1,5 @@
 import React from 'react';
+import { NavigationTree } from '../navigation/NavigationTree';
 
 export function SidebarPlaceholder() {
   return (
@@ -10,4 +11,8 @@ export function SidebarPlaceholder() {
       </p>
     </div>
   );
+}
+
+export function Sidebar() {
+  return <NavigationTree />;
 }

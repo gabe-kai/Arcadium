@@ -1,9 +1,11 @@
 import React, { useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { Layout } from '../components/layout/Layout';
-import { SidebarPlaceholder } from '../components/layout/Sidebar';
+import { Sidebar } from '../components/layout/Sidebar';
 import { Breadcrumb } from '../components/navigation/Breadcrumb';
 import { PageNavigation } from '../components/navigation/PageNavigation';
+import { TableOfContents } from '../components/navigation/TableOfContents';
+import { Backlinks } from '../components/navigation/Backlinks';
 import { usePage, useBreadcrumb, usePageNavigation } from '../services/api/pages';
 import { highlightCodeBlocks } from '../utils/syntaxHighlight';
 import { processLinks } from '../utils/linkHandler';
@@ -76,8 +78,18 @@ export function PageView() {
     );
   }
 
+  // Build right sidebar with TOC and Backlinks
+  const rightSidebar = page && (page.table_of_contents || page.backlinks) ? (
+    <div className="arc-right-sidebar-content">
+      {page.table_of_contents && (
+        <TableOfContents toc={page.table_of_contents} contentRef={contentRef} />
+      )}
+      {page.backlinks && <Backlinks backlinks={page.backlinks} />}
+    </div>
+  ) : null;
+
   return (
-    <Layout sidebar={<SidebarPlaceholder />}>
+    <Layout sidebar={<Sidebar />} rightSidebar={rightSidebar}>
       {content}
     </Layout>
   );

@@ -23,10 +23,16 @@ vi.mock('../../services/api/pages', () => ({
 
 // Mock Layout and Sidebar to simplify tests
 vi.mock('../../components/layout/Layout', () => ({
-  Layout: ({ children }) => <div data-testid="layout">{children}</div>,
+  Layout: ({ children, rightSidebar }) => (
+    <div data-testid="layout">
+      {children}
+      {rightSidebar && <div data-testid="right-sidebar">{rightSidebar}</div>}
+    </div>
+  ),
 }));
 
 vi.mock('../../components/layout/Sidebar', () => ({
+  Sidebar: () => <div data-testid="sidebar" />,
   SidebarPlaceholder: () => <div data-testid="sidebar" />,
 }));
 
@@ -37,6 +43,14 @@ vi.mock('../../components/navigation/Breadcrumb', () => ({
 
 vi.mock('../../components/navigation/PageNavigation', () => ({
   PageNavigation: ({ navigation }) => navigation ? <nav data-testid="page-navigation">Navigation</nav> : null,
+}));
+
+vi.mock('../../components/navigation/TableOfContents', () => ({
+  TableOfContents: ({ toc }) => toc ? <nav data-testid="table-of-contents">TOC</nav> : null,
+}));
+
+vi.mock('../../components/navigation/Backlinks', () => ({
+  Backlinks: ({ backlinks }) => backlinks ? <nav data-testid="backlinks">Backlinks</nav> : null,
 }));
 
 // Mock utility functions
@@ -291,5 +305,83 @@ describe('PageView', () => {
 
     renderPageView('test-page-id');
     expect(screen.queryByTestId('page-navigation')).not.toBeInTheDocument();
+  });
+
+  it('displays table of contents when available', () => {
+    const mockPage = {
+      id: 'test-page-id',
+      title: 'Test Page',
+      html_content: '<p>Content</p>',
+      table_of_contents: [
+        { anchor: 'section-1', text: 'Section 1', level: 2 },
+        { anchor: 'section-2', text: 'Section 2', level: 2 },
+      ],
+    };
+
+    pagesApi.usePage.mockReturnValue({
+      data: mockPage,
+      isLoading: false,
+      isError: false,
+    });
+
+    renderPageView('test-page-id');
+    expect(screen.getByTestId('table-of-contents')).toBeInTheDocument();
+  });
+
+  it('displays backlinks when available', () => {
+    const mockPage = {
+      id: 'test-page-id',
+      title: 'Test Page',
+      html_content: '<p>Content</p>',
+      backlinks: [
+        { page_id: 'page-1', title: 'Linking Page 1' },
+        { page_id: 'page-2', title: 'Linking Page 2' },
+      ],
+    };
+
+    pagesApi.usePage.mockReturnValue({
+      data: mockPage,
+      isLoading: false,
+      isError: false,
+    });
+
+    renderPageView('test-page-id');
+    expect(screen.getByTestId('backlinks')).toBeInTheDocument();
+  });
+
+  it('does not display table of contents when null', () => {
+    const mockPage = {
+      id: 'test-page-id',
+      title: 'Test Page',
+      html_content: '<p>Content</p>',
+      table_of_contents: null,
+    };
+
+    pagesApi.usePage.mockReturnValue({
+      data: mockPage,
+      isLoading: false,
+      isError: false,
+    });
+
+    renderPageView('test-page-id');
+    expect(screen.queryByTestId('table-of-contents')).not.toBeInTheDocument();
+  });
+
+  it('does not display backlinks when null', () => {
+    const mockPage = {
+      id: 'test-page-id',
+      title: 'Test Page',
+      html_content: '<p>Content</p>',
+      backlinks: null,
+    };
+
+    pagesApi.usePage.mockReturnValue({
+      data: mockPage,
+      isLoading: false,
+      isError: false,
+    });
+
+    renderPageView('test-page-id');
+    expect(screen.queryByTestId('backlinks')).not.toBeInTheDocument();
   });
 });

@@ -39,3 +39,15 @@ export function usePageNavigation(pageId) {
     enabled: Boolean(pageId),
   });
 }
+
+export function fetchNavigationTree() {
+  return apiClient.get('/navigation').then((res) => res.data.tree);
+}
+
+export function useNavigationTree() {
+  return useQuery({
+    queryKey: ['navigationTree'],
+    queryFn: fetchNavigationTree,
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+  });
+}

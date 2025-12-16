@@ -81,6 +81,8 @@ VITE_WIKI_API_BASE_URL=http://localhost:5000/api
 
 ## Testing
 
+### Unit & Integration Tests
+
 Tests use **Vitest** with **jsdom** and **React Testing Library**.
 
 From `client/`:
@@ -95,6 +97,34 @@ npm run test:ui
 # Run with coverage
 npm run test:coverage
 ```
+
+### E2E Tests
+
+End-to-end tests use **Playwright** to test the full application in a real browser.
+
+```bash
+# Run all E2E tests
+npm run test:e2e
+
+# Run E2E tests in UI mode (interactive)
+npm run test:e2e:ui
+
+# Run E2E tests with visible browser
+npm run test:e2e:headed
+
+# Debug E2E tests
+npm run test:e2e:debug
+
+# View test report
+npm run test:e2e:report
+```
+
+**First time setup:**
+```bash
+npx playwright install
+```
+
+See `e2e/README.md` for detailed E2E testing documentation.
 
 ### What’s Covered So Far
 

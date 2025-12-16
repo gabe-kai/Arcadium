@@ -1,10 +1,10 @@
 import React from 'react';
 import { Layout } from '../components/layout/Layout';
-import { SidebarPlaceholder } from '../components/layout/Sidebar';
+import { Sidebar } from '../components/layout/Sidebar';
 
 export function HomePage() {
   return (
-    <Layout sidebar={<SidebarPlaceholder />}>
+    <Layout sidebar={<Sidebar />}>
       <section>
         <h1>Welcome to the Arcadium Wiki</h1>
         <p>

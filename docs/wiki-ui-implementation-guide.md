@@ -28,6 +28,7 @@ This guide outlines the implementation plan for building the Wiki User Interface
 - **CORS configured** - Flask backend allows requests from React dev server (`localhost:3000`)
 - **React Query integration** - Server state management for page data fetching
 - **Auth context** - JWT token storage and Authorization header support ready
+- **E2E Testing** - Playwright E2E tests for full user flows (syntax highlighting, navigation, TOC, backlinks)
 
 #### ✅ Phase 2: Reading View - Core Components (Complete)
 - **PageView component** - Full reading experience with content rendering, metadata display
@@ -47,6 +48,40 @@ This guide outlines the implementation plan for building the Wiki User Interface
   - Breadcrumb component tests (7 test cases)
   - PageNavigation component tests (8 test cases)
   - Backend: cache service tests (user_id=None), CORS header tests, unauthenticated page access tests
+
+#### ✅ Phase 3: Navigation Tree (Left Sidebar) (Complete)
+- **NavigationTree component** - Hierarchical page navigation with expandable/collapsible nodes
+- **Tree Search** - Search/filter within tree with auto-expand matching branches
+- **Tree Features**:
+  - Expandable/collapsible tree nodes with smooth animations
+  - Highlights current page
+  - Auto-expands path to current page
+  - Persists expanded state in localStorage
+  - Draft badge indicator for draft pages
+  - Hover effects and active state highlighting
+- **API Integration**:
+  - `useNavigationTree` hook with 5-minute cache
+- **Tests added**:
+  - NavigationTree component tests (11 test cases covering all features)
+
+#### ✅ Phase 4: Table of Contents & Backlinks (Right Sidebar) (Complete)
+- **TableOfContents component** - Auto-generated from page headings (H2-H6)
+  - Click to scroll to section (smooth scroll)
+  - Highlight current section while scrolling
+  - Indentation for nested headings
+  - Active section highlighting
+  - Sticky positioning support
+- **Backlinks component** - Displays pages that link to current page
+  - Shows backlink count
+  - Click to navigate to linking page
+  - Styled list with hover effects
+- **Integration**:
+  - Both components integrated into PageView right sidebar
+  - Rendered when `table_of_contents` or `backlinks` data is available from API
+- **Tests added**:
+  - TableOfContents component tests (10 test cases)
+  - Backlinks component tests (9 test cases)
+  - PageView integration tests for TOC and Backlinks
 
 ## Implementation Phases
 
@@ -129,33 +164,75 @@ This guide outlines the implementation plan for building the Wiki User Interface
 **Goal**: Implement hierarchical page navigation
 
 #### Tasks:
-- [ ] **Navigation Tree Component**
-  - Fetch and build page hierarchy
-  - Expandable/collapsible tree nodes
-  - Highlight current page
-  - Click to navigate
-  - Icons for pages vs sections
-  - Hover effects
-  - Active state highlighting
+- [x] **Navigation Tree Component** ✅
+  - [x] Fetch and build page hierarchy
+  - [x] Expandable/collapsible tree nodes
+  - [x] Highlight current page
+  - [x] Click to navigate
+  - [x] Hover effects
+  - [x] Active state highlighting
+  - [x] Auto-expand path to current page
+  - [ ] Icons for pages vs sections - **TODO** (optional enhancement)
 
-- [ ] **Tree Search**
-  - Search/filter within tree
-  - Highlight matching pages
-  - Collapse non-matching branches
+- [x] **Tree Search** ✅
+  - [x] Search/filter within tree
+  - [x] Auto-expand matching branches
+  - [x] Filter non-matching branches
 
-- [ ] **Tree Features**
-  - Show page count per section
-  - Remember expanded state (localStorage)
-  - Lazy load children (if needed for performance)
+- [x] **Tree Features** ✅
+  - [x] Remember expanded state (localStorage)
+  - [x] Draft badge indicator
+  - [ ] Show page count per section - **TODO** (optional enhancement)
+  - [ ] Lazy load children - **TODO** (not needed yet, performance is good)
 
 #### API Endpoints Used:
-- `GET /api/pages` - Get all pages for tree
-- `GET /api/navigation/tree` - Get hierarchical structure
+- `GET /api/navigation` - Get hierarchical structure ✅ (in use)
 
 #### Deliverables:
-- Functional navigation tree
-- Search within tree
-- Smooth expand/collapse animations
+- ✅ Functional navigation tree
+- ✅ Search within tree
+- ✅ Smooth expand/collapse (CSS transitions)
+- ✅ Expanded state persistence
+- ✅ Current page highlighting
+
+**Phase 3 Status: ✅ COMPLETE** (except optional enhancements)
+
+---
+
+### Phase 3: Navigation Tree (Left Sidebar)
+**Goal**: Implement hierarchical page navigation
+
+#### Tasks:
+- [x] **Navigation Tree Component** ✅
+  - [x] Fetch and build page hierarchy
+  - [x] Expandable/collapsible tree nodes
+  - [x] Highlight current page
+  - [x] Click to navigate
+  - [x] Hover effects
+  - [x] Active state highlighting
+  - [x] Auto-expand path to current page
+  - [ ] Icons for pages vs sections - **TODO** (optional enhancement)
+
+- [x] **Tree Search** ✅
+  - [x] Search/filter within tree
+  - [x] Auto-expand matching branches
+  - [x] Filter non-matching branches
+
+- [x] **Tree Features** ✅
+  - [x] Remember expanded state (localStorage)
+  - [x] Draft badge indicator
+  - [ ] Show page count per section - **TODO** (optional enhancement)
+  - [ ] Lazy load children - **TODO** (not needed yet, performance is good)
+
+#### API Endpoints Used:
+- `GET /api/navigation` - Get hierarchical structure ✅ (in use)
+
+#### Deliverables:
+- ✅ Functional navigation tree
+- ✅ Search within tree
+- ✅ Smooth expand/collapse (CSS transitions)
+- ✅ Expanded state persistence
+- ✅ Current page highlighting
 
 ---
 
@@ -163,29 +240,32 @@ This guide outlines the implementation plan for building the Wiki User Interface
 **Goal**: Implement right sidebar with TOC and backlinks
 
 #### Tasks:
-- [ ] **Table of Contents Component**
-  - Auto-generate from page headings (H2-H6)
-  - Click to scroll to section (smooth scroll)
-  - Highlight current section while scrolling
-  - Sticky positioning (stays visible)
-  - Indentation for nested headings
-  - Active section highlighting
-  - Collapsible if page is short
+- [x] **Table of Contents Component** ✅
+  - [x] Auto-generate from page headings (H2-H6)
+  - [x] Click to scroll to section (smooth scroll)
+  - [x] Highlight current section while scrolling
+  - [x] Sticky positioning (stays visible)
+  - [x] Indentation for nested headings
+  - [x] Active section highlighting
+  - [ ] Collapsible if page is short - **TODO** (optional enhancement)
 
-- [ ] **Backlinks Component**
-  - Display pages that link to current page
-  - Show context snippet (where link appears)
-  - Click to navigate to linking page
-  - Display backlink count
-  - Styled list with hover effects
+- [x] **Backlinks Component** ✅
+  - [x] Display pages that link to current page
+  - [ ] Show context snippet (where link appears) - **TODO** (optional enhancement)
+  - [x] Click to navigate to linking page
+  - [x] Display backlink count
+  - [x] Styled list with hover effects
 
 #### API Endpoints Used:
-- `GET /api/pages/{page_id}` - Includes `table_of_contents` and `backlinks`
+- `GET /api/pages/{page_id}` - Includes `table_of_contents` and `backlinks` ✅ (in use)
 
 #### Deliverables:
-- Sticky TOC with scroll highlighting
-- Functional backlinks section
-- Smooth scroll-to-section behavior
+- ✅ Sticky TOC with scroll highlighting
+- ✅ Functional backlinks section
+- ✅ Smooth scroll-to-section behavior
+- ✅ Component tests for both TOC and Backlinks
+
+**Phase 4 Status: ✅ COMPLETE** (except optional enhancements)
 
 ---
 
@@ -749,15 +829,25 @@ src/
 - Component tests (React Testing Library)
 - Utility function tests
 - API service tests (mocked)
+- **Status**: ✅ Comprehensive coverage (112+ tests)
 
 ### Integration Tests
 - User flows (create page, edit page, comment)
 - Navigation flows
 - Search flows
+- **Status**: ✅ Core flows tested
 
-### E2E Tests (Optional)
-- Playwright or Cypress
-- Critical user journeys
+### E2E Tests ✅ (Implemented)
+- **Playwright** - Full browser testing
+- Critical user journeys:
+  - Page viewing with syntax highlighting
+  - Navigation (breadcrumbs, tree, prev/next)
+  - Table of Contents scrolling and highlighting
+  - Backlinks navigation
+  - Link processing (internal vs external)
+- **Status**: ✅ E2E test suite implemented (20+ tests)
+- **Run**: `npm run test:e2e` from `client/` directory
+- **Documentation**: See `client/e2e/README.md`
 
 ---
 

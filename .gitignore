@@ -74,4 +74,9 @@ temp/
 Thumbs.db
 .DS_Store
 
+# Playwright
+test-results/
+playwright-report/
+playwright/.cache/
+
 venvLibsite-packages/

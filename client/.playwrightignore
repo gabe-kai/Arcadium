@@ -1,0 +1,10 @@
+# Playwright test ignore file
+# Files and directories to ignore when discovering tests
+
+node_modules/
+dist/
+build/
+.vite/
+coverage/
+*.log
+.DS_Store
