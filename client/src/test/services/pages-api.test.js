@@ -252,4 +252,160 @@ describe('Pages API Service', () => {
       expect(result.content).toBe('# New Content');
     });
   });
+
+  describe('searchPages', () => {
+    it('returns empty array for empty query', async () => {
+      const { searchPages } = await import('../../services/api/pages');
+      const result = await searchPages('');
+      expect(result).toEqual([]);
+      expect(apiClient.get).not.toHaveBeenCalled();
+    });
+
+    it('returns empty array for null query', async () => {
+      const { searchPages } = await import('../../services/api/pages');
+      const result = await searchPages(null);
+      expect(result).toEqual([]);
+      expect(apiClient.get).not.toHaveBeenCalled();
+    });
+
+    it('searches pages successfully', async () => {
+      const { searchPages } = await import('../../services/api/pages');
+      const mockPages = [
+        { id: 'page-1', title: 'Test Page 1' },
+        { id: 'page-2', title: 'Test Page 2' },
+      ];
+      apiClient.get.mockResolvedValue({ data: { pages: mockPages } });
+
+      const result = await searchPages('Test');
+
+      expect(apiClient.get).toHaveBeenCalledWith('/pages', { params: { search: 'Test', limit: 20 } });
+      expect(result).toEqual(mockPages);
+    });
+
+    it('trims query before searching', async () => {
+      const { searchPages } = await import('../../services/api/pages');
+      apiClient.get.mockResolvedValue({ data: { pages: [] } });
+
+      await searchPages('  Test  ');
+
+      expect(apiClient.get).toHaveBeenCalledWith('/pages', { params: { search: 'Test', limit: 20 } });
+    });
+
+    it('handles API errors gracefully', async () => {
+      const { searchPages } = await import('../../services/api/pages');
+      apiClient.get.mockRejectedValue(new Error('Network error'));
+
+      const result = await searchPages('Test');
+
+      expect(result).toEqual([]);
+    });
+
+    it('handles missing pages in response', async () => {
+      const { searchPages } = await import('../../services/api/pages');
+      apiClient.get.mockResolvedValue({ data: {} });
+
+      const result = await searchPages('Test');
+
+      expect(result).toEqual([]);
+    });
+  });
+
+  describe('validateSlug', () => {
+    it('returns invalid for empty slug', async () => {
+      const { validateSlug } = await import('../../services/api/pages');
+      const result = await validateSlug('');
+      expect(result).toEqual({ valid: false, message: 'Slug is required' });
+      expect(apiClient.get).not.toHaveBeenCalled();
+    });
+
+    it('returns invalid for null slug', async () => {
+      const { validateSlug } = await import('../../services/api/pages');
+      const result = await validateSlug(null);
+      expect(result).toEqual({ valid: false, message: 'Slug is required' });
+    });
+
+    it('returns invalid for slug with invalid characters', async () => {
+      const { validateSlug } = await import('../../services/api/pages');
+      const result = await validateSlug('invalid slug!');
+      expect(result).toEqual({ 
+        valid: false, 
+        message: 'Slug can only contain lowercase letters, numbers, and hyphens' 
+      });
+      expect(apiClient.get).not.toHaveBeenCalled();
+    });
+
+    it('validates unique slug successfully', async () => {
+      const { validateSlug } = await import('../../services/api/pages');
+      apiClient.get.mockResolvedValue({ data: { pages: [] } });
+
+      const result = await validateSlug('test-slug');
+
+      expect(apiClient.get).toHaveBeenCalledWith('/pages', { params: { slug: 'test-slug' } });
+      expect(result).toEqual({ valid: true });
+    });
+
+    it('returns invalid for duplicate slug', async () => {
+      const { validateSlug } = await import('../../services/api/pages');
+      const mockPages = [
+        { id: 'other-page-id', title: 'Other Page', slug: 'test-slug' },
+      ];
+      apiClient.get.mockResolvedValue({ data: { pages: mockPages } });
+
+      const result = await validateSlug('test-slug');
+
+      expect(result).toEqual({ 
+        valid: false, 
+        message: 'Slug "test-slug" is already in use by another page' 
+      });
+    });
+
+    it('excludes specified page from validation', async () => {
+      const { validateSlug } = await import('../../services/api/pages');
+      const mockPages = [
+        { id: 'current-page-id', title: 'Current Page', slug: 'test-slug' },
+      ];
+      apiClient.get.mockResolvedValue({ data: { pages: mockPages } });
+
+      const result = await validateSlug('test-slug', 'current-page-id');
+
+      expect(result).toEqual({ valid: true });
+    });
+
+    it('handles API errors optimistically', async () => {
+      const { validateSlug } = await import('../../services/api/pages');
+      apiClient.get.mockRejectedValue(new Error('Network error'));
+
+      const result = await validateSlug('test-slug');
+
+      expect(result).toEqual({ valid: true });
+    });
+
+    it('trims slug before validation', async () => {
+      const { validateSlug } = await import('../../services/api/pages');
+      apiClient.get.mockResolvedValue({ data: { pages: [] } });
+
+      const result = await validateSlug('  test-slug  ');
+
+      expect(apiClient.get).toHaveBeenCalledWith('/pages', { params: { slug: 'test-slug' } });
+      expect(result.valid).toBe(true);
+    });
+
+    it('validates slug with hyphens', async () => {
+      const { validateSlug } = await import('../../services/api/pages');
+      apiClient.get.mockResolvedValue({ data: { pages: [] } });
+
+      const result = await validateSlug('test-slug-123');
+
+      expect(result).toEqual({ valid: true });
+    });
+
+    it('validates slug with numbers', async () => {
+      const { validateSlug } = await import('../../services/api/pages');
+      apiClient.get.mockResolvedValue({ data: { pages: [] } });
+
+      const result = await validateSlug('page123');
+
+      expect(result).toEqual({ valid: true });
+    });
+  });
 });

@@ -5,6 +5,7 @@ import { Layout } from '../components/layout/Layout';
 import { Sidebar } from '../components/layout/Sidebar';
 import { Editor } from '../components/editor/Editor';
 import { EditorToolbar } from '../components/editor/EditorToolbar';
+import { MetadataForm } from '../components/editor/MetadataForm';
 import { usePage, createPage, updatePage } from '../services/api/pages';
 import { htmlToMarkdown, markdownToHtml } from '../utils/markdown';
 
@@ -19,6 +20,14 @@ export function EditPage() {
   
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
+  const [metadata, setMetadata] = useState({
+    title: '',
+    slug: '',
+    parent_id: null,
+    section: null,
+    order: null,
+    status: 'draft',
+  });
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [editor, setEditor] = useState(null);
   const editorRef = useRef(null);
@@ -32,10 +41,18 @@ export function EditPage() {
     setEditor(editorInstance);
   };
 
-  // Load page content into editor
+  // Load page content and metadata into editor
   useEffect(() => {
     if (page && editor && !hasUnsavedChanges) {
       setTitle(page.title || '');
+      setMetadata({
+        title: page.title || '',
+        slug: page.slug || '',
+        parent_id: page.parent_id || null,
+        section: page.section || null,
+        order: page.order !== undefined ? page.order : null,
+        status: page.status || 'draft',
+      });
       if (page.content) {
         // Convert markdown to HTML for editor
         const html = markdownToHtml(page.content);
@@ -51,12 +68,13 @@ export function EditPage() {
       clearTimeout(autoSaveTimerRef.current);
     }
 
-    if (hasUnsavedChanges && (title || content)) {
+    if (hasUnsavedChanges && (metadata.title || content)) {
       autoSaveTimerRef.current = setTimeout(() => {
         const draftKey = isNewPage ? 'arcadium_draft_new' : `arcadium_draft_${pageId}`;
         const draft = {
-          title,
+          title: metadata.title,
           content,
+          metadata,
           timestamp: Date.now(),
         };
         try {
@@ -72,7 +90,7 @@ export function EditPage() {
         clearTimeout(autoSaveTimerRef.current);
       }
     };
-  }, [title, content, hasUnsavedChanges, isNewPage, pageId]);
+  }, [metadata, content, hasUnsavedChanges, isNewPage, pageId]);
 
   // Load draft from localStorage on mount
   useEffect(() => {
@@ -84,6 +102,9 @@ export function EditPage() {
           const draft = JSON.parse(draftJson);
           setTitle(draft.title || '');
           setContent(draft.content || '');
+          if (draft.metadata) {
+            setMetadata(draft.metadata);
+          }
           setHasUnsavedChanges(true);
         }
       } catch (e) {
@@ -114,8 +135,13 @@ export function EditPage() {
   });
 
   const handleSave = async () => {
-    if (!title.trim()) {
+    if (!metadata.title || !metadata.title.trim()) {
       alert('Please enter a page title');
+      return;
+    }
+
+    if (!metadata.slug || !metadata.slug.trim()) {
+      alert('Please enter a valid slug');
       return;
     }
 
@@ -134,31 +160,45 @@ export function EditPage() {
       }
     };
 
+    const pageData = {
+      title: metadata.title.trim(),
+      slug: metadata.slug.trim(),
+      content: markdown,
+      status: metadata.status,
+    };
+
+    // Add optional fields if they have values
+    if (metadata.parent_id) {
+      pageData.parent_id = metadata.parent_id;
+    }
+    if (metadata.section) {
+      pageData.section = metadata.section.trim();
+    }
+    if (metadata.order !== null && metadata.order !== undefined) {
+      pageData.order = metadata.order;
+    }
+
     if (isNewPage) {
-      createMutation.mutate(
-        {
-          title: title.trim(),
-          content: markdown,
-          status: 'draft', // Default to draft for new pages
-        },
-        {
-          onSuccess: clearDraft,
-        }
-      );
+      createMutation.mutate(pageData, {
+        onSuccess: clearDraft,
+      });
     } else {
       updateMutation.mutate(
         {
           pageId,
-          pageData: {
-            title: title.trim(),
-            content: markdown,
-          },
+          pageData,
         },
         {
           onSuccess: clearDraft,
         }
       );
     }
+  };
+
+  const handleMetadataChange = (newMetadata) => {
+    setMetadata(newMetadata);
+    setTitle(newMetadata.title || '');
+    setHasUnsavedChanges(true);
   };
 
   const handleCancel = () => {
@@ -188,19 +228,22 @@ export function EditPage() {
     <Layout sidebar={<Sidebar />}>
       <div className="arc-edit-page">
         <div className="arc-edit-page-header">
-          <input
-            type="text"
-            className="arc-edit-page-title"
-            placeholder="Page Title"
-            value={title}
-            onChange={(e) => {
-              setTitle(e.target.value);
-              setHasUnsavedChanges(true);
-            }}
-          />
+          <h2 className="arc-edit-page-header-title">
+            {isNewPage ? 'Create New Page' : 'Edit Page'}
+          </h2>
           {hasUnsavedChanges && (
             <span className="arc-edit-page-unsaved">Unsaved changes</span>
           )}
+        </div>
+
+        {/* Metadata Form */}
+        <div className="arc-edit-page-metadata">
+          <MetadataForm
+            initialData={metadata}
+            onChange={handleMetadataChange}
+            isNewPage={isNewPage}
+            excludePageId={pageId}
+          />
         </div>
 
         <div className="arc-edit-page-toolbar-wrapper">
@@ -232,7 +275,7 @@ export function EditPage() {
             type="button"
             onClick={handleSave}
             className="arc-edit-page-button arc-edit-page-button-save"
-            disabled={isSaving || !title.trim()}
+            disabled={isSaving || !metadata.title?.trim() || !metadata.slug?.trim()}
           >
             {isSaving ? 'Saving...' : isNewPage ? 'Create Page' : 'Save Changes'}
           </button>

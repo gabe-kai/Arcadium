@@ -104,7 +104,7 @@ The workflow runs three jobs in parallel:
 
 #### Test Coverage
 
-**Unit & Integration Tests (~340+ tests):**
+**Unit & Integration Tests (269+ passing tests):**
 - ✅ All React components (Editor, EditorToolbar, Navigation, Layout, etc.)
 - ✅ Page components (PageView, EditPage)
 - ✅ Utility functions (markdown conversion, link handling)

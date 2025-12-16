@@ -60,3 +60,50 @@ export function createPage(pageData) {
 export function updatePage(pageId, pageData) {
   return apiClient.put(`/pages/${pageId}`, pageData).then((res) => res.data);
 }
+
+// Search pages for parent selection
+export function searchPages(query) {
+  if (!query || query.trim().length === 0) {
+    return Promise.resolve([]);
+  }
+  return apiClient
+    .get('/pages', { params: { search: query.trim(), limit: 20 } })
+    .then((res) => res.data.pages || [])
+    .catch(() => []); // Return empty array on error
+}
+
+// Validate slug uniqueness (for new pages or when slug changes)
+export function validateSlug(slug, excludePageId = null) {
+  const trimmedSlug = slug ? slug.trim() : '';
+  
+  if (!trimmedSlug || trimmedSlug.length === 0) {
+    return Promise.resolve({ valid: false, message: 'Slug is required' });
+  }
+  
+  // Basic validation
+  if (!/^[a-z0-9-]+$/.test(trimmedSlug)) {
+    return Promise.resolve({ 
+      valid: false, 
+      message: 'Slug can only contain lowercase letters, numbers, and hyphens' 
+    });
+  }
+  
+  // Check uniqueness via API (would need a dedicated endpoint or use search)
+  // For now, we'll use a simple approach - check if a page with this slug exists
+  return apiClient
+    .get('/pages', { params: { slug: trimmedSlug } })
+    .then((res) => {
+      const pages = res.data.pages || [];
+      const conflictingPage = pages.find(p => p.id !== excludePageId);
+      
+      if (conflictingPage) {
+        return { 
+          valid: false, 
+          message: `Slug "${trimmedSlug}" is already in use by another page` 
+        };
+      }
+      
+      return { valid: true };
+    })
+    .catch(() => ({ valid: true })); // Assume valid on error (optimistic)
+}

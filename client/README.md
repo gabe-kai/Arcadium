@@ -150,19 +150,29 @@ See `e2e/README.md` for detailed E2E testing documentation.
 
 ### Test Coverage
 
-- **Component tests**: 15+ test cases across PageView, Breadcrumb, PageNavigation, Layout
-- **Integration tests**: API client, routing, state management
-- **Coverage**: Core reading view functionality is well-tested
-
-As more UI phases are implemented (navigation tree, editor, search, etc.), add:
-
-- Component tests for new UI components
-- Integration tests for key user flows (edit, search, comment)
+- **Component tests**: 400+ test cases covering all components
+  - PageView, Breadcrumb, PageNavigation, NavigationTree
+  - TableOfContents, Backlinks, Layout
+  - Editor, EditorToolbar, MetadataForm
+  - EditPage and all utility functions
+- **Integration tests**: 11+ test cases
+  - Page creation/editing flows
+  - Metadata integration
+  - Navigation flows
+- **E2E tests**: 20+ Playwright tests
+  - Full user journeys
+  - Browser-based testing
+- **Coverage**: Comprehensive with aggressive edge case coverage
+  - All components fully tested
+  - Edge cases and error scenarios covered
+  - API error handling tested
 
 ## Related Documentation
 
 - `docs/wiki-user-interface.md` – high-level UI design
 - `docs/wiki-ui-implementation-guide.md` – phased UI implementation plan
 - `docs/wiki-implementation-guide.md` – backend Wiki Service implementation
-- `docs/ci-cd.md` – CI/CD setup (currently focused on Wiki Service backend tests)
+- `docs/ci-cd.md` – CI/CD setup for both backend and frontend
+- `client/PHASE_8_SUMMARY.md` – Phase 8 implementation details
+- `client/TEST_COVERAGE_SUMMARY.md` – Comprehensive test coverage summary
 

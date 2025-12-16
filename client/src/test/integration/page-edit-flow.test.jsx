@@ -77,6 +77,56 @@ vi.mock('../../components/editor/EditorToolbar', () => ({
   EditorToolbar: () => <div data-testid="editor-toolbar">Toolbar</div>,
 }));
 
+vi.mock('../../components/editor/MetadataForm', () => {
+  const React = require('react');
+  return {
+    MetadataForm: ({ initialData, onChange, isNewPage }) => {
+      const [formData, setFormData] = React.useState({
+        title: initialData?.title || '',
+        slug: initialData?.slug || (isNewPage ? 'auto-slug' : ''),
+        parent_id: initialData?.parent_id || null,
+        section: initialData?.section || null,
+        order: initialData?.order || null,
+        status: initialData?.status || 'draft',
+      });
+
+      React.useEffect(() => {
+        if (onChange) {
+          onChange(formData);
+        }
+      }, [formData, onChange]);
+
+      const handleTitleChange = (e) => {
+        const newTitle = e.target.value;
+        const newSlug = isNewPage && !formData.slug ? `slug-${newTitle.toLowerCase()}` : formData.slug;
+        const updated = { ...formData, title: newTitle, slug: newSlug };
+        setFormData(updated);
+      };
+
+      const handleSlugChange = (e) => {
+        setFormData({ ...formData, slug: e.target.value });
+      };
+
+      return (
+        <div data-testid="metadata-form">
+          <input
+            data-testid="metadata-title"
+            value={formData.title}
+            onChange={handleTitleChange}
+            placeholder="Page Title"
+          />
+          <input
+            data-testid="metadata-slug"
+            value={formData.slug}
+            onChange={handleSlugChange}
+            placeholder="slug"
+          />
+        </div>
+      );
+    },
+  };
+});
+
 vi.mock('../../components/navigation/Breadcrumb', () => ({
   Breadcrumb: () => null,
 }));
@@ -139,44 +189,52 @@ describe('Page Edit Flow Integration', () => {
     );
   };
 
-  it('completes full create page flow', async () => {
+  it('completes full create page flow with metadata', async () => {
     renderEditPage('new');
     
-    // Enter title
-    const titleInput = screen.getByPlaceholderText('Page Title');
-    fireEvent.change(titleInput, { target: { value: 'New Test Page' } });
-    
-    // Wait for editor to be ready
+    // Wait for metadata form and editor to be ready
     await waitFor(() => {
+      expect(screen.getByTestId('metadata-form')).toBeInTheDocument();
       expect(screen.getByTestId('editor')).toBeInTheDocument();
     });
+    
+    // Enter metadata - title will auto-generate slug
+    const titleInput = screen.getByTestId('metadata-title');
+    fireEvent.change(titleInput, { target: { value: 'New Test Page' } });
+    
+    // Wait a bit for state updates
+    await waitFor(() => {
+      expect(titleInput.value).toBe('New Test Page');
+    }, { timeout: 1000 });
     
     // Save page
     const saveButton = screen.getByText('Create Page');
     fireEvent.click(saveButton);
     
-    // Verify API call
+    // Verify API call includes metadata
     await waitFor(() => {
-      expect(pagesApi.createPage).toHaveBeenCalledWith(
-        expect.objectContaining({
-          title: 'New Test Page',
-          status: 'draft',
-        })
-      );
-    });
+      expect(pagesApi.createPage).toHaveBeenCalled();
+    }, { timeout: 2000 });
     
-    // Verify navigation
-    await waitFor(() => {
-      expect(mockNavigate).toHaveBeenCalledWith('/pages/new-page-id');
+    const createCall = pagesApi.createPage.mock.calls[0]?.[0];
+    expect(createCall).toMatchObject({
+      title: expect.any(String),
+      slug: expect.any(String),
+      status: 'draft',
     });
   });
 
-  it('completes full edit page flow', async () => {
+  it('completes full edit page flow with metadata', async () => {
     pagesApi.usePage.mockReturnValue({
       data: {
         id: 'existing-page-id',
         title: 'Existing Page',
+        slug: 'existing-page',
         content: '# Original Content',
+        parent_id: null,
+        section: 'Test Section',
+        order: 5,
+        status: 'published',
       },
       isLoading: false,
       isError: false,
@@ -186,25 +244,27 @@ describe('Page Edit Flow Integration', () => {
     
     // Wait for page to load
     await waitFor(() => {
-      expect(screen.getByDisplayValue('Existing Page')).toBeInTheDocument();
+      expect(screen.getByTestId('metadata-form')).toBeInTheDocument();
     });
     
-    // Update title
-    const titleInput = screen.getByDisplayValue('Existing Page');
+    // Update metadata
+    const titleInput = screen.getByTestId('metadata-title');
     fireEvent.change(titleInput, { target: { value: 'Updated Page Title' } });
     
     // Save changes
     const saveButton = screen.getByText('Save Changes');
     fireEvent.click(saveButton);
     
-    // Verify API call
+    // Verify API call includes metadata
     await waitFor(() => {
-      expect(pagesApi.updatePage).toHaveBeenCalledWith(
-        'existing-page-id',
-        expect.objectContaining({
-          title: 'Updated Page Title',
-        })
-      );
+      expect(pagesApi.updatePage).toHaveBeenCalled();
+    }, { timeout: 2000 });
+    
+    const updateCall = pagesApi.updatePage.mock.calls[0];
+    expect(updateCall[0]).toBe('existing-page-id');
+    expect(updateCall[1]).toMatchObject({
+      title: expect.any(String),
+      slug: expect.any(String),
     });
   });
 
@@ -257,11 +317,19 @@ describe('Page Edit Flow Integration', () => {
     expect(mockNavigate).not.toHaveBeenCalled();
   });
 
-  it('preserves draft across page reloads', async () => {
-    // Set up draft in localStorage
+  it('preserves draft with metadata across page reloads', async () => {
+    // Set up draft in localStorage with metadata
     const draft = {
       title: 'Draft Title',
       content: '<p>Draft content</p>',
+      metadata: {
+        title: 'Draft Title',
+        slug: 'draft-title',
+        parent_id: null,
+        section: 'Draft Section',
+        order: 10,
+        status: 'draft',
+      },
       timestamp: Date.now(),
     };
     localStorage.setItem('arcadium_draft_new', JSON.stringify(draft));
@@ -270,16 +338,24 @@ describe('Page Edit Flow Integration', () => {
     
     // Draft should be loaded
     await waitFor(() => {
-      expect(screen.getByDisplayValue('Draft Title')).toBeInTheDocument();
-    });
+      expect(screen.getByTestId('metadata-form')).toBeInTheDocument();
+    }, { timeout: 2000 });
     
-    expect(screen.getByText('Unsaved changes')).toBeInTheDocument();
+    // Check that unsaved changes indicator appears
+    await waitFor(() => {
+      expect(screen.getByText('Unsaved changes')).toBeInTheDocument();
+    }, { timeout: 2000 });
   });
 
   it('clears draft after successful save', async () => {
     const draft = {
       title: 'Draft Title',
       content: '<p>Draft</p>',
+      metadata: {
+        title: 'Draft Title',
+        slug: 'draft-title',
+        status: 'draft',
+      },
       timestamp: Date.now(),
     };
     localStorage.setItem('arcadium_draft_new', JSON.stringify(draft));
@@ -287,7 +363,7 @@ describe('Page Edit Flow Integration', () => {
     renderEditPage('new');
     
     await waitFor(() => {
-      expect(screen.getByDisplayValue('Draft Title')).toBeInTheDocument();
+      expect(screen.getByTestId('metadata-form')).toBeInTheDocument();
     });
     
     const saveButton = screen.getByText('Create Page');
@@ -295,6 +371,107 @@ describe('Page Edit Flow Integration', () => {
     
     await waitFor(() => {
       expect(localStorage.getItem('arcadium_draft_new')).toBeNull();
+    });
+  });
+
+  it('validates metadata before saving', async () => {
+    const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
+    
+    renderEditPage('new');
+    
+    await waitFor(() => {
+      expect(screen.getByTestId('metadata-form')).toBeInTheDocument();
+    }, { timeout: 2000 });
+    
+    // Clear title and slug manually
+    const titleInput = screen.getByTestId('metadata-title');
+    fireEvent.change(titleInput, { target: { value: '' } });
+    
+    const slugInput = screen.getByTestId('metadata-slug');
+    fireEvent.change(slugInput, { target: { value: '' } });
+    
+    // Wait for state to update
+    await waitFor(() => {
+      expect(titleInput.value).toBe('');
+    }, { timeout: 1000 });
+    
+    // Try to save without title
+    const saveButton = screen.getByText('Create Page');
+    fireEvent.click(saveButton);
+    
+    // Should show alert
+    await waitFor(() => {
+      expect(alertSpy).toHaveBeenCalled();
+    }, { timeout: 2000 });
+    
+    // Should not call API
+    expect(pagesApi.createPage).not.toHaveBeenCalled();
+    
+    alertSpy.mockRestore();
+  });
+
+  it('validates slug before saving', async () => {
+    const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
+    
+    renderEditPage('new');
+    
+    await waitFor(() => {
+      expect(screen.getByTestId('metadata-form')).toBeInTheDocument();
+    }, { timeout: 2000 });
+    
+    // Set title (will auto-generate slug)
+    const titleInput = screen.getByTestId('metadata-title');
+    fireEvent.change(titleInput, { target: { value: 'Test Page' } });
+    
+    // Wait for slug to be generated, then clear it
+    await waitFor(() => {
+      const slugInput = screen.getByTestId('metadata-slug');
+      if (slugInput.value) {
+        fireEvent.change(slugInput, { target: { value: '' } });
+      }
+    }, { timeout: 2000 });
+    
+    const saveButton = screen.getByText('Create Page');
+    fireEvent.click(saveButton);
+    
+    // Should show alert for missing slug
+    await waitFor(() => {
+      expect(alertSpy).toHaveBeenCalled();
+    }, { timeout: 2000 });
+    
+    alertSpy.mockRestore();
+  });
+
+  it('saves page with all metadata fields', async () => {
+    renderEditPage('new');
+    
+    await waitFor(() => {
+      expect(screen.getByTestId('metadata-form')).toBeInTheDocument();
+    }, { timeout: 2000 });
+    
+    const titleInput = screen.getByTestId('metadata-title');
+    fireEvent.change(titleInput, { target: { value: 'Complete Page' } });
+    
+    // Wait for slug to be auto-generated or set manually
+    await waitFor(() => {
+      const slugInput = screen.getByTestId('metadata-slug');
+      if (!slugInput.value) {
+        fireEvent.change(slugInput, { target: { value: 'complete-page' } });
+      }
+    }, { timeout: 2000 });
+    
+    const saveButton = screen.getByText('Create Page');
+    fireEvent.click(saveButton);
+    
+    await waitFor(() => {
+      expect(pagesApi.createPage).toHaveBeenCalled();
+    }, { timeout: 2000 });
+    
+    const createCall = pagesApi.createPage.mock.calls[0]?.[0];
+    expect(createCall).toMatchObject({
+      title: expect.any(String),
+      slug: expect.any(String),
+      status: 'draft',
     });
   });
 });

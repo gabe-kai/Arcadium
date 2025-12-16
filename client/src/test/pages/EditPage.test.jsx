@@ -67,6 +67,27 @@ vi.mock('../../components/editor/EditorToolbar', () => ({
   EditorToolbar: ({ editor }) => editor ? <div data-testid="editor-toolbar">Toolbar</div> : null,
 }));
 
+vi.mock('../../components/editor/MetadataForm', () => {
+  const React = require('react');
+  return {
+    MetadataForm: ({ initialData, onChange, isNewPage }) => {
+      React.useEffect(() => {
+        if (onChange) {
+          onChange({
+            title: initialData?.title || '',
+            slug: initialData?.slug || '',
+            parent_id: initialData?.parent_id || null,
+            section: initialData?.section || null,
+            order: initialData?.order || null,
+            status: initialData?.status || 'draft',
+          });
+        }
+      }, []);
+      return React.createElement('div', { 'data-testid': 'metadata-form' }, 'MetadataForm');
+    },
+  };
+});
+
 describe('EditPage', () => {
   let queryClient;
   let mockNavigate;
@@ -127,7 +148,8 @@ describe('EditPage', () => {
   it('renders edit page for new page', () => {
     renderEditPage('new');
     
-    expect(screen.getByPlaceholderText('Page Title')).toBeInTheDocument();
+    expect(screen.getByText('Create New Page')).toBeInTheDocument();
+    expect(screen.getByTestId('metadata-form')).toBeInTheDocument();
     expect(screen.getByTestId('editor')).toBeInTheDocument();
     expect(screen.getByText('Create Page')).toBeInTheDocument();
   });
@@ -137,7 +159,12 @@ describe('EditPage', () => {
       data: {
         id: 'existing-page-id',
         title: 'Existing Page',
+        slug: 'existing-page',
         content: '# Content',
+        parent_id: null,
+        section: null,
+        order: 0,
+        status: 'published',
       },
       isLoading: false,
       isError: false,
@@ -145,7 +172,8 @@ describe('EditPage', () => {
     
     renderEditPage('existing-page-id');
     
-    expect(screen.getByDisplayValue('Existing Page')).toBeInTheDocument();
+    expect(screen.getByText('Edit Page')).toBeInTheDocument();
+    expect(screen.getByTestId('metadata-form')).toBeInTheDocument();
     expect(screen.getByText('Save Changes')).toBeInTheDocument();
   });
 
@@ -161,13 +189,18 @@ describe('EditPage', () => {
     expect(screen.getByText('Loading page...')).toBeInTheDocument();
   });
 
-  it('loads page content into editor', async () => {
+  it('loads page content and metadata into editor', async () => {
     const pageContent = '# Test Content';
     pagesApi.usePage.mockReturnValue({
       data: {
         id: 'existing-page-id',
         title: 'Test Page',
+        slug: 'test-page',
         content: pageContent,
+        parent_id: null,
+        section: 'Test Section',
+        order: 5,
+        status: 'published',
       },
       isLoading: false,
       isError: false,
@@ -177,6 +210,7 @@ describe('EditPage', () => {
     
     await waitFor(() => {
       expect(markdownUtils.markdownToHtml).toHaveBeenCalledWith(pageContent);
+      expect(screen.getByTestId('metadata-form')).toBeInTheDocument();
     });
   });
 
@@ -191,39 +225,71 @@ describe('EditPage', () => {
     });
   });
 
-  it('disables save button when title is empty', () => {
+  it('disables save button when metadata is incomplete', async () => {
     renderEditPage('new');
     
-    const saveButton = screen.getByText('Create Page');
-    expect(saveButton).toBeDisabled();
+    await waitFor(() => {
+      const saveButton = screen.getByText('Create Page');
+      // Button should be disabled if title or slug is missing
+      expect(saveButton).toBeDisabled();
+    });
   });
 
-  it('enables save button when title is provided', () => {
+  it('includes metadata in save request', async () => {
     renderEditPage('new');
     
-    const titleInput = screen.getByPlaceholderText('Page Title');
-    fireEvent.change(titleInput, { target: { value: 'Test Title' } });
-    
-    const saveButton = screen.getByText('Create Page');
-    expect(saveButton).not.toBeDisabled();
-  });
-
-  it('creates new page when save is clicked', async () => {
-    renderEditPage('new');
-    
-    const titleInput = screen.getByPlaceholderText('Page Title');
-    fireEvent.change(titleInput, { target: { value: 'New Page Title' } });
+    await waitFor(() => {
+      expect(screen.getByTestId('metadata-form')).toBeInTheDocument();
+    });
     
     const saveButton = screen.getByText('Create Page');
     fireEvent.click(saveButton);
     
     await waitFor(() => {
-      expect(pagesApi.createPage).toHaveBeenCalledWith({
-        title: 'New Page Title',
-        content: expect.any(String),
-        status: 'draft',
-      });
+      expect(pagesApi.createPage).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: expect.any(String),
+          slug: expect.any(String),
+          status: 'draft',
+        })
+      );
     });
+  });
+
+  it('creates new page with all metadata when save is clicked', async () => {
+    renderEditPage('new');
+    
+    // Wait for MetadataForm to call onChange
+    await waitFor(() => {
+      expect(screen.getByTestId('metadata-form')).toBeInTheDocument();
+    });
+    
+    const saveButton = screen.getByText('Create Page');
+    fireEvent.click(saveButton);
+    
+    await waitFor(() => {
+      expect(pagesApi.createPage).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: expect.any(String),
+          slug: expect.any(String),
+          content: expect.any(String),
+          status: 'draft',
+        })
+      );
+    });
+  });
+
+  it('validates slug before saving', async () => {
+    renderEditPage('new');
+    
+    await waitFor(() => {
+      expect(screen.getByTestId('metadata-form')).toBeInTheDocument();
+    });
+    
+    const saveButton = screen.getByText('Create Page');
+    
+    // Button should be disabled if slug is missing
+    expect(saveButton).toBeDisabled();
   });
 
   it('updates existing page when save is clicked', async () => {
@@ -231,7 +297,12 @@ describe('EditPage', () => {
       data: {
         id: 'existing-page-id',
         title: 'Existing Page',
+        slug: 'existing-page',
         content: '# Content',
+        parent_id: null,
+        section: null,
+        order: 0,
+        status: 'published',
       },
       isLoading: false,
       isError: false,
@@ -239,17 +310,22 @@ describe('EditPage', () => {
     
     renderEditPage('existing-page-id');
     
-    const titleInput = screen.getByDisplayValue('Existing Page');
-    fireEvent.change(titleInput, { target: { value: 'Updated Title' } });
+    await waitFor(() => {
+      expect(screen.getByTestId('metadata-form')).toBeInTheDocument();
+    });
     
     const saveButton = screen.getByText('Save Changes');
     fireEvent.click(saveButton);
     
     await waitFor(() => {
-      expect(pagesApi.updatePage).toHaveBeenCalledWith('existing-page-id', {
-        title: 'Updated Title',
-        content: expect.any(String),
-      });
+      expect(pagesApi.updatePage).toHaveBeenCalledWith(
+        'existing-page-id',
+        expect.objectContaining({
+          title: expect.any(String),
+          slug: expect.any(String),
+          content: expect.any(String),
+        })
+      );
     });
   });
 
