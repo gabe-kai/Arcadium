@@ -1,7 +1,7 @@
 ---
-title: Orphanage
 slug: orphanage
 status: published
+title: Orphanage
 ---
 # Orphanage
 

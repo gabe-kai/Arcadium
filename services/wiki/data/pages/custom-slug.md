@@ -1,6 +1,6 @@
 ---
-title: Test Page
 slug: custom-slug
 status: published
+title: Test Page
 ---
 Content

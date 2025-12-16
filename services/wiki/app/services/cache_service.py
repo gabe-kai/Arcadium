@@ -8,11 +8,15 @@ Provides caching for:
 """
 import hashlib
 import json
+import uuid
 from typing import Optional, Dict, List
 from datetime import datetime, timezone
 from flask import current_app
 from app import db
 from app.models.wiki_config import WikiConfig
+
+# System user ID for cache operations when no user is authenticated
+SYSTEM_USER_ID = uuid.UUID('00000000-0000-0000-0000-000000000001')
 
 
 class CacheService:
@@ -106,16 +110,18 @@ class CacheService:
             'cached_at': datetime.now(timezone.utc).isoformat()
         }
         
+        # Use system user ID if no user_id provided
+        cache_user_id = uuid.UUID(user_id) if user_id else SYSTEM_USER_ID
+        
         config = db.session.query(WikiConfig).filter_by(key=cache_key).first()
         if config:
             config.value = json.dumps(cache_data)
-            if user_id:
-                config.updated_by = user_id
+            config.updated_by = cache_user_id
         else:
             config = WikiConfig(
                 key=cache_key,
                 value=json.dumps(cache_data),
-                updated_by=user_id
+                updated_by=cache_user_id
             )
             db.session.add(config)
         
@@ -174,16 +180,18 @@ class CacheService:
             'cached_at': datetime.now(timezone.utc).isoformat()
         }
         
+        # Use system user ID if no user_id provided
+        cache_user_id = uuid.UUID(user_id) if user_id else SYSTEM_USER_ID
+        
         config = db.session.query(WikiConfig).filter_by(key=cache_key).first()
         if config:
             config.value = json.dumps(cache_data)
-            if user_id:
-                config.updated_by = user_id
+            config.updated_by = cache_user_id
         else:
             config = WikiConfig(
                 key=cache_key,
                 value=json.dumps(cache_data),
-                updated_by=user_id
+                updated_by=cache_user_id
             )
             db.session.add(config)
         

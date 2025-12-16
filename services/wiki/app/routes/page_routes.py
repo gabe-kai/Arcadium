@@ -215,7 +215,7 @@ def get_page(page_id):
         
         # If HTML format requested, return styled HTML page
         if format_type == 'html':
-            from flask import render_template_string
+            from flask import render_template_string, make_response
             
             # Get forward links (outgoing)
             forward_links = LinkService.get_outgoing_links(page.id)
@@ -431,7 +431,7 @@ def get_page(page_id):
 </html>
             """
             
-            return render_template_string(
+            html_output = render_template_string(
                 html_template,
                 title=page.title,
                 html_content=html_content,
@@ -441,7 +441,10 @@ def get_page(page_id):
                 updated_at=page.updated_at.strftime('%Y-%m-%d %H:%M:%S') if page.updated_at else 'Unknown',
                 word_count=page.word_count,
                 content_size_kb=page.content_size_kb
-            ), 200
+            )
+            response = make_response(html_output, 200)
+            response.headers['Content-Type'] = 'text/html; charset=utf-8'
+            return response
         
         # JSON response (default)
         # Get forward links (outgoing)

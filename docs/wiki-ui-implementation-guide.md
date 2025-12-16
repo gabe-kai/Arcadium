@@ -15,11 +15,38 @@ This guide outlines the implementation plan for building the Wiki User Interface
 - Admin dashboard endpoints
 - Service status endpoints
 
-### ⏳ Frontend UI (Not Started)
-- Client directory exists but is empty (placeholder only)
-- No UI components implemented
-- No routing or state management
-- No editor integration
+### 🧩 Frontend UI (In Progress)
+
+#### ✅ Phase 1: Foundation & Setup (Complete)
+- React + Vite client bootstrapped in `client/`
+- Basic project structure created (`components`, `pages`, `services`, `utils`, `test`)
+- React Router configured with core routes (home, page view, edit, search, index)
+- Base layout components implemented (header, footer, layout, sidebar placeholder)
+- Initial styling in place for a modern, book-like reading shell
+- Axios API client configured with `VITE_WIKI_API_BASE_URL` fallback to `http://localhost:5000/api`
+- Testing infrastructure set up (Vitest + React Testing Library) with smoke tests for routing, layout, and API client
+- **CORS configured** - Flask backend allows requests from React dev server (`localhost:3000`)
+- **React Query integration** - Server state management for page data fetching
+- **Auth context** - JWT token storage and Authorization header support ready
+
+#### ✅ Phase 2: Reading View - Core Components (Complete)
+- **PageView component** - Full reading experience with content rendering, metadata display
+- **Breadcrumb Navigation** - Component implemented with API integration, tests included
+- **Previous/Next Navigation** - Component implemented with API integration, tests included
+- **Enhanced Content Styling**:
+  - Syntax highlighting (Prism.js with multiple languages: JS, TS, Python, Bash, JSON, Markdown, CSS, SQL)
+  - Responsive image handling (max-width 100%, rounded corners, shadows)
+  - Styled tables (striped rows, hover effects, borders)
+  - Enhanced blockquotes (background, decorative quote mark)
+  - Internal vs external link distinction (visual indicators, external icon)
+- **API Integration**:
+  - `usePage`, `useBreadcrumb`, `usePageNavigation` hooks
+  - Automatic syntax highlighting and link processing after render
+- **Tests added**:
+  - PageView component tests (loading, error, success states)
+  - Breadcrumb component tests (7 test cases)
+  - PageNavigation component tests (8 test cases)
+  - Backend: cache service tests (user_id=None), CORS header tests, unauthenticated page access tests
 
 ## Implementation Phases
 
@@ -27,23 +54,24 @@ This guide outlines the implementation plan for building the Wiki User Interface
 **Goal**: Set up the frontend framework and basic infrastructure
 
 #### Tasks:
-- [ ] Choose frontend framework (React recommended for Tiptap integration)
-- [ ] Set up project structure (components, pages, services, utils)
-- [ ] Configure build tools (Vite already configured)
-- [ ] Set up routing (React Router or similar)
-- [ ] Set up state management (Context API, Redux, or Zustand)
-- [ ] Configure API service layer (axios or fetch wrapper)
-- [ ] Set up authentication integration (JWT token handling)
-- [ ] Create base layout components (Header, Footer, Layout)
-- [ ] Set up CSS/styling approach (CSS Modules, Tailwind, or styled-components)
-- [ ] Configure environment variables for API endpoints
+- [x] Choose frontend framework (React 18 + React Router, Vite)
+- [x] Set up project structure (components, pages, services, utils, test)
+- [x] Configure build tools (Vite + `@vitejs/plugin-react-swc`)
+- [x] Set up routing (React Router with core routes + v7 future flags)
+- [x] Set up state management (React Query for server state, simple Auth context for auth state)
+- [x] Configure API service layer (Axios wrapper in `src/services/api/client.js` with auth header support)
+- [x] Set up authentication integration (JWT token storage + Axios Authorization header hookup)
+- [x] Create base layout components (Header, Footer, Layout, Sidebar placeholder)
+- [x] Set up CSS/styling approach (global CSS with modern, book-like layout)
+- [x] Configure environment variables for API endpoints (`VITE_WIKI_API_BASE_URL`)
+- [x] Set up UI testing infrastructure (Vitest + React Testing Library) and smoke tests
 
 #### Deliverables:
-- Working development environment
-- Basic routing structure
-- API service layer with error handling
-- Authentication flow integration
-- Base layout with header/footer
+- Working development environment (`npm install`, `npm run dev` in `client/`)
+- Basic routing structure with placeholder pages
+- API service layer with error handling hook (Axios client + interceptor)
+- Testable layout shell (header, sidebar, content, footer)
+- UI test harness ready for future components (Vitest + RTL)
 
 ---
 
@@ -51,40 +79,49 @@ This guide outlines the implementation plan for building the Wiki User Interface
 **Goal**: Implement the main reading experience
 
 #### Tasks:
-- [ ] **Page Content Component**
-  - Render markdown HTML content
-  - Apply typography styles (max-width 800px, line-height 1.6-1.8)
-  - Syntax highlighting for code blocks (Prism.js or highlight.js)
-  - Responsive image handling
-  - Table styling
-  - Block quote styling
-  - Internal vs external link styling
+- [x] **Page Content Component** ✅ (Complete)
+  - [x] Render markdown HTML content from backend API
+  - [x] Display page title and metadata (updated_at, word_count, size, status)
+  - [x] Apply basic typography styles (via global CSS)
+  - [x] Syntax highlighting for code blocks (Prism.js with multiple languages)
+  - [x] Responsive image handling (max-width 100%, rounded corners, shadows)
+  - [x] Table styling (striped rows, hover effects, borders)
+  - [x] Enhanced block quote styling (background, decorative quote mark)
+  - [x] Internal vs external link styling (visual distinction, external icon)
 
-- [ ] **Breadcrumb Navigation**
-  - Build breadcrumb trail from page hierarchy
-  - Click to navigate to parent pages
-  - Display: `Home > Section > Parent > Current Page`
+- [x] **Breadcrumb Navigation** ✅
+  - [x] Build breadcrumb trail from page hierarchy
+  - [x] Click to navigate to parent pages
+  - [x] Display: `Home > Section > Parent > Current Page`
+  - [x] Hide when only root page (single item)
+  - [x] Style with separators and hover effects
 
-- [ ] **Previous/Next Navigation**
-  - Calculate previous/next pages based on order_index
-  - Display buttons at bottom of content
-  - Handle edge cases (first/last pages)
+- [x] **Previous/Next Navigation** ✅
+  - [x] Calculate previous/next pages based on order_index
+  - [x] Display buttons at bottom of content
+  - [x] Handle edge cases (first/last pages - disabled state)
+  - [x] Style with hover effects and disabled states
 
-- [ ] **Page Header**
-  - Display page title
-  - Show metadata (last updated, word count, size)
-  - Edit button (for writers/admins)
-  - Status indicator (published/draft)
+- [x] **Page Header** (Basic implementation complete)
+  - [x] Display page title
+  - [x] Show metadata (last updated, word count, size)
+  - [x] Status indicator (published/draft)
+  - [ ] Edit button (for writers/admins) - **TODO** (requires auth integration)
 
 #### API Endpoints Used:
-- `GET /api/pages/{page_id}` - Get page content
-- `GET /api/pages` - List pages for navigation
-- `GET /api/navigation/pages/{page_id}/hierarchy` - Get breadcrumbs
+- `GET /api/pages/{page_id}` - Get page content ✅ (in use)
+- `GET /api/pages/{page_id}/breadcrumb` - Get breadcrumb path (for breadcrumb nav)
+- `GET /api/pages/{page_id}/navigation` - Get previous/next pages (for prev/next nav)
+- `GET /api/navigation` - Get full navigation tree (for sidebar)
 
 #### Deliverables:
-- Fully styled page reading view
-- Working navigation (breadcrumbs, prev/next)
-- Responsive layout
+- ✅ Fully styled page reading view - **COMPLETE**
+- ✅ Working navigation (breadcrumbs, prev/next) - **COMPLETE**
+- ✅ Responsive layout (basic) - **COMPLETE**
+- ✅ Component tests for all navigation components - **COMPLETE**
+- ✅ Enhanced content styling (syntax highlighting, tables, images, blockquotes, links) - **COMPLETE**
+
+**Phase 2 Status: ✅ COMPLETE** (except Edit button which requires auth integration)
 
 ---
 
@@ -750,12 +787,41 @@ src/
 
 ## Next Steps
 
-1. **Review and approve this implementation guide**
-2. **Set up development environment** (Phase 1)
-3. **Start with MVP phases** (Phases 1-4, 7-10)
-4. **Iterate based on feedback**
-5. **Add enhanced features** (Phases 5-6, 11-12)
-6. **Polish and optimize** (Phases 13-14)
+### Immediate Next Steps
+
+1. **Phase 3: Navigation Tree (Left Sidebar)**
+   - Implement hierarchical page navigation tree
+   - Expandable/collapsible nodes
+   - Tree search/filter
+   - Highlight current page
+   - Remember expanded state (localStorage)
+
+2. **Phase 4: Table of Contents & Backlinks (Right Sidebar)**
+   - Auto-generate TOC from page headings
+   - Scroll-to-section functionality
+   - Active section highlighting while scrolling
+   - Display backlinks (pages linking to current page)
+
+3. **Phase 5: Comments System**
+   - Threaded comments display
+   - Comment form (create, reply, edit, delete)
+   - Recommendation styling for player suggestions
+
+4. **Phase 6: Search Interface**
+   - Global search bar in header
+   - Search results page
+   - Alphabetical index view
+
+5. **Phase 7: WYSIWYG Editor Integration**
+   - Integrate Tiptap editor
+   - Page editing interface
+   - Auto-save drafts
+   - Preview mode
+
+### Completed Phases
+
+- ✅ **Phase 1: Foundation & Setup** - Complete
+- ✅ **Phase 2: Reading View - Core Components** - Complete (except Edit button, requires auth)
 
 ---
 

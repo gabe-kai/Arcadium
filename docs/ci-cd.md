@@ -8,7 +8,7 @@ The project uses **GitHub Actions** for CI/CD. Currently, CI is configured for t
 
 ## GitHub Actions Workflows
 
-### Wiki Service Tests
+### Wiki Service Tests (Backend)
 
 **Location:** `.github/workflows/wiki-service-tests.yml`
 
@@ -60,6 +60,43 @@ Tests use PostgreSQL (not SQLite) to:
 - Ensure accurate test results
 
 See `services/wiki/tests/conftest.py` for test database configuration.
+
+---
+
+### Wiki UI Tests (Frontend)
+
+**Status:** Local-only for now (no dedicated GitHub Actions workflow yet).  
+**Location:** `client/`
+
+The Wiki UI uses **Vitest** and **React Testing Library** for component and integration tests.
+
+#### Running Wiki UI Tests Locally
+
+From the `client/` directory:
+
+```bash
+# Install dependencies (first time)
+npm install
+
+# Run all tests
+npm test
+
+# Run tests with UI
+npm run test:ui
+
+# Run with coverage
+npm run test:coverage
+```
+
+#### What’s Currently Covered
+
+- App shell renders (React + Router + layout)
+- Basic routing (home, page view, search)
+- Axios API client configuration
+
+Future CI work (see **Planned CI/CD Features** below) will add:
+- A GitHub Actions workflow for the Wiki UI (running `npm test`)
+- Optional build checks (`npm run build`) for the client
 
 ## Running CI Tests Locally
 

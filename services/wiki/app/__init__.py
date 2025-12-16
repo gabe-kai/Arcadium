@@ -2,6 +2,7 @@ import os
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
+from flask_cors import CORS
 
 db = SQLAlchemy()
 migrate = Migrate()
@@ -22,6 +23,16 @@ def create_app(config_name=None):
     # Note: SQLALCHEMY_ENGINE_OPTIONS is automatically used by Flask-SQLAlchemy
     db.init_app(app)
     migrate.init_app(app, db)
+    
+    # Configure CORS for frontend access
+    CORS(app, resources={
+        r"/api/*": {
+            "origins": ["http://localhost:3000", "http://127.0.0.1:3000"],
+            "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+            "allow_headers": ["Content-Type", "Authorization"],
+            "supports_credentials": True
+        }
+    })
     
     # Create data directories
     os.makedirs(app.config['WIKI_PAGES_DIR'], exist_ok=True)

@@ -100,12 +100,22 @@ pytest
 
 See [CI/CD Documentation](docs/ci-cd.md) for detailed information about the CI setup and troubleshooting.
 
+## Web Client
+
+The web client is a React-based SPA located in `client/`. See [Client README](client/README.md) for setup and development instructions.
+
+**Current Status:**
+- ✅ Phase 1: Foundation & Setup (Complete)
+- ✅ Phase 2: Reading View - Core Components (Complete)
+- 🚧 Phase 3+: Navigation Tree, TOC, Comments, Search, Editor (In Progress)
+
 ## Documentation
 
 - [Architecture](docs/architecture/)
 - [API Documentation](docs/api/)
 - [Game Design](docs/game-design/)
 - [Service Specifications](docs/services/)
+- [Wiki UI Implementation Guide](docs/wiki-ui-implementation-guide.md)
 - [CI/CD](docs/ci-cd.md)
 
 ## Contributing

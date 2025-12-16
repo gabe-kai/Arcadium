@@ -37,6 +37,18 @@ flask db upgrade
 flask run
 ```
 
+The service will be available at `http://localhost:5000` by default.
+
+## Frontend Integration
+
+The Wiki Service API is configured to work with the React frontend client:
+
+- **CORS enabled** - Allows requests from `http://localhost:3000` (React dev server)
+- **HTML format support** - API endpoints accept `?format=html` query parameter for styled HTML responses
+- **JSON API** - All endpoints return JSON by default for programmatic access
+
+The frontend client is located in `client/` and connects to the API at `http://localhost:5000/api`.
+
 ## File Sync Utility
 
 The wiki service includes a sync utility for syncing markdown files to the database. This is especially useful for AI agents writing wiki content.

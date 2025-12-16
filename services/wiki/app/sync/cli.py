@@ -125,7 +125,7 @@ def watch_command(admin_user_id: str = None, debounce: float = 1.0):
     except Exception as e:
         print(f"[WATCHER] Error: {e}")
         watcher.stop()
-            sys.exit(1)
+        sys.exit(1)
 
 
 def main():

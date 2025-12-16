@@ -187,3 +187,70 @@ def test_clear_all_caches(app, test_user_id):
         assert CacheService.get_html_cache(content1) is None
         assert CacheService.get_toc_cache(content1) is None
         assert CacheService.get_html_cache(content2) is None
+
+
+def test_set_html_cache_without_user_id(app):
+    """Test setting HTML cache without user_id uses SYSTEM_USER_ID"""
+    with app.app_context():
+        from app.services.cache_service import SYSTEM_USER_ID
+        content = "# Test Content"
+        html = "<h1>Test Content</h1>"
+        
+        # Set cache without user_id (None)
+        CacheService.set_html_cache(content, html, None)
+        
+        # Verify cache was created with SYSTEM_USER_ID
+        cache_key = CacheService._generate_cache_key(content, 'html')
+        config = db.session.query(WikiConfig).filter_by(key=cache_key).first()
+        assert config is not None
+        assert config.updated_by == SYSTEM_USER_ID
+        
+        # Verify cache can be retrieved
+        cached = CacheService.get_html_cache(content)
+        assert cached == html
+
+
+def test_set_toc_cache_without_user_id(app):
+    """Test setting TOC cache without user_id uses SYSTEM_USER_ID"""
+    with app.app_context():
+        from app.services.cache_service import SYSTEM_USER_ID
+        content = "## Section"
+        toc = [{'level': 2, 'text': 'Section', 'anchor': 'section'}]
+        
+        # Set cache without user_id (None)
+        CacheService.set_toc_cache(content, toc, None)
+        
+        # Verify cache was created with SYSTEM_USER_ID
+        cache_key = CacheService._generate_cache_key(content, 'toc')
+        config = db.session.query(WikiConfig).filter_by(key=cache_key).first()
+        assert config is not None
+        assert config.updated_by == SYSTEM_USER_ID
+        
+        # Verify cache can be retrieved
+        cached = CacheService.get_toc_cache(content)
+        assert cached == toc
+
+
+def test_set_html_cache_updates_existing_without_user_id(app, test_user_id):
+    """Test updating existing HTML cache without user_id still uses SYSTEM_USER_ID"""
+    with app.app_context():
+        from app.services.cache_service import SYSTEM_USER_ID
+        content = "# Test Content"
+        html1 = "<h1>Test Content</h1>"
+        html2 = "<h1>Updated Content</h1>"
+        
+        # First set with user_id
+        CacheService.set_html_cache(content, html1, str(test_user_id))
+        
+        # Update without user_id
+        CacheService.set_html_cache(content, html2, None)
+        
+        # Verify cache was updated with SYSTEM_USER_ID
+        cache_key = CacheService._generate_cache_key(content, 'html')
+        config = db.session.query(WikiConfig).filter_by(key=cache_key).first()
+        assert config is not None
+        assert config.updated_by == SYSTEM_USER_ID
+        
+        # Verify updated cache can be retrieved
+        cached = CacheService.get_html_cache(content)
+        assert cached == html2

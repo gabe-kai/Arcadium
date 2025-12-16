@@ -1,6 +1,6 @@
 ---
-title: First Page
 slug: test-slug
 status: published
+title: First Page
 ---
 Content

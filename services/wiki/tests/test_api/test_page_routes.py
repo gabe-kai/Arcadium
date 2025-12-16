@@ -282,3 +282,55 @@ def test_delete_page_with_children(client, app, test_writer_id):
         # but orphaned_pages should still be in the response
         assert len(data.get('orphaned_pages', [])) >= 1, f"Expected at least 1 orphaned page, got {data.get('orphaned_count', 0)}. Response: {data}"
         assert data['orphaned_count'] >= 1
+
+
+def test_get_page_unauthenticated_creates_cache(client, app, test_page):
+    """Test that unauthenticated page access creates cache with SYSTEM_USER_ID"""
+    from app.services.cache_service import SYSTEM_USER_ID, CacheService
+    from app.models.wiki_config import WikiConfig
+    from app import db
+    
+    page_id = str(test_page.id)
+    
+    with app.app_context():
+        # Clear any existing cache
+        CacheService.invalidate_cache(test_page.content)
+        
+        # Make unauthenticated request (no auth headers)
+        response = client.get(f'/api/pages/{page_id}')
+        assert response.status_code == 200
+        data = response.get_json()
+        assert data['title'] == test_page.title
+        
+        # Verify cache was created with SYSTEM_USER_ID
+        cache_key_html = CacheService._generate_cache_key(test_page.content, 'html')
+        cache_key_toc = CacheService._generate_cache_key(test_page.content, 'toc')
+        
+        html_config = db.session.query(WikiConfig).filter_by(key=cache_key_html).first()
+        toc_config = db.session.query(WikiConfig).filter_by(key=cache_key_toc).first()
+        
+        assert html_config is not None, "HTML cache should be created"
+        assert html_config.updated_by == SYSTEM_USER_ID, "HTML cache should use SYSTEM_USER_ID"
+        assert toc_config is not None, "TOC cache should be created"
+        assert toc_config.updated_by == SYSTEM_USER_ID, "TOC cache should use SYSTEM_USER_ID"
+
+
+def test_cors_headers_present(client, test_page):
+    """Test that CORS headers are present in API responses"""
+    page_id = str(test_page.id)
+    response = client.get(f'/api/pages/{page_id}')
+    
+    assert response.status_code == 200
+    
+    # Check for CORS headers
+    assert 'Access-Control-Allow-Origin' in response.headers
+    # CORS should allow localhost:3000 (React dev server)
+    assert 'localhost:3000' in response.headers.get('Access-Control-Allow-Origin', '') or \
+           '*' in response.headers.get('Access-Control-Allow-Origin', '')
+    
+    # Check for other CORS headers if present
+    if 'Access-Control-Allow-Methods' in response.headers:
+        assert 'GET' in response.headers['Access-Control-Allow-Methods']
+    if 'Access-Control-Allow-Headers' in response.headers:
+        assert 'Authorization' in response.headers['Access-Control-Allow-Headers'] or \
+               'Content-Type' in response.headers['Access-Control-Allow-Headers']

@@ -1,0 +1,515 @@
+/* Global styles for Arcadium Wiki UI foundation */
+
+:root {
+  color-scheme: light dark;
+  --arc-bg: #0f172a;
+  --arc-bg-elevated: #020617;
+  --arc-surface: #0b1120;
+  --arc-border: #1e293b;
+  --arc-accent: #38bdf8;
+  --arc-accent-soft: rgba(56, 189, 248, 0.2);
+  --arc-text: #e5e7eb;
+  --arc-text-subtle: #9ca3af;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI',
+    sans-serif;
+  background: radial-gradient(circle at top, #0f172a, #020617 55%, #000 100%);
+  color: var(--arc-text);
+}
+
+.arc-app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.arc-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1.5rem;
+  border-bottom: 1px solid var(--arc-border);
+  background: linear-gradient(to right, #020617, #0b1120);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.arc-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--arc-text);
+  text-decoration: none;
+}
+
+.arc-logo-mark {
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 0.5rem;
+  background: radial-gradient(circle at 30% 30%, #38bdf8, #0ea5e9 60%, #0369a1);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  color: #0b1120;
+  box-shadow: 0 0 25px rgba(56, 189, 248, 0.6);
+}
+
+.arc-logo-text {
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.arc-header-right {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.arc-search-input {
+  padding: 0.4rem 0.75rem;
+  border-radius: 999px;
+  border: 1px solid var(--arc-border);
+  background: rgba(15, 23, 42, 0.85);
+  color: var(--arc-text);
+  min-width: 16rem;
+}
+
+.arc-search-input::placeholder {
+  color: var(--arc-text-subtle);
+}
+
+.arc-header-button {
+  border-radius: 999px;
+  padding: 0.4rem 0.9rem;
+  border: 1px solid rgba(56, 189, 248, 0.7);
+  background: radial-gradient(circle at 30% 0%, #0ea5e9, #0369a1);
+  color: #e5e7eb;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.arc-main {
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr);
+  gap: 1.5rem;
+  padding: 1.5rem 1.5rem 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.arc-sidebar {
+  background: radial-gradient(circle at top, #020617, #020617 55%, #000);
+  border-radius: 0.75rem;
+  border: 1px solid rgba(15, 23, 42, 0.9);
+  padding: 1rem 1.25rem;
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.8);
+}
+
+.arc-sidebar-placeholder h3 {
+  margin-top: 0;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--arc-text-subtle);
+}
+
+.arc-sidebar-placeholder p {
+  font-size: 0.9rem;
+  color: var(--arc-text-subtle);
+}
+
+.arc-content {
+  background: radial-gradient(circle at top, #020617, #020617 55%, #000);
+  border-radius: 0.75rem;
+  border: 1px solid rgba(15, 23, 42, 0.9);
+  padding: 1.5rem 1.75rem 1.75rem;
+  box-shadow: 0 22px 55px rgba(15, 23, 42, 0.95);
+}
+
+.arc-content h1 {
+  margin-top: 0;
+  margin-bottom: 0.75rem;
+  font-size: 1.75rem;
+}
+
+.arc-content p {
+  line-height: 1.6;
+  color: var(--arc-text-subtle);
+}
+
+/* Reading view typography */
+.arc-page-header {
+  margin-bottom: 1rem;
+}
+
+.arc-page-header h1 {
+  margin: 0 0 0.35rem;
+  font-size: 2rem;
+}
+
+.arc-page-meta {
+  font-size: 0.85rem;
+  color: var(--arc-text-subtle);
+}
+
+.arc-reading-view {
+  display: flex;
+  justify-content: center;
+}
+
+.arc-reading-body {
+  max-width: 800px;
+  width: 100%;
+  line-height: 1.7;
+  color: var(--arc-text-subtle);
+}
+
+.arc-reading-body h2,
+.arc-reading-body h3,
+.arc-reading-body h4,
+.arc-reading-body h5,
+.arc-reading-body h6 {
+  margin-top: 1.8rem;
+  margin-bottom: 0.75rem;
+  color: var(--arc-text);
+}
+
+.arc-reading-body p {
+  margin-top: 0;
+  margin-bottom: 0.9rem;
+}
+
+.arc-reading-body a {
+  color: var(--arc-accent);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.arc-reading-body a:hover {
+  color: #7dd3fc;
+  text-decoration: underline;
+}
+
+/* Internal vs External link styling */
+.arc-reading-body a.arc-link-internal {
+  color: var(--arc-accent);
+  border-bottom: 1px dotted var(--arc-accent-soft);
+}
+
+.arc-reading-body a.arc-link-internal:hover {
+  border-bottom: 1px solid var(--arc-accent);
+  color: #7dd3fc;
+}
+
+.arc-reading-body a.arc-link-external {
+  color: #60a5fa;
+  position: relative;
+  padding-right: 1.1em;
+}
+
+.arc-reading-body a.arc-link-external::after {
+  content: '↗';
+  position: absolute;
+  right: 0;
+  font-size: 0.85em;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+
+.arc-reading-body a.arc-link-external:hover::after {
+  opacity: 1;
+}
+
+.arc-reading-body blockquote {
+  margin: 1.5rem 0;
+  padding: 1rem 1.25rem;
+  padding-left: 1.5rem;
+  border-left: 4px solid var(--arc-accent);
+  background: rgba(56, 189, 248, 0.05);
+  border-radius: 0 0.5rem 0.5rem 0;
+  color: var(--arc-text);
+  font-style: normal;
+  position: relative;
+}
+
+.arc-reading-body blockquote::before {
+  content: '"';
+  position: absolute;
+  left: 0.5rem;
+  top: 0.25rem;
+  font-size: 3rem;
+  line-height: 1;
+  color: var(--arc-accent-soft);
+  opacity: 0.3;
+  font-family: Georgia, serif;
+}
+
+.arc-reading-body blockquote p {
+  margin: 0.5rem 0;
+}
+
+.arc-reading-body blockquote p:first-child {
+  margin-top: 0;
+}
+
+.arc-reading-body blockquote p:last-child {
+  margin-bottom: 0;
+}
+
+.arc-reading-body code {
+  background: rgba(15, 23, 42, 0.9);
+  padding: 0.15rem 0.35rem;
+  border-radius: 0.35rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    'Liberation Mono', 'Courier New', monospace;
+  font-size: 0.9em;
+}
+
+.arc-reading-body pre {
+  background: rgba(15, 23, 42, 0.95);
+  padding: 1.25rem 1.5rem;
+  border-radius: 0.6rem;
+  overflow-x: auto;
+  border: 1px solid rgba(15, 23, 42, 0.5);
+  margin: 1.5rem 0;
+  position: relative;
+}
+
+.arc-reading-body pre code {
+  background: transparent;
+  padding: 0;
+  border-radius: 0;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  display: block;
+  color: var(--arc-text);
+}
+
+/* Prism.js syntax highlighting overrides for dark theme */
+.arc-reading-body pre[class*="language-"] {
+  background: rgba(15, 23, 42, 0.95);
+}
+
+.arc-reading-body code[class*="language-"] {
+  background: transparent;
+}
+
+/* Table styling */
+.arc-reading-body table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.5rem 0;
+  background: rgba(15, 23, 42, 0.4);
+  border-radius: 0.5rem;
+  overflow: hidden;
+  border: 1px solid var(--arc-border);
+}
+
+.arc-reading-body thead {
+  background: rgba(15, 23, 42, 0.7);
+}
+
+.arc-reading-body th {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  font-weight: 600;
+  color: var(--arc-text);
+  border-bottom: 2px solid var(--arc-border);
+}
+
+.arc-reading-body td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--arc-border);
+  color: var(--arc-text-subtle);
+}
+
+.arc-reading-body tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.arc-reading-body tbody tr:hover {
+  background: rgba(56, 189, 248, 0.05);
+}
+
+.arc-reading-body tbody tr:nth-child(even) {
+  background: rgba(15, 23, 42, 0.2);
+}
+
+.arc-reading-body tbody tr:nth-child(even):hover {
+  background: rgba(56, 189, 248, 0.08);
+}
+
+/* Responsive image handling */
+.arc-reading-body img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 0.5rem;
+  margin: 1.5rem 0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--arc-border);
+}
+
+.arc-reading-body p img {
+  margin: 1rem 0;
+}
+
+.arc-reading-body figure {
+  margin: 1.5rem 0;
+  text-align: center;
+}
+
+.arc-reading-body figure img {
+  margin: 0;
+}
+
+.arc-reading-body figcaption {
+  margin-top: 0.5rem;
+  font-size: 0.85rem;
+  color: var(--arc-text-subtle);
+  font-style: italic;
+}
+
+.arc-muted {
+  color: var(--arc-text-subtle);
+  font-size: 0.95rem;
+}
+
+.arc-error {
+  color: #f97373;
+  font-size: 0.95rem;
+}
+
+/* Breadcrumb navigation */
+.arc-breadcrumb {
+  margin-bottom: 1.25rem;
+}
+
+.arc-breadcrumb-list {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: 0.9rem;
+}
+
+.arc-breadcrumb-item {
+  display: flex;
+  align-items: center;
+}
+
+.arc-breadcrumb-link {
+  color: var(--arc-accent);
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.arc-breadcrumb-link:hover {
+  color: #7dd3fc;
+  text-decoration: underline;
+}
+
+.arc-breadcrumb-current {
+  color: var(--arc-text);
+  font-weight: 500;
+}
+
+.arc-breadcrumb-separator {
+  color: var(--arc-text-subtle);
+  margin: 0 0.5rem;
+  user-select: none;
+}
+
+/* Page navigation (previous/next) */
+.arc-page-navigation {
+  margin-top: 3rem;
+  padding-top: 2rem;
+  border-top: 1px solid var(--arc-border);
+}
+
+.arc-page-navigation-inner {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.arc-page-nav-link {
+  display: flex;
+  flex-direction: column;
+  padding: 1rem 1.25rem;
+  border-radius: 0.5rem;
+  border: 1px solid var(--arc-border);
+  background: rgba(15, 23, 42, 0.4);
+  text-decoration: none;
+  color: var(--arc-text);
+  transition: all 0.2s;
+}
+
+.arc-page-nav-link:hover:not(.arc-page-nav-disabled) {
+  border-color: var(--arc-accent-soft);
+  background: rgba(56, 189, 248, 0.1);
+  transform: translateY(-1px);
+}
+
+.arc-page-nav-link.arc-page-nav-disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  color: var(--arc-text-subtle);
+}
+
+.arc-page-nav-prev {
+  text-align: left;
+}
+
+.arc-page-nav-next {
+  text-align: right;
+}
+
+.arc-page-nav-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--arc-text-subtle);
+  margin-bottom: 0.35rem;
+}
+
+.arc-page-nav-title {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--arc-text);
+  line-height: 1.4;
+}
+
+.arc-page-nav-link:hover:not(.arc-page-nav-disabled) .arc-page-nav-title {
+  color: var(--arc-accent);
+}
+
+.arc-footer {
+  margin-top: auto;
+  padding: 1rem 1.5rem 1.5rem;
+  text-align: center;
+  color: var(--arc-text-subtle);
+  font-size: 0.85rem;
+}
+
+@media (max-width: 900px) {
+  .arc-main {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .arc-sidebar {
+    order: 2;
+  }
+}
