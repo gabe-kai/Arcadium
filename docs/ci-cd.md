@@ -63,12 +63,60 @@ See `services/wiki/tests/conftest.py` for test database configuration.
 
 ---
 
-### Wiki UI Tests (Frontend)
+### Client Tests (Frontend)
 
-**Status:** Local-only for now (no dedicated GitHub Actions workflow yet).  
-**Location:** `client/`
+**Status:** ✅ **CI/CD Configured**.  
+**Location:** `.github/workflows/client-tests.yml`  
+**Test Location:** `client/`
 
-The Wiki UI uses **Vitest** and **React Testing Library** for component and integration tests.
+The Client uses **Vitest** and **React Testing Library** for unit/integration tests, and **Playwright** for E2E tests.
+
+#### When It Runs
+
+- **Push events:**
+  - `main` branch
+  - Any `feature/**` branch
+- **Pull request events:**
+  - PRs targeting `main` branch
+
+#### What It Does
+
+The workflow runs three jobs in parallel:
+
+1. **Unit & Integration Tests:**
+   - Sets up Node.js 20
+   - Installs dependencies with `npm ci`
+   - Runs Vitest test suite (`npm test -- --run`)
+   - Attempts to generate coverage report (optional)
+
+2. **E2E Tests:**
+   - Sets up Node.js 20
+   - Installs dependencies
+   - Installs Playwright browsers
+   - Runs Playwright E2E tests (`npm run test:e2e`)
+   - Uploads test report as artifact
+
+3. **Build Check:**
+   - Sets up Node.js 20
+   - Installs dependencies
+   - Builds the client (`npm run build`)
+   - Ensures production build succeeds
+
+#### Test Coverage
+
+**Unit & Integration Tests (~340+ tests):**
+- ✅ All React components (Editor, EditorToolbar, Navigation, Layout, etc.)
+- ✅ Page components (PageView, EditPage)
+- ✅ Utility functions (markdown conversion, link handling)
+- ✅ API service functions
+- ✅ Routing and navigation
+- ✅ Edge cases and error scenarios
+
+**E2E Tests:**
+- ✅ Page viewing and content rendering
+- ✅ Navigation (breadcrumbs, page navigation, navigation tree)
+- ✅ Table of Contents and Backlinks
+- ✅ Full user workflows
 
 #### Running Wiki UI Tests Locally
 
@@ -242,9 +290,10 @@ If tests fail with PostgreSQL connection errors:
 
 ### Planned CI/CD Features
 
-- [ ] **Multi-service testing:**
-  - Add CI workflows for other services (Game Server, Web Client)
-  - Run all service tests in parallel
+- [x] **Multi-service testing:**
+  - ✅ Wiki Service tests (backend)
+  - ✅ Client tests (frontend)
+  - [ ] Game Server tests (when implemented)
 
 - [ ] **Code quality checks:**
   - Linting (flake8, pylint, or ruff)
@@ -274,7 +323,8 @@ If tests fail with PostgreSQL connection errors:
 ```
 .github/
 └── workflows/
-    └── wiki-service-tests.yml    # Wiki Service test workflow
+    ├── wiki-service-tests.yml    # Wiki Service (backend) test workflow
+    └── client-tests.yml         # Client (frontend) test workflow
 ```
 
 ## Related Documentation

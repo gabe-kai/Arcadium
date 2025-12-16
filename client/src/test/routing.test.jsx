@@ -75,4 +75,36 @@ describe('Routing', () => {
     );
     expect(screen.getByText(/Search/i)).toBeInTheDocument();
   });
+
+  it('renders EditPage for edit route', () => {
+    mockInitialEntries = ['/pages/test-page-id/edit'];
+    render(
+      <QueryClientProvider client={queryClient}>
+        <App />
+      </QueryClientProvider>
+    );
+    // EditPage should render (may show loading or editor)
+    expect(screen.getByPlaceholderText(/Page Title/i) || screen.getByText(/Loading/i)).toBeTruthy();
+  });
+
+  it('renders EditPage for new page route', () => {
+    mockInitialEntries = ['/pages/new/edit'];
+    render(
+      <QueryClientProvider client={queryClient}>
+        <App />
+      </QueryClientProvider>
+    );
+    expect(screen.getByPlaceholderText(/Page Title/i)).toBeInTheDocument();
+  });
+
+  it('handles invalid routes gracefully', () => {
+    mockInitialEntries = ['/invalid-route'];
+    render(
+      <QueryClientProvider client={queryClient}>
+        <App />
+      </QueryClientProvider>
+    );
+    // Should not crash, may show 404 or default to home
+    expect(screen.getByText(/Welcome/i) || screen.getByText(/404/i)).toBeTruthy();
+  });
 });

@@ -115,4 +115,70 @@ describe('Backlinks', () => {
     expect(link).toBeInTheDocument();
     expect(link.textContent).toBe('Linking Page 1');
   });
+
+  it('handles backlinks with missing fields gracefully', () => {
+    const backlinks = [
+      { page_id: 'page-1' }, // Missing title
+      { title: 'Page 2' }, // Missing page_id
+    ];
+
+    expect(() => {
+      renderBacklinks(backlinks);
+    }).not.toThrow();
+  });
+
+  it('handles very long backlink titles', () => {
+    const longTitle = 'A'.repeat(200);
+    const backlinks = [
+      { page_id: 'page-1', title: longTitle },
+    ];
+
+    renderBacklinks(backlinks);
+    
+    expect(screen.getByText(longTitle)).toBeInTheDocument();
+  });
+
+  it('handles special characters in backlink titles', () => {
+    const backlinks = [
+      { page_id: 'page-1', title: 'Page & < > " \' Special' },
+    ];
+
+    renderBacklinks(backlinks);
+    
+    expect(screen.getByText('Page & < > " \' Special')).toBeInTheDocument();
+  });
+
+  it('handles duplicate page_ids', () => {
+    const backlinks = [
+      { page_id: 'page-1', title: 'First Link' },
+      { page_id: 'page-1', title: 'Second Link' },
+    ];
+
+    renderBacklinks(backlinks);
+    
+    expect(screen.getByText('First Link')).toBeInTheDocument();
+    expect(screen.getByText('Second Link')).toBeInTheDocument();
+    expect(screen.getByText('(2)')).toBeInTheDocument();
+  });
+
+  it('handles empty string titles', () => {
+    const backlinks = [
+      { page_id: 'page-1', title: '' },
+    ];
+
+    renderBacklinks(backlinks);
+    
+    // Should still render structure
+    expect(screen.getByText('Pages Linking Here')).toBeInTheDocument();
+  });
+
+  it('handles null page_id gracefully', () => {
+    const backlinks = [
+      { page_id: null, title: 'Link' },
+    ];
+
+    expect(() => {
+      renderBacklinks(backlinks);
+    }).not.toThrow();
+  });
 });

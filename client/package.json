@@ -18,11 +18,19 @@
   },
   "dependencies": {
     "@tanstack/react-query": "^5.62.8",
+    "@tiptap/extension-code-block": "^3.13.0",
+    "@tiptap/extension-image": "^3.13.0",
+    "@tiptap/extension-link": "^3.13.0",
+    "@tiptap/extension-table": "^3.13.0",
+    "@tiptap/react": "^3.13.0",
+    "@tiptap/starter-kit": "^3.13.0",
     "axios": "^1.7.7",
+    "marked": "^17.0.1",
     "prismjs": "^1.30.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "react-router-dom": "^6.27.0"
+    "react-router-dom": "^6.27.0",
+    "turndown": "^7.2.2"
   },
   "devDependencies": {
     "@playwright/test": "^1.57.0",

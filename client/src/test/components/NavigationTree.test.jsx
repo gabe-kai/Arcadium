@@ -301,4 +301,199 @@ describe('NavigationTree', () => {
     // No expand buttons should be present
     expect(screen.queryByLabelText(/Expand/i)).not.toBeInTheDocument();
   });
+
+  it('handles tree nodes with missing fields gracefully', () => {
+    const treeWithMissingFields = [
+      {
+        id: 'page-1',
+        title: 'Page 1',
+        // Missing slug and status
+        children: [],
+      },
+    ];
+
+    pagesApi.useNavigationTree.mockReturnValue({
+      data: treeWithMissingFields,
+      isLoading: false,
+      isError: false,
+    });
+
+    renderNavigationTree();
+    
+    expect(screen.getByText('Page 1')).toBeInTheDocument();
+  });
+
+  it('handles very deep nesting', () => {
+    const deepTree = [
+      {
+        id: 'level-1',
+        title: 'Level 1',
+        slug: 'level-1',
+        status: 'published',
+        children: [
+          {
+            id: 'level-2',
+            title: 'Level 2',
+            slug: 'level-2',
+            status: 'published',
+            children: [
+              {
+                id: 'level-3',
+                title: 'Level 3',
+                slug: 'level-3',
+                status: 'published',
+                children: [
+                  {
+                    id: 'level-4',
+                    title: 'Level 4',
+                    slug: 'level-4',
+                    status: 'published',
+                    children: [],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+    ];
+
+    pagesApi.useNavigationTree.mockReturnValue({
+      data: deepTree,
+      isLoading: false,
+      isError: false,
+    });
+
+    renderNavigationTree();
+    
+    expect(screen.getByText('Level 1')).toBeInTheDocument();
+    expect(screen.getByText('Level 4')).toBeInTheDocument();
+  });
+
+  it('handles tree with special characters in titles', () => {
+    const treeWithSpecialChars = [
+      {
+        id: 'page-1',
+        title: 'Page & < > " \' Special',
+        slug: 'page-1',
+        status: 'published',
+        children: [],
+      },
+    ];
+
+    pagesApi.useNavigationTree.mockReturnValue({
+      data: treeWithSpecialChars,
+      isLoading: false,
+      isError: false,
+    });
+
+    renderNavigationTree();
+    
+    expect(screen.getByText('Page & < > " \' Special')).toBeInTheDocument();
+  });
+
+  it('handles tree with very long titles', () => {
+    const longTitle = 'A'.repeat(100);
+    const treeWithLongTitle = [
+      {
+        id: 'page-1',
+        title: longTitle,
+        slug: 'page-1',
+        status: 'published',
+        children: [],
+      },
+    ];
+
+    pagesApi.useNavigationTree.mockReturnValue({
+      data: treeWithLongTitle,
+      isLoading: false,
+      isError: false,
+    });
+
+    renderNavigationTree();
+    
+    expect(screen.getByText(longTitle)).toBeInTheDocument();
+  });
+
+  it('handles localStorage errors gracefully', () => {
+    // Mock localStorage to throw error
+    const originalGetItem = global.localStorage.getItem;
+    global.localStorage.getItem = vi.fn(() => {
+      throw new Error('localStorage error');
+    });
+
+    pagesApi.useNavigationTree.mockReturnValue({
+      data: mockTree,
+      isLoading: false,
+      isError: false,
+    });
+
+    expect(() => renderNavigationTree()).not.toThrow();
+    
+    global.localStorage.getItem = originalGetItem;
+  });
+
+  it('handles invalid JSON in localStorage', () => {
+    store['arcadium_nav_expanded'] = 'invalid json';
+    
+    pagesApi.useNavigationTree.mockReturnValue({
+      data: mockTree,
+      isLoading: false,
+      isError: false,
+    });
+
+    expect(() => renderNavigationTree()).not.toThrow();
+  });
+
+  it('handles search with special regex characters', () => {
+    pagesApi.useNavigationTree.mockReturnValue({
+      data: mockTree,
+      isLoading: false,
+      isError: false,
+    });
+
+    renderNavigationTree();
+    
+    const searchInput = screen.getByPlaceholderText(/Search pages/i);
+    fireEvent.change(searchInput, { target: { value: '.*+?^${}[]|()' } });
+    
+    // Should not crash with regex special characters
+    expect(searchInput).toHaveValue('.*+?^${}[]|()');
+  });
+
+  it('handles search with empty string after non-empty', () => {
+    pagesApi.useNavigationTree.mockReturnValue({
+      data: mockTree,
+      isLoading: false,
+      isError: false,
+    });
+
+    renderNavigationTree();
+    
+    const searchInput = screen.getByPlaceholderText(/Search pages/i);
+    fireEvent.change(searchInput, { target: { value: 'Section' } });
+    fireEvent.change(searchInput, { target: { value: '' } });
+    
+    // Should show all items again
+    expect(screen.getByText('Home')).toBeInTheDocument();
+  });
+
+  it('handles multiple rapid search changes', () => {
+    pagesApi.useNavigationTree.mockReturnValue({
+      data: mockTree,
+      isLoading: false,
+      isError: false,
+    });
+
+    renderNavigationTree();
+    
+    const searchInput = screen.getByPlaceholderText(/Search pages/i);
+    fireEvent.change(searchInput, { target: { value: 'S' } });
+    fireEvent.change(searchInput, { target: { value: 'Se' } });
+    fireEvent.change(searchInput, { target: { value: 'Sec' } });
+    fireEvent.change(searchInput, { target: { value: 'Section' } });
+    
+    // Should handle rapid changes without errors
+    expect(searchInput).toHaveValue('Section');
+  });
 });

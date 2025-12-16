@@ -51,3 +51,12 @@ export function useNavigationTree() {
     staleTime: 5 * 60 * 1000, // Cache for 5 minutes
   });
 }
+
+// Mutations for creating and updating pages
+export function createPage(pageData) {
+  return apiClient.post('/pages', pageData).then((res) => res.data);
+}
+
+export function updatePage(pageId, pageData) {
+  return apiClient.put(`/pages/${pageId}`, pageData).then((res) => res.data);
+}

@@ -149,4 +149,96 @@ describe('TableOfContents', () => {
     expect(screen.getByText('Section 1')).toBeInTheDocument();
     expect(screen.getByText('Section 1 Duplicate')).toBeInTheDocument();
   });
+
+  it('handles TOC items with missing fields gracefully', () => {
+    const toc = [
+      { anchor: 'section-1', text: 'Section 1' }, // Missing level
+      { anchor: 'section-2', level: 2 }, // Missing text
+      { text: 'Section 3', level: 2 }, // Missing anchor
+    ];
+
+    expect(() => {
+      render(<TableOfContents toc={toc} contentRef={contentRef} />);
+    }).not.toThrow();
+  });
+
+  it('handles very long section titles', () => {
+    const longTitle = 'A'.repeat(200);
+    const toc = [
+      { anchor: 'section-1', text: longTitle, level: 2 },
+    ];
+
+    render(<TableOfContents toc={toc} contentRef={contentRef} />);
+    
+    expect(screen.getByText(longTitle)).toBeInTheDocument();
+  });
+
+  it('handles special characters in section titles', () => {
+    const toc = [
+      { anchor: 'section-1', text: 'Section & < > " \' Special', level: 2 },
+    ];
+
+    render(<TableOfContents toc={toc} contentRef={contentRef} />);
+    
+    expect(screen.getByText('Section & < > " \' Special')).toBeInTheDocument();
+  });
+
+  it('handles all heading levels (2-6)', () => {
+    const toc = [
+      { anchor: 'h2', text: 'H2', level: 2 },
+      { anchor: 'h3', text: 'H3', level: 3 },
+      { anchor: 'h4', text: 'H4', level: 4 },
+      { anchor: 'h5', text: 'H5', level: 5 },
+      { anchor: 'h6', text: 'H6', level: 6 },
+    ];
+
+    render(<TableOfContents toc={toc} contentRef={contentRef} />);
+    
+    expect(screen.getByText('H2')).toBeInTheDocument();
+    expect(screen.getByText('H3')).toBeInTheDocument();
+    expect(screen.getByText('H4')).toBeInTheDocument();
+    expect(screen.getByText('H5')).toBeInTheDocument();
+    expect(screen.getByText('H6')).toBeInTheDocument();
+  });
+
+  it('handles invalid level values gracefully', () => {
+    const toc = [
+      { anchor: 'section-1', text: 'Section 1', level: 1 }, // Level 1 not typically used
+      { anchor: 'section-2', text: 'Section 2', level: 7 }, // Level 7 doesn't exist
+      { anchor: 'section-3', text: 'Section 3', level: 0 }, // Invalid level
+    ];
+
+    expect(() => {
+      render(<TableOfContents toc={toc} contentRef={contentRef} />);
+    }).not.toThrow();
+  });
+
+  it('handles scroll event cleanup', () => {
+    const removeEventListenerSpy = vi.spyOn(window, 'removeEventListener');
+    const toc = [
+      { anchor: 'section-1', text: 'Section 1', level: 2 },
+    ];
+
+    const { unmount } = render(<TableOfContents toc={toc} contentRef={contentRef} />);
+    
+    unmount();
+    
+    expect(removeEventListenerSpy).toHaveBeenCalledWith('scroll', expect.any(Function));
+    
+    removeEventListenerSpy.mockRestore();
+  });
+
+  it('handles contentRef becoming null after mount', () => {
+    const toc = [
+      { anchor: 'section-1', text: 'Section 1', level: 2 },
+    ];
+
+    const { rerender } = render(<TableOfContents toc={toc} contentRef={contentRef} />);
+    
+    // Change contentRef to null
+    rerender(<TableOfContents toc={toc} contentRef={{ current: null }} />);
+    
+    // Should not crash
+    expect(screen.getByText('Section 1')).toBeInTheDocument();
+  });
 });

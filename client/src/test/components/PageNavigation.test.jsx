@@ -140,4 +140,85 @@ describe('PageNavigation', () => {
     const nav = screen.getByLabelText('Page navigation');
     expect(nav).toBeInTheDocument();
   });
+
+  it('handles navigation items with missing fields', () => {
+    const navigation = {
+      previous: { id: 'page-1', title: 'Previous' }, // Missing slug
+      next: { id: 'page-2', slug: 'next' }, // Missing title
+    };
+
+    render(
+      <MemoryRouter>
+        <PageNavigation navigation={navigation} />
+      </MemoryRouter>
+    );
+
+    expect(screen.getByText('Previous')).toBeInTheDocument();
+    // Should still render even with missing fields
+    expect(screen.getByText('Next')).toBeInTheDocument();
+  });
+
+  it('handles very long page titles', () => {
+    const longTitle = 'A'.repeat(100);
+    const navigation = {
+      previous: { id: 'page-1', title: longTitle, slug: 'previous' },
+      next: { id: 'page-2', title: 'Next', slug: 'next' },
+    };
+
+    render(
+      <MemoryRouter>
+        <PageNavigation navigation={navigation} />
+      </MemoryRouter>
+    );
+
+    expect(screen.getByText(longTitle)).toBeInTheDocument();
+  });
+
+  it('handles special characters in page titles', () => {
+    const navigation = {
+      previous: { id: 'page-1', title: 'Previous & < > " \' Special', slug: 'previous' },
+      next: { id: 'page-2', title: 'Next', slug: 'next' },
+    };
+
+    render(
+      <MemoryRouter>
+        <PageNavigation navigation={navigation} />
+      </MemoryRouter>
+    );
+
+    expect(screen.getByText('Previous & < > " \' Special')).toBeInTheDocument();
+  });
+
+  it('handles empty string titles gracefully', () => {
+    const navigation = {
+      previous: { id: 'page-1', title: '', slug: 'previous' },
+      next: { id: 'page-2', title: 'Next', slug: 'next' },
+    };
+
+    render(
+      <MemoryRouter>
+        <PageNavigation navigation={navigation} />
+      </MemoryRouter>
+    );
+
+    // Should still render navigation structure
+    expect(screen.getByText('Previous')).toBeInTheDocument();
+    expect(screen.getByText('Next')).toBeInTheDocument();
+  });
+
+  it('renders inner container with proper structure', () => {
+    const navigation = {
+      previous: { id: 'page-1', title: 'Previous', slug: 'previous' },
+      next: { id: 'page-2', title: 'Next', slug: 'next' },
+    };
+
+    const { container } = render(
+      <MemoryRouter>
+        <PageNavigation navigation={navigation} />
+      </MemoryRouter>
+    );
+
+    const inner = container.querySelector('.arc-page-navigation-inner');
+    expect(inner).toBeInTheDocument();
+  });
 });

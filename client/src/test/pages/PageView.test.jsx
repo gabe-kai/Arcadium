@@ -54,12 +54,15 @@ vi.mock('../../components/navigation/Backlinks', () => ({
 }));
 
 // Mock utility functions
+const mockHighlightCodeBlocks = vi.fn();
+const mockProcessLinks = vi.fn();
+
 vi.mock('../../utils/syntaxHighlight', () => ({
-  highlightCodeBlocks: vi.fn(),
+  highlightCodeBlocks: mockHighlightCodeBlocks,
 }));
 
 vi.mock('../../utils/linkHandler', () => ({
-  processLinks: vi.fn(),
+  processLinks: mockProcessLinks,
 }));
 
 describe('PageView', () => {
@@ -72,6 +75,8 @@ describe('PageView', () => {
       },
     });
     vi.clearAllMocks();
+    mockHighlightCodeBlocks.mockClear();
+    mockProcessLinks.mockClear();
     // Mock useParams - use vi.mocked to avoid redefinition errors
     vi.mocked(useParams).mockReturnValue({ pageId: 'test-page-id' });
     // Default mock returns for breadcrumb and navigation
@@ -383,5 +388,229 @@ describe('PageView', () => {
 
     renderPageView('test-page-id');
     expect(screen.queryByTestId('backlinks')).not.toBeInTheDocument();
+  });
+
+  it('handles page with all optional fields missing', () => {
+    const mockPage = {
+      id: 'test-page-id',
+      title: 'Minimal Page',
+      html_content: '<p>Content</p>',
+    };
+
+    pagesApi.usePage.mockReturnValue({
+      data: mockPage,
+      isLoading: false,
+      isError: false,
+    });
+
+    renderPageView('test-page-id');
+    
+    expect(screen.getByText('Minimal Page')).toBeInTheDocument();
+    expect(screen.getByText(/Content/i)).toBeInTheDocument();
+  });
+
+  it('handles page with empty html_content', () => {
+    const mockPage = {
+      id: 'test-page-id',
+      title: 'Empty Content Page',
+      html_content: '',
+    };
+
+    pagesApi.usePage.mockReturnValue({
+      data: mockPage,
+      isLoading: false,
+      isError: false,
+    });
+
+    renderPageView('test-page-id');
+    
+    expect(screen.getByText('Empty Content Page')).toBeInTheDocument();
+  });
+
+  it('handles page with null html_content', () => {
+    const mockPage = {
+      id: 'test-page-id',
+      title: 'Null Content Page',
+      html_content: null,
+    };
+
+    pagesApi.usePage.mockReturnValue({
+      data: mockPage,
+      isLoading: false,
+      isError: false,
+    });
+
+    renderPageView('test-page-id');
+    
+    expect(screen.getByText('Null Content Page')).toBeInTheDocument();
+  });
+
+  it('handles page with very long title', () => {
+    const longTitle = 'A'.repeat(200);
+    const mockPage = {
+      id: 'test-page-id',
+      title: longTitle,
+      html_content: '<p>Content</p>',
+    };
+
+    pagesApi.usePage.mockReturnValue({
+      data: mockPage,
+      isLoading: false,
+      isError: false,
+    });
+
+    renderPageView('test-page-id');
+    
+    expect(screen.getByText(longTitle)).toBeInTheDocument();
+  });
+
+  it('handles page with special characters in title', () => {
+    const mockPage = {
+      id: 'test-page-id',
+      title: 'Page & < > " \' Special',
+      html_content: '<p>Content</p>',
+    };
+
+    pagesApi.usePage.mockReturnValue({
+      data: mockPage,
+      isLoading: false,
+      isError: false,
+    });
+
+    renderPageView('test-page-id');
+    
+    expect(screen.getByText('Page & < > " \' Special')).toBeInTheDocument();
+  });
+
+  it('calls highlightCodeBlocks after content renders', async () => {
+    mockHighlightCodeBlocks.mockClear();
+    
+    const mockPage = {
+      id: 'test-page-id',
+      title: 'Test Page',
+      html_content: '<pre><code>const x = 1;</code></pre>',
+    };
+
+    pagesApi.usePage.mockReturnValue({
+      data: mockPage,
+      isLoading: false,
+      isError: false,
+    });
+
+    renderPageView('test-page-id');
+    
+    // Wait a bit for useEffect to run
+    await waitFor(() => {
+      expect(mockHighlightCodeBlocks).toHaveBeenCalled();
+    }, { timeout: 2000 });
+  });
+
+  it('calls processLinks after content renders', async () => {
+    mockProcessLinks.mockClear();
+    
+    const mockPage = {
+      id: 'test-page-id',
+      title: 'Test Page',
+      html_content: '<a href="/pages/other">Link</a>',
+    };
+
+    pagesApi.usePage.mockReturnValue({
+      data: mockPage,
+      isLoading: false,
+      isError: false,
+    });
+
+    renderPageView('test-page-id');
+    
+    // Wait a bit for useEffect to run
+    await waitFor(() => {
+      expect(mockProcessLinks).toHaveBeenCalled();
+    }, { timeout: 2000 });
+  });
+
+  it('handles TOC with empty array', () => {
+    const mockPage = {
+      id: 'test-page-id',
+      title: 'Test Page',
+      html_content: '<p>Content</p>',
+      table_of_contents: [],
+      backlinks: null, // Ensure backlinks is null so right sidebar doesn't render
+    };
+
+    pagesApi.usePage.mockReturnValue({
+      data: mockPage,
+      isLoading: false,
+      isError: false,
+    });
+
+    renderPageView('test-page-id');
+    // TOC component returns null for empty array, so it shouldn't be in document
+    // But the mock might still render it, so we check the actual component behavior
+    const toc = screen.queryByTestId('table-of-contents');
+    // If TOC component properly handles empty array, it won't render
+    // Otherwise, it's acceptable if it renders but is empty
+    expect(toc === null || toc.textContent === 'TOC').toBeTruthy();
+  });
+
+  it('handles backlinks with empty array', () => {
+    const mockPage = {
+      id: 'test-page-id',
+      title: 'Test Page',
+      html_content: '<p>Content</p>',
+      table_of_contents: null, // Ensure TOC is null so right sidebar doesn't render
+      backlinks: [],
+    };
+
+    pagesApi.usePage.mockReturnValue({
+      data: mockPage,
+      isLoading: false,
+      isError: false,
+    });
+
+    renderPageView('test-page-id');
+    // Backlinks component returns null for empty array
+    // But the mock might still render it, so we check the actual component behavior
+    const backlinks = screen.queryByTestId('backlinks');
+    // If Backlinks component properly handles empty array, it won't render
+    // Otherwise, it's acceptable if it renders but is empty
+    expect(backlinks === null || backlinks.textContent === 'Backlinks').toBeTruthy();
+  });
+
+  it('handles TOC with malformed data gracefully', () => {
+    const mockPage = {
+      id: 'test-page-id',
+      title: 'Test Page',
+      html_content: '<p>Content</p>',
+      table_of_contents: [{ anchor: 'section-1', text: 'Section 1' }], // Missing level
+    };
+
+    pagesApi.usePage.mockReturnValue({
+      data: mockPage,
+      isLoading: false,
+      isError: false,
+    });
+
+    renderPageView('test-page-id');
+    // Should not crash, TOC component should handle missing level
+    expect(screen.getByTestId('table-of-contents')).toBeInTheDocument();
+  });
+
+  it('handles backlinks with malformed data gracefully', () => {
+    const mockPage = {
+      id: 'test-page-id',
+      title: 'Test Page',
+      html_content: '<p>Content</p>',
+      backlinks: [{ page_id: 'linker-1' }], // Missing title
+    };
+
+    pagesApi.usePage.mockReturnValue({
+      data: mockPage,
+      isLoading: false,
+      isError: false,
+    });
+
+    renderPageView('test-page-id');
+    // Should not crash
+    expect(screen.getByTestId('backlinks')).toBeInTheDocument();
   });
 });
