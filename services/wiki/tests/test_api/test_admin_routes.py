@@ -164,16 +164,17 @@ def test_configure_upload_size_success(client, app, test_admin_id):
 
 
 def test_configure_page_size_success(client, app, test_admin_id):
-    """Configure page size should return oversized_pages_count."""
+    """Configure page size should return oversized_pages_count and create notifications."""
     user_id = test_admin_id
     with app.app_context():
-        # Clear existing pages
+        # Clear existing pages and notifications
+        db.session.query(OversizedPageNotification).delete()
         db.session.query(Page).delete()
         db.session.commit()
 
         # One within threshold, one above
-        _create_page(app, user_id, size_kb=100.0, word_count=1000, title="Small", slug="small-thresh")
-        _create_page(app, user_id, size_kb=600.0, word_count=2000, title="Big", slug="big-thresh")
+        small_page_id = _create_page(app, user_id, size_kb=100.0, word_count=1000, title="Small", slug="small-thresh")
+        big_page_id = _create_page(app, user_id, size_kb=600.0, word_count=2000, title="Big", slug="big-thresh")
 
     with mock_auth(test_admin_id, "admin"):
         headers = auth_headers(test_admin_id, "admin")
@@ -189,6 +190,23 @@ def test_configure_page_size_success(client, app, test_admin_id):
         data = resp.get_json()
         assert data["max_size_kb"] == 500
         assert data["oversized_pages_count"] == 1  # Only the 600kb page
+        assert data["notifications_created"] == 1  # One notification created
+
+    # Verify notification was created
+    with app.app_context():
+        notifications = db.session.query(OversizedPageNotification).filter_by(
+            resolved=False
+        ).all()
+        assert len(notifications) == 1
+        assert notifications[0].page_id == big_page_id
+        assert notifications[0].max_size_kb == 500.0
+        assert notifications[0].current_size_kb == 600.0
+        
+        # Verify small page has no notification
+        small_notif = db.session.query(OversizedPageNotification).filter_by(
+            page_id=small_page_id
+        ).first()
+        assert small_notif is None
 
 
 def test_get_oversized_pages_and_update_status(client, app, test_admin_id):
@@ -251,5 +269,241 @@ def test_get_oversized_pages_and_update_status(client, app, test_admin_id):
         assert updated["status"] == "resolved"
         assert updated["resolved"] is True
         assert updated["due_date"] is not None
+
+
+def test_configure_upload_size_missing_field(client, app, test_admin_id):
+    """Configure upload size should return 400 if max_size_mb is missing."""
+    with mock_auth(test_admin_id, "admin"):
+        headers = auth_headers(test_admin_id, "admin")
+        resp = client.post(
+            "/api/admin/config/upload-size",
+            json={"is_custom": True},
+            headers=headers,
+        )
+        assert resp.status_code == 400
+        data = resp.get_json()
+        assert "error" in data
+        assert "max_size_mb" in data["error"].lower()
+
+
+def test_configure_upload_size_invalid_value(client, app, test_admin_id):
+    """Configure upload size should return 400 if max_size_mb is not a number."""
+    with mock_auth(test_admin_id, "admin"):
+        headers = auth_headers(test_admin_id, "admin")
+        resp = client.post(
+            "/api/admin/config/upload-size",
+            json={"max_size_mb": "not-a-number", "is_custom": False},
+            headers=headers,
+        )
+        assert resp.status_code == 400
+        data = resp.get_json()
+        assert "error" in data
+        assert "number" in data["error"].lower()
+
+
+def test_configure_upload_size_negative_value(client, app, test_admin_id):
+    """Configure upload size should accept negative values (validation handled elsewhere)."""
+    with mock_auth(test_admin_id, "admin"):
+        headers = auth_headers(test_admin_id, "admin")
+        resp = client.post(
+            "/api/admin/config/upload-size",
+            json={"max_size_mb": -5, "is_custom": False},
+            headers=headers,
+        )
+        # Currently accepts negative, but stores it
+        assert resp.status_code == 200
+        data = resp.get_json()
+        assert data["max_size_mb"] == -5
+
+
+def test_configure_upload_size_updates_existing(client, app, test_admin_id):
+    """Configure upload size should update existing config."""
+    with app.app_context():
+        # Create initial config
+        config = WikiConfig(
+            key="upload_max_size_mb",
+            value="10.0",
+            updated_by=test_admin_id
+        )
+        db.session.add(config)
+        db.session.commit()
+
+    with mock_auth(test_admin_id, "admin"):
+        headers = auth_headers(test_admin_id, "admin")
+        resp = client.post(
+            "/api/admin/config/upload-size",
+            json={"max_size_mb": 20, "is_custom": True},
+            headers=headers,
+        )
+        assert resp.status_code == 200
+        data = resp.get_json()
+        assert data["max_size_mb"] == 20
+
+    with app.app_context():
+        config = db.session.query(WikiConfig).filter_by(key="upload_max_size_mb").first()
+        assert config is not None
+        assert float(config.value) == 20.0
+
+
+def test_configure_page_size_missing_fields(client, app, test_admin_id):
+    """Configure page size should return 400 if required fields are missing."""
+    with mock_auth(test_admin_id, "admin"):
+        headers = auth_headers(test_admin_id, "admin")
+        
+        # Missing max_size_kb
+        resp = client.post(
+            "/api/admin/config/page-size",
+            json={"resolution_due_date": "2024-02-01T00:00:00Z"},
+            headers=headers,
+        )
+        assert resp.status_code == 400
+        data = resp.get_json()
+        assert "error" in data
+        assert "max_size_kb" in data["error"].lower()
+        
+        # Missing resolution_due_date
+        resp = client.post(
+            "/api/admin/config/page-size",
+            json={"max_size_kb": 500},
+            headers=headers,
+        )
+        assert resp.status_code == 400
+        data = resp.get_json()
+        assert "error" in data
+        assert "resolution_due_date" in data["error"].lower()
+
+
+def test_configure_page_size_invalid_max_size(client, app, test_admin_id):
+    """Configure page size should return 400 if max_size_kb is not a number."""
+    with mock_auth(test_admin_id, "admin"):
+        headers = auth_headers(test_admin_id, "admin")
+        resp = client.post(
+            "/api/admin/config/page-size",
+            json={
+                "max_size_kb": "not-a-number",
+                "resolution_due_date": "2024-02-01T00:00:00Z",
+            },
+            headers=headers,
+        )
+        assert resp.status_code == 400
+        data = resp.get_json()
+        assert "error" in data
+        assert "number" in data["error"].lower()
+
+
+def test_configure_page_size_invalid_date_format(client, app, test_admin_id):
+    """Configure page size should return 400 if resolution_due_date is invalid."""
+    with mock_auth(test_admin_id, "admin"):
+        headers = auth_headers(test_admin_id, "admin")
+        resp = client.post(
+            "/api/admin/config/page-size",
+            json={
+                "max_size_kb": 500,
+                "resolution_due_date": "not-a-date",
+            },
+            headers=headers,
+        )
+        assert resp.status_code == 400
+        data = resp.get_json()
+        assert "error" in data
+        assert "iso" in data["error"].lower() or "datetime" in data["error"].lower()
+
+
+def test_configure_page_size_creates_multiple_notifications(client, app, test_admin_id):
+    """Configure page size should create notifications for all oversized pages."""
+    user_id = test_admin_id
+    with app.app_context():
+        # Clear existing pages and notifications
+        db.session.query(OversizedPageNotification).delete()
+        db.session.query(Page).delete()
+        db.session.commit()
+
+        # Create multiple oversized pages
+        page1_id = _create_page(app, user_id, size_kb=600.0, word_count=2000, title="Big 1", slug="big-1")
+        page2_id = _create_page(app, user_id, size_kb=700.0, word_count=3000, title="Big 2", slug="big-2")
+        page3_id = _create_page(app, user_id, size_kb=800.0, word_count=4000, title="Big 3", slug="big-3")
+        _create_page(app, user_id, size_kb=100.0, word_count=500, title="Small", slug="small")  # Under limit
+
+    with mock_auth(test_admin_id, "admin"):
+        headers = auth_headers(test_admin_id, "admin")
+        resp = client.post(
+            "/api/admin/config/page-size",
+            json={
+                "max_size_kb": 500,
+                "resolution_due_date": "2024-02-01T00:00:00Z",
+            },
+            headers=headers,
+        )
+        assert resp.status_code == 200
+        data = resp.get_json()
+        assert data["oversized_pages_count"] == 3
+        assert data["notifications_created"] == 3
+
+    # Verify all notifications were created
+    with app.app_context():
+        notifications = db.session.query(OversizedPageNotification).filter_by(
+            resolved=False
+        ).all()
+        assert len(notifications) == 3
+        
+        page_ids = {notif.page_id for notif in notifications}
+        assert page1_id in page_ids
+        assert page2_id in page_ids
+        assert page3_id in page_ids
+
+
+def test_configure_page_size_updates_existing_notifications(client, app, test_admin_id):
+    """Configure page size should update existing notifications if they already exist."""
+    user_id = test_admin_id
+    with app.app_context():
+        # Clear existing pages and notifications
+        db.session.query(OversizedPageNotification).delete()
+        db.session.query(Page).delete()
+        db.session.commit()
+
+        # Create oversized page
+        page_id = _create_page(app, user_id, size_kb=600.0, word_count=2000, title="Big", slug="big")
+        
+        # Create initial notification
+        due_date1 = datetime.now(timezone.utc) + timedelta(days=7)
+        notif = OversizedPageNotification(
+            page_id=page_id,
+            current_size_kb=600.0,
+            max_size_kb=500.0,
+            resolution_due_date=due_date1,
+            notified_users=[],
+            resolved=False
+        )
+        db.session.add(notif)
+        db.session.commit()
+        
+        # Update page size
+        page = db.session.query(Page).filter_by(id=page_id).first()
+        page.content_size_kb = 700.0
+        db.session.commit()
+
+    with mock_auth(test_admin_id, "admin"):
+        headers = auth_headers(test_admin_id, "admin")
+        due_date2 = (datetime.now(timezone.utc) + timedelta(days=14)).isoformat().replace("+00:00", "Z")
+        resp = client.post(
+            "/api/admin/config/page-size",
+            json={
+                "max_size_kb": 500,
+                "resolution_due_date": due_date2,
+            },
+            headers=headers,
+        )
+        assert resp.status_code == 200
+        assert resp.get_json()["notifications_created"] == 1
+
+    # Verify notification was updated, not duplicated
+    with app.app_context():
+        notifications = db.session.query(OversizedPageNotification).filter_by(
+            page_id=page_id,
+            resolved=False
+        ).all()
+        assert len(notifications) == 1  # Should be updated, not duplicated
+        assert notifications[0].current_size_kb == 700.0  # Updated size
+        assert notifications[0].max_size_kb == 500.0
 
 

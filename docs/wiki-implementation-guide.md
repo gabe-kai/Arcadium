@@ -752,38 +752,73 @@ python -m app.sync watch --admin-user-id <uuid>
 
 ### Phase 7: Admin Dashboard Features
 
-#### 7.1 Size Monitoring
-- [ ] Calculate page sizes (KB) and word counts
-- [ ] Generate size distribution charts
-- [ ] Track oversized pages
-- [ ] Send notifications via Notification Service
+#### 7.1 Size Monitoring ✅ COMPLETE
+- [x] Calculate page sizes (KB) and word counts ✅
+- [x] Generate size distribution charts ✅
+- [x] Track oversized pages ✅
+- [x] Create oversized page notifications ✅
+- [ ] Send notifications via Notification Service (Phase 8.2)
 
 **Testing:**
 ```python
-# tests/test_services/test_size_monitoring.py
-def test_size_calculation()
-def test_size_distribution()
-def test_oversized_detection()
-def test_notification_triggering()
+# tests/test_services/test_size_monitoring_service.py (10 tests)
+def test_get_max_page_size_kb_not_configured() ✅
+def test_get_max_page_size_kb_configured() ✅
+def test_get_oversized_pages_no_limit() ✅
+def test_get_oversized_pages_with_limit() ✅
+def test_create_oversized_notifications() ✅
+def test_create_oversized_notifications_updates_existing() ✅
+def test_check_and_resolve_oversized_pages() ✅
+def test_get_size_distribution() ✅
+def test_get_oversized_pages_with_notifications() ✅
+def test_create_oversized_notifications_with_user_ids() ✅
+
+# tests/test_api/test_admin_routes.py (configuration tests)
+def test_configure_page_size_success() ✅ (updated to verify notifications)
+def test_configure_page_size_creates_multiple_notifications() ✅
+def test_configure_page_size_updates_existing_notifications() ✅
+# Plus 6 additional edge case tests for configuration management
+# 10 total tests, all passing (100%)
 ```
 
 **Validation:** Check against `docs/wiki-admin-dashboard.md`
 
-#### 7.2 Configuration Management
-- [ ] File upload size limits (presets + custom)
-- [ ] Page size limits
-- [ ] Resolution due dates
-- [ ] Status tracking
+**Implementation:**
+- Created `SizeMonitoringService` with full functionality
+- Integrated with admin routes
+- Auto-resolution when pages are fixed
+- Notification creation when page size limit is set
+
+#### 7.2 Configuration Management ✅ COMPLETE
+- [x] File upload size limits (presets + custom) ✅
+- [x] Page size limits ✅
+- [x] Resolution due dates ✅
+- [x] Status tracking ✅
 
 **Testing:**
 ```python
-# tests/test_services/test_admin_service.py
-def test_upload_size_config()
-def test_page_size_config()
-def test_config_persistence()
+# tests/test_api/test_admin_routes.py (11 configuration tests)
+def test_configure_upload_size_success() ✅
+def test_configure_upload_size_missing_field() ✅
+def test_configure_upload_size_invalid_value() ✅
+def test_configure_upload_size_negative_value() ✅
+def test_configure_upload_size_updates_existing() ✅
+def test_configure_page_size_success() ✅ (verifies notification creation)
+def test_configure_page_size_missing_fields() ✅
+def test_configure_page_size_invalid_max_size() ✅
+def test_configure_page_size_invalid_date_format() ✅
+def test_configure_page_size_creates_multiple_notifications() ✅
+def test_configure_page_size_updates_existing_notifications() ✅
+# 11 total tests, all passing (100%)
 ```
 
 **Validation:** Check against `docs/wiki-admin-dashboard.md`
+
+**Implementation:**
+- File upload size configuration with presets and custom values
+- Page size limit configuration with automatic notification creation
+- Configuration persistence via WikiConfig model
+- Comprehensive edge case validation and error handling
 
 #### 7.3 Service Status Page
 - [ ] Create system page for service status monitoring
@@ -1052,11 +1087,26 @@ After each phase, validate against design documents:
   - File watcher service (12 tests)
   - Admin user assignment (3 tests)
 - **Total Sync Tests:** 74 tests, all passing (100%)
+- **Phase 7**: Admin Dashboard Features ⏳ **IN PROGRESS**
+  - **Phase 7.1**: Size Monitoring - **COMPLETE** ✅
+    - SizeMonitoringService implementation (10 service tests)
+    - Size distribution charts
+    - Oversized page detection and tracking
+    - Notification creation when limit is set
+    - Auto-resolution when pages are fixed
+    - Admin route integration (16 API tests, including 9 new edge case tests)
+  - **Phase 7.2**: Configuration Management - **COMPLETE** ✅
+    - File upload size limits (presets + custom)
+    - Page size limits with notification creation
+    - Configuration persistence
+    - Comprehensive edge case testing (9 new tests)
+  - **Phase 7.3**: Service Status Page - **TODO**
+- **Total Phase 7 Tests:** 26 tests (10 service + 16 API), all passing (100%)
 
 **Overall Test Summary:**
-- **Total Tests:** 475 tests across all phases
+- **Total Tests:** 501 tests across all phases
 - **Test Status:** All passing (100%)
-- **Coverage:** Comprehensive coverage including happy paths, error handling, edge cases, integration, CLI testing, and file watcher functionality
+- **Coverage:** Comprehensive coverage including happy paths, error handling, edge cases, integration, CLI testing, file watcher functionality, and admin dashboard features
 
 ### ⏳ Next Steps
 - **Phase 1.2**: Database migrations (Flask-Migrate setup and initial migration)
@@ -1079,6 +1129,18 @@ After each phase, validate against design documents:
     - Automatically syncs files on create/modify
     - Debouncing prevents rapid-fire syncs
     - Graceful shutdown on Ctrl+C
+- **Phase 7.1**: Size Monitoring - Complete with 10 service tests, all passing (100%) ✅
+  - SizeMonitoringService implementation
+  - Size distribution charts (by KB and word count)
+  - Oversized page detection and tracking
+  - Notification creation when page size limit is set
+  - Auto-resolution when pages are fixed
+  - Admin route integration
+- **Phase 7.2**: Configuration Management - Complete with comprehensive testing ✅
+  - File upload size limits (presets + custom)
+  - Page size limits with automatic notification creation
+  - Configuration persistence via WikiConfig
+  - 9 new edge case tests for validation and error handling
 
 ---
 

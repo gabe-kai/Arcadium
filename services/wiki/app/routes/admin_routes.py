@@ -1,6 +1,6 @@
 """Admin dashboard and configuration endpoints"""
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 
 from flask import Blueprint, request, jsonify
 from sqlalchemy import func
@@ -11,6 +11,7 @@ from app.models.comment import Comment
 from app.models.wiki_config import WikiConfig
 from app.models.oversized_page_notification import OversizedPageNotification
 from app.middleware.auth import require_auth, require_role
+from app.services.size_monitoring_service import SizeMonitoringService
 
 
 admin_bp = Blueprint("admin", __name__)
@@ -81,56 +82,8 @@ def get_size_distribution():
     Permissions: Admin
     """
     try:
-        # Define buckets
-        size_buckets = {
-            "0-10": (0, 10),
-            "10-50": (10, 50),
-            "50-100": (50, 100),
-            "100-500": (100, 500),
-            "500-1000": (500, 1000),
-            "1000+": (1000, None),
-        }
-
-        word_buckets = {
-            "0-500": (0, 500),
-            "500-1000": (500, 1000),
-            "1000-2500": (1000, 2500),
-            "2500-5000": (2500, 5000),
-            "5000-10000": (5000, 10000),
-            "10000+": (10000, None),
-        }
-
-        by_size_kb = {}
-        for label, (start, end) in size_buckets.items():
-            query = db.session.query(func.count(Page.id))
-            if end is None:
-                query = query.filter(Page.content_size_kb >= start)
-            else:
-                query = query.filter(
-                    Page.content_size_kb >= start, Page.content_size_kb < end
-                )
-            by_size_kb[label] = int(query.scalar() or 0)
-
-        by_word_count = {}
-        for label, (start, end) in word_buckets.items():
-            query = db.session.query(func.count(Page.id))
-            if end is None:
-                query = query.filter(Page.word_count >= start)
-            else:
-                query = query.filter(
-                    Page.word_count >= start, Page.word_count < end
-                )
-            by_word_count[label] = int(query.scalar() or 0)
-
-        return (
-            jsonify(
-                {
-                    "by_size_kb": by_size_kb,
-                    "by_word_count": by_word_count,
-                }
-            ),
-            200,
-        )
+        distribution = SizeMonitoringService.get_size_distribution()
+        return jsonify(distribution), 200
     except Exception as e:  # pragma: no cover - defensive
         return jsonify({"error": str(e)}), 500
 
@@ -259,12 +212,16 @@ def configure_page_size():
 
         db.session.commit()
 
-        # Calculate oversized pages count based on new threshold
-        oversized_pages_count = (
-            db.session.query(func.count(Page.id))
-            .filter(Page.content_size_kb > max_size_kb_val)
-            .scalar()
-            or 0
+        # Parse resolution due date
+        try:
+            due_date = datetime.fromisoformat(resolution_due_date.replace("Z", "+00:00"))
+        except ValueError:
+            due_date = datetime.fromisoformat(resolution_due_date)
+
+        # Create oversized page notifications
+        notifications = SizeMonitoringService.create_oversized_notifications(
+            max_size_kb=max_size_kb_val,
+            resolution_due_date=due_date
         )
 
         return (
@@ -272,7 +229,8 @@ def configure_page_size():
                 {
                     "max_size_kb": max_size_kb_val,
                     "resolution_due_date": resolution_due_date,
-                    "oversized_pages_count": int(oversized_pages_count),
+                    "oversized_pages_count": len(notifications),
+                    "notifications_created": len(notifications),
                     "updated_at": config.updated_at.isoformat()
                     if config.updated_at
                     else None,
@@ -294,31 +252,12 @@ def get_oversized_pages():
     Permissions: Admin
     """
     try:
-        # Join OversizedPageNotification with Page
-        results = (
-            db.session.query(OversizedPageNotification, Page)
-            .join(Page, OversizedPageNotification.page_id == Page.id)
-            .filter(OversizedPageNotification.resolved.is_(False))
-            .all()
-        )
-
-        pages = []
-        for notif, page in results:
-            pages.append(
-                {
-                    "id": str(page.id),
-                    "title": page.title,
-                    "current_size_kb": notif.current_size_kb,
-                    "max_size_kb": notif.max_size_kb,
-                    "word_count": page.word_count,
-                    "authors": [],  # No user model in this service
-                    "due_date": notif.resolution_due_date.isoformat()
-                    if notif.resolution_due_date
-                    else None,
-                    "status": "resolved" if notif.resolved else "pending",
-                }
-            )
-
+        pages = SizeMonitoringService.get_oversized_pages_with_notifications()
+        
+        # Add authors field (placeholder - no user model in this service)
+        for page in pages:
+            page['authors'] = []
+        
         return jsonify({"pages": pages}), 200
     except Exception as e:  # pragma: no cover - defensive
         return jsonify({"error": str(e)}), 500
@@ -358,7 +297,7 @@ def update_oversized_page_status(page_id):
         # Update resolved flag based on status
         if status == "resolved":
             notif.resolved = True
-            notif.resolved_at = datetime.utcnow()
+            notif.resolved_at = datetime.now(timezone.utc)
         else:
             # For other statuses, keep resolved False
             notif.resolved = False
@@ -396,14 +335,3 @@ def update_oversized_page_status(page_id):
     except Exception as e:  # pragma: no cover - defensive
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
-
-{
-  "cells": [],
-  "metadata": {
-    "language_info": {
-      "name": "python"
-    }
-  },
-  "nbformat": 4,
-  "nbformat_minor": 2
-}
