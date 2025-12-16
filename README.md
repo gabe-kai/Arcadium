@@ -73,6 +73,8 @@ flask run
 
 ## Testing
 
+### Local Testing
+
 Run tests for a specific service:
 
 ```bash
@@ -81,12 +83,30 @@ cd services/wiki
 pytest
 ```
 
+### CI/CD
+
+The project uses GitHub Actions for continuous integration. Tests run automatically on:
+- Push to `main` or `feature/**` branches
+- Pull requests targeting `main`
+
+**To run tests locally with CI configuration:**
+```bash
+# Set environment variables (matches CI)
+export FLASK_ENV=testing
+export TEST_DATABASE_URL="postgresql://postgres:Le555ecure@localhost:5432/wiki_test"
+cd services/wiki
+pytest
+```
+
+See [CI/CD Documentation](docs/ci-cd.md) for detailed information about the CI setup and troubleshooting.
+
 ## Documentation
 
 - [Architecture](docs/architecture/)
 - [API Documentation](docs/api/)
 - [Game Design](docs/game-design/)
 - [Service Specifications](docs/services/)
+- [CI/CD](docs/ci-cd.md)
 
 ## Contributing
 

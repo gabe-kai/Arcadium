@@ -88,6 +88,47 @@ python -m app.sync watch --admin-user-id <uuid>
 
 For more details, see [Wiki AI Content Management](../../docs/wiki-ai-content-management.md).
 
+## Testing
+
+### Running Tests Locally
+
+```bash
+# From services/wiki directory
+pytest
+```
+
+### Running Tests with CI Configuration
+
+To verify tests will pass in CI before pushing:
+
+**Windows (PowerShell):**
+```powershell
+$env:FLASK_ENV = "testing"
+$env:TEST_DATABASE_URL = "postgresql://postgres:Le555ecure@localhost:5432/wiki_test"
+pytest
+```
+
+**Linux/Mac (Bash):**
+```bash
+export FLASK_ENV=testing
+export TEST_DATABASE_URL="postgresql://postgres:Le555ecure@localhost:5432/wiki_test"
+pytest
+```
+
+**Prerequisites:**
+- PostgreSQL running locally with test database `wiki_test`
+- All dependencies installed from root `requirements.txt`
+
+**Note:** Tests use PostgreSQL (not SQLite) to avoid UUID compatibility issues and match production behavior.
+
+### CI/CD
+
+Tests run automatically on GitHub Actions for:
+- Push to `main` or `feature/**` branches
+- Pull requests targeting `main`
+
+See [CI/CD Documentation](../../docs/ci-cd.md) for details.
+
 ## API Endpoints
 
 - `GET /` - Wiki homepage
