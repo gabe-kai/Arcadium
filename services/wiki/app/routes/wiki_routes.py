@@ -25,6 +25,24 @@ wiki_bp.register_blueprint(admin_bp)
 wiki_bp.register_blueprint(upload_bp)
 
 
+@wiki_bp.route("/", methods=["GET"])
+def root():
+    """Root endpoint - API information"""
+    return jsonify({
+        "service": "Wiki Service",
+        "version": "1.0.0",
+        "status": "running",
+        "endpoints": {
+            "health": "/api/health",
+            "pages": "/api/pages",
+            "search": "/api/search",
+            "navigation": "/api/navigation",
+            "admin": "/api/admin/dashboard/stats"
+        },
+        "documentation": "See README.md for API documentation"
+    }), 200
+
+
 @wiki_bp.route("/health", methods=["GET"])
 def health_check():
     """Health check endpoint"""

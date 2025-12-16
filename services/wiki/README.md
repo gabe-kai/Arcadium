@@ -16,6 +16,9 @@ source ../venv/bin/activate
 ```bash
 # From project root:
 pip install -r requirements.txt
+
+# Note: If psycopg2-binary installation fails (especially on Python 3.14+), try:
+pip install psycopg2-binary --only-binary :all:
 ```
 
 2. Set up environment variables:

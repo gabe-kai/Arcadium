@@ -162,16 +162,27 @@ def get_page(page_id):
     """
     Get a single page by ID.
     
+    Returns JSON by default. Add ?format=html to get HTML view.
+    
     Draft pages return 404 for non-creators and non-admins.
     """
+    from flask import request
+    
+    # Check if HTML format requested
+    format_type = request.args.get('format', 'json')
+    
     try:
         page_id_uuid = uuid.UUID(page_id)
     except ValueError:
+        if format_type == 'html':
+            return '<html><body><h1>Error</h1><p>Invalid page ID format</p></body></html>', 400
         return jsonify({'error': 'Invalid page ID format'}), 400
     
     try:
         page = db.session.get(Page, page_id_uuid)
         if not page:
+            if format_type == 'html':
+                return '<html><body><h1>Page Not Found</h1><p>The requested page does not exist.</p></body></html>', 404
             return jsonify({'error': 'Page not found'}), 404
         
         # Get current user info
@@ -182,8 +193,12 @@ def get_page(page_id):
         # Check draft visibility
         if page.status == 'draft':
             if user_role not in ['admin', 'writer']:
+                if format_type == 'html':
+                    return '<html><body><h1>Page Not Found</h1><p>The requested page does not exist.</p></body></html>', 404
                 return jsonify({'error': 'Page not found'}), 404
             if user_role == 'writer' and page.created_by != user_id:
+                if format_type == 'html':
+                    return '<html><body><h1>Page Not Found</h1><p>The requested page does not exist.</p></body></html>', 404
                 return jsonify({'error': 'Page not found'}), 404
         
         # Get or generate TOC (with caching)
@@ -198,6 +213,237 @@ def get_page(page_id):
             html_content = markdown_to_html(page.content)
             CacheService.set_html_cache(page.content, html_content, str(user_id) if user_id else None)
         
+        # If HTML format requested, return styled HTML page
+        if format_type == 'html':
+            from flask import render_template_string
+            
+            # Get forward links (outgoing)
+            forward_links = LinkService.get_outgoing_links(page.id)
+            forward_links_data = [{
+                'page_id': str(link.id),
+                'title': link.title,
+                'slug': link.slug
+            } for link in forward_links]
+            
+            # Get backlinks (incoming)
+            backlinks = LinkService.get_incoming_links(page.id)
+            backlinks_data = [{
+                'page_id': str(link.id),
+                'title': link.title,
+                'slug': link.slug
+            } for link in backlinks]
+            
+            # Convert TOC list to HTML with proper nesting
+            toc_html = ''
+            if toc:
+                toc_html = '<ul>'
+                current_level = 2  # Start at H2
+                for i, entry in enumerate(toc):
+                    level = entry['level']
+                    # Close nested lists if we're going back up levels
+                    while current_level > level:
+                        toc_html += '</ul></li>'
+                        current_level -= 1
+                    # Close previous list item if we're at the same or deeper level
+                    if i > 0 and current_level <= level:
+                        toc_html += '</li>'
+                    # Open new nested list if we're going deeper
+                    if level > current_level:
+                        toc_html += '<ul>'
+                    # Add the list item
+                    toc_html += f'<li><a href="#{entry["anchor"]}">{entry["text"]}</a>'
+                    current_level = level
+                # Close all remaining lists
+                toc_html += '</li>'  # Close last item
+                while current_level >= 2:
+                    toc_html += '</ul>'
+                    current_level -= 1
+            
+            html_template = """
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }} - Wiki</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: white;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        header {
+            border-bottom: 2px solid #e0e0e0;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            color: #2c3e50;
+        }
+        .meta {
+            color: #666;
+            font-size: 0.9em;
+            margin-bottom: 20px;
+        }
+        .content {
+            font-size: 1.1em;
+            line-height: 1.8;
+        }
+        .content h2 { margin-top: 30px; margin-bottom: 15px; color: #34495e; }
+        .content h3 { margin-top: 25px; margin-bottom: 12px; color: #34495e; }
+        .content h4 { margin-top: 20px; margin-bottom: 10px; color: #34495e; }
+        .content p { margin-bottom: 15px; }
+        .content code {
+            background: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+        }
+        .content pre {
+            background: #f4f4f4;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            margin-bottom: 15px;
+        }
+        .content a {
+            color: #3498db;
+            text-decoration: none;
+        }
+        .content a:hover {
+            text-decoration: underline;
+        }
+        .toc {
+            background: #f9f9f9;
+            border-left: 4px solid #3498db;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .toc h3 {
+            margin-top: 0;
+            margin-bottom: 15px;
+        }
+        .toc ul {
+            list-style: none;
+            padding-left: 20px;
+        }
+        .toc li {
+            margin: 8px 0;
+        }
+        .toc a {
+            color: #3498db;
+            text-decoration: none;
+        }
+        .links {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 2px solid #e0e0e0;
+        }
+        .links h3 {
+            margin-bottom: 15px;
+        }
+        .links ul {
+            list-style: none;
+        }
+        .links li {
+            margin: 8px 0;
+        }
+        .links a {
+            color: #3498db;
+            text-decoration: none;
+        }
+        .links a:hover {
+            text-decoration: underline;
+        }
+        footer {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 2px solid #e0e0e0;
+            color: #666;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>{{ title }}</h1>
+            <div class="meta">
+                <span>Last updated: {{ updated_at }}</span>
+                {% if word_count %}
+                <span> | Words: {{ word_count }}</span>
+                {% endif %}
+                {% if content_size_kb %}
+                <span> | Size: {{ "%.1f"|format(content_size_kb) }} KB</span>
+                {% endif %}
+            </div>
+        </header>
+        
+        {% if table_of_contents %}
+        <div class="toc">
+            <h3>Table of Contents</h3>
+            {{ table_of_contents|safe }}
+        </div>
+        {% endif %}
+        
+        <div class="content">
+            {{ html_content|safe }}
+        </div>
+        
+        {% if forward_links or backlinks %}
+        <div class="links">
+            {% if forward_links %}
+            <h3>See Also</h3>
+            <ul>
+                {% for link in forward_links %}
+                <li><a href="/api/pages/{{ link.page_id }}?format=html">{{ link.title }}</a></li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+            
+            {% if backlinks %}
+            <h3>Pages Linking Here</h3>
+            <ul>
+                {% for link in backlinks %}
+                <li><a href="/api/pages/{{ link.page_id }}?format=html">{{ link.title }}</a></li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+        </div>
+        {% endif %}
+        
+        <footer>
+            <p>Wiki Service API | <a href="/api/pages">View as JSON</a> | <a href="/api">API Documentation</a></p>
+        </footer>
+    </div>
+</body>
+</html>
+            """
+            
+            return render_template_string(
+                html_template,
+                title=page.title,
+                html_content=html_content,
+                toc_html=toc_html,
+                forward_links=forward_links_data,
+                backlinks=backlinks_data,
+                updated_at=page.updated_at.strftime('%Y-%m-%d %H:%M:%S') if page.updated_at else 'Unknown',
+                word_count=page.word_count,
+                content_size_kb=page.content_size_kb
+            ), 200
+        
+        # JSON response (default)
         # Get forward links (outgoing)
         forward_links = LinkService.get_outgoing_links(page.id)
         forward_links_data = [{
@@ -243,6 +489,8 @@ def get_page(page_id):
         return jsonify(response_data), 200
     
     except Exception as e:
+        if format_type == 'html':
+            return f'<html><body><h1>Error</h1><p>{str(e)}</p></body></html>', 500
         return jsonify({'error': str(e)}), 500
 
 

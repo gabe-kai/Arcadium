@@ -35,6 +35,9 @@ source venv/bin/activate
 
 # Install dependencies
 pip install -r requirements.txt
+
+# Note: If psycopg2-binary installation fails (especially on Python 3.14+), try:
+pip install psycopg2-binary --only-binary :all:
 ```
 
 ### Database Setup

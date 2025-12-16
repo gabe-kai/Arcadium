@@ -5,9 +5,10 @@
 Flask==3.0.0
 Flask-SQLAlchemy==3.1.1
 Flask-Migrate==4.0.5
-# psycopg2-binary - Install manually if needed for PostgreSQL
-# Note: psycopg2-binary may have issues with Python 3.14
-# Alternative: Use psycopg2 (requires PostgreSQL dev libraries) or install from wheel
+psycopg2-binary>=2.9.9
+# Note: If psycopg2-binary has issues with Python 3.14+, try:
+# - Install from wheel: pip install psycopg2-binary --only-binary :all:
+# - Or use psycopg2 (requires PostgreSQL dev libraries): pip install psycopg2
 python-dotenv==1.0.0
 pytest==7.4.3
 pytest-cov==4.1.0
