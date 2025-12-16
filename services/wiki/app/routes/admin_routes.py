@@ -258,7 +258,7 @@ def get_oversized_pages():
         # Add authors field (placeholder - no user model in this service)
         for page in pages:
             page['authors'] = []
-        
+
         return jsonify({"pages": pages}), 200
     except Exception as e:  # pragma: no cover - defensive
         return jsonify({"error": str(e)}), 500

@@ -690,7 +690,7 @@ def mock_auth(user_id, role='writer'):
     """Context manager to mock authentication"""
     return patch('app.middleware.auth.get_user_from_token', return_value={
         'id': user_id,
-        'role': role,
+                'role': role,
         'username': 'testuser'
     })
 
