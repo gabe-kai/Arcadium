@@ -1,9 +1,11 @@
 """CLI commands for sync utility"""
 import sys
+import signal
 import argparse
 from flask import Flask
 from app import create_app
 from app.sync.sync_utility import SyncUtility
+from app.sync.file_watcher import FileWatcher
 
 
 def sync_all_command(force: bool = False, admin_user_id: str = None):
@@ -90,6 +92,42 @@ def sync_dir_command(directory: str, force: bool = False, admin_user_id: str = N
             sys.exit(1)
 
 
+def watch_command(admin_user_id: str = None, debounce: float = 1.0):
+    """Watch for file changes and auto-sync"""
+    app = create_app()
+    
+    # Create watcher
+    watcher = FileWatcher(
+        app=app,
+        admin_user_id=admin_user_id,
+        debounce_seconds=debounce
+    )
+    
+    # Handle graceful shutdown
+    def signal_handler(sig, frame):
+        print("\n[WATCHER] Shutting down...")
+        watcher.stop()
+        sys.exit(0)
+    
+    signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGTERM, signal_handler)
+    
+    try:
+        # Start watching
+        watcher.start()
+        
+        # Keep running
+        while watcher.is_alive():
+            import time
+            time.sleep(1)
+    except KeyboardInterrupt:
+        signal_handler(None, None)
+    except Exception as e:
+        print(f"[WATCHER] Error: {e}")
+        watcher.stop()
+        sys.exit(1)
+
+
 def main():
     """Main CLI entry point"""
     parser = argparse.ArgumentParser(description='Wiki sync utility')
@@ -112,6 +150,11 @@ def main():
     parser_dir.add_argument('--force', action='store_true', help='Force sync even if file is not newer')
     parser_dir.add_argument('--admin-user-id', help='Admin user UUID to assign pages to')
     
+    # watch command
+    parser_watch = subparsers.add_parser('watch', help='Watch for file changes and auto-sync')
+    parser_watch.add_argument('--admin-user-id', help='Admin user UUID to assign pages to')
+    parser_watch.add_argument('--debounce', type=float, default=1.0, help='Debounce time in seconds (default: 1.0)')
+    
     args = parser.parse_args()
     
     if not args.command:
@@ -124,6 +167,8 @@ def main():
         sync_file_command(args.file_path, force=args.force, admin_user_id=args.admin_user_id)
     elif args.command == 'sync-dir':
         sync_dir_command(args.directory, force=args.force, admin_user_id=args.admin_user_id)
+    elif args.command == 'watch':
+        watch_command(admin_user_id=args.admin_user_id, debounce=args.debounce)
 
 
 if __name__ == '__main__':

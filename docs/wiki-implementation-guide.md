@@ -608,6 +608,7 @@ def test_upload_image_invalid_config_falls_back_to_default() ✅
 - [x] Index updater ✅
 - [x] Admin user assignment ✅
 - [x] CLI commands (sync-all, sync-file, sync-dir) ✅
+- [x] File watcher service (automatic syncing) ✅
 
 **Testing:**
 ```python
@@ -682,12 +683,28 @@ def test_main_sync_file() ✅
 def test_main_sync_file_with_force() ✅
 def test_main_sync_dir() ✅
 def test_main_no_command() ✅
-# 62 total tests, all passing (100%)
+
+# tests/test_sync/test_file_watcher.py (12 tests)
+def test_markdown_file_handler_init() ✅
+def test_markdown_file_handler_get_relative_path() ✅
+def test_markdown_file_handler_should_handle() ✅
+def test_markdown_file_handler_schedule_sync() ✅
+def test_markdown_file_handler_sync_file() ✅
+def test_markdown_file_handler_on_created() ✅
+def test_markdown_file_handler_on_modified() ✅
+def test_markdown_file_handler_ignores_directories() ✅
+def test_file_watcher_init() ✅
+def test_file_watcher_start() ✅
+def test_file_watcher_stop() ✅
+def test_file_watcher_is_alive() ✅
+# 74 total tests, all passing (100%)
 ```
 
 **Validation:** Check against `docs/wiki-ai-content-management.md`
 
 **CLI Usage:**
+
+**Manual Sync Commands:**
 ```bash
 # Sync all markdown files
 python -m app.sync sync-all
@@ -704,6 +721,32 @@ python -m app.sync sync-all --force
 # Specify admin user ID
 python -m app.sync sync-all --admin-user-id <uuid>
 ```
+
+**Automatic Sync (File Watcher):**
+```bash
+# Start watching for file changes (auto-sync)
+python -m app.sync watch
+
+# Watch with custom debounce time (default: 1.0 seconds)
+python -m app.sync watch --debounce 2.0
+
+# Watch with custom admin user ID
+python -m app.sync watch --admin-user-id <uuid>
+
+# Stop watcher: Press Ctrl+C
+```
+
+**Watcher Features:**
+- Automatically syncs files when created or modified
+- Debouncing prevents rapid-fire syncs (waits 1 second after last change)
+- Recursively monitors all subdirectories in `data/pages/`
+- Only watches `.md` files
+- Graceful shutdown on Ctrl+C or SIGTERM
+- Perfect for AI agent workflows - files sync automatically as they're written
+
+**When to Use:**
+- **Manual sync** (`sync-all`, `sync-file`, `sync-dir`): For batch operations, one-time syncs, or when you want control over when syncing happens
+- **Watch mode** (`watch`): For continuous development, AI agent workflows, or when you want real-time automatic syncing
 
 ---
 
@@ -741,6 +784,96 @@ def test_config_persistence()
 ```
 
 **Validation:** Check against `docs/wiki-admin-dashboard.md`
+
+#### 7.3 Service Status Page
+- [ ] Create system page for service status monitoring
+- [ ] Display all Arcadium services with status indicators (red/yellow/green)
+- [ ] Health check integration (check `/health` endpoints)
+- [ ] Notes section for status explanations
+- [ ] Auto-refresh capability (optional)
+- [ ] Manual status override (for maintenance windows)
+
+**Services to Monitor:**
+- Wiki Service (self)
+- Auth Service
+- Notification Service
+- Game Server
+- Web Client (if applicable)
+- Admin Service
+- Assets Service
+- Chat Service
+- Leaderboard Service
+- Presence Service
+
+**Status Indicators:**
+- 🟢 **Green**: Service is healthy (all checks passing)
+- 🟡 **Yellow**: Service is degraded (partial functionality, warnings)
+- 🔴 **Red**: Service is unhealthy (down, errors, critical issues)
+
+**Page Structure:**
+```markdown
+# Arcadium Service Status
+
+## Services
+
+| Service | Status | Last Check | Notes |
+|---------|--------|------------|-------|
+| Wiki Service | 🟢 Healthy | 2024-01-01 12:00:00 | All systems operational |
+| Auth Service | 🟢 Healthy | 2024-01-01 12:00:00 | - |
+| Notification Service | 🟡 Degraded | 2024-01-01 12:00:00 | High latency, investigating |
+| Game Server | 🔴 Unhealthy | 2024-01-01 12:00:00 | Service restarting |
+| Web Client | 🟢 Healthy | 2024-01-01 12:00:00 | - |
+| Admin Service | 🟢 Healthy | 2024-01-01 12:00:00 | - |
+| Assets Service | 🟢 Healthy | 2024-01-01 12:00:00 | - |
+| Chat Service | 🟢 Healthy | 2024-01-01 12:00:00 | - |
+| Leaderboard Service | 🟢 Healthy | 2024-01-01 12:00:00 | - |
+| Presence Service | 🟢 Healthy | 2024-01-01 12:00:00 | - |
+
+## Status Notes
+
+### Notification Service (🟡 Degraded)
+- **Issue**: High response latency detected
+- **Impact**: Notifications may be delayed
+- **ETA**: Expected resolution within 1 hour
+- **Last Updated**: 2024-01-01 11:45:00
+
+### Game Server (🔴 Unhealthy)
+- **Issue**: Service restarting after crash
+- **Impact**: Game unavailable
+- **ETA**: Expected resolution within 15 minutes
+- **Last Updated**: 2024-01-01 11:50:00
+```
+
+**Implementation:**
+1. Create system page with slug `service-status` (or `system/service-status`)
+2. Mark as system page (`is_system_page = true`)
+3. Create service to check health endpoints
+4. Create API endpoint to update status (admin only)
+5. Optional: Auto-refresh page content via scheduled task
+6. Optional: Webhook integration for status updates
+
+**API Endpoints:**
+```python
+# Get service status data
+GET /api/admin/service-status
+# Returns: JSON with all service statuses
+
+# Update service status (admin only)
+PUT /api/admin/service-status
+# Body: { "service": "auth", "status": "degraded", "notes": "..." }
+```
+
+**Testing:**
+```python
+# tests/test_api/test_service_status_routes.py
+def test_get_service_status()
+def test_update_service_status_requires_admin()
+def test_update_service_status_success()
+def test_health_check_integration()
+def test_status_page_rendering()
+```
+
+**Validation:** Check against `docs/services/service-architecture.md` Service Status Monitoring
 
 ---
 
@@ -883,6 +1016,10 @@ After each phase, validate against design documents:
 2. **Core Services** (Phase 3-4) - File system and business logic ✅ **COMPLETE**
 3. **API Layer** (Phase 5) - REST endpoints ✅ **COMPLETE** (all 11 sub-phases: 5.1-5.11)
 4. **Features** (Phase 6-7) - Sync utility and admin features ⏳ **IN PROGRESS** (Phase 6 complete)
+   - **Phase 6**: Sync Utility ✅ **COMPLETE**
+   - **Phase 7.1**: Size Monitoring
+   - **Phase 7.2**: Configuration Management
+   - **Phase 7.3**: Service Status Page ⭐ **NEW** - Important for monitoring all Arcadium services
 5. **Integration** (Phase 8) - External services and optimization
 
 ## Current Progress
@@ -912,27 +1049,36 @@ After each phase, validate against design documents:
   - Error handling and edge cases (16 tests)
   - Link and search index integration (5 tests)
   - CLI commands (16 tests)
+  - File watcher service (12 tests)
   - Admin user assignment (3 tests)
-- **Total Sync Tests:** 62 tests, all passing (100%)
+- **Total Sync Tests:** 74 tests, all passing (100%)
 
 **Overall Test Summary:**
-- **Total Tests:** 463 tests across all phases
+- **Total Tests:** 475 tests across all phases
 - **Test Status:** All passing (100%)
-- **Coverage:** Comprehensive coverage including happy paths, error handling, edge cases, integration, and CLI testing
+- **Coverage:** Comprehensive coverage including happy paths, error handling, edge cases, integration, CLI testing, and file watcher functionality
 
 ### ⏳ Next Steps
 - **Phase 1.2**: Database migrations (Flask-Migrate setup and initial migration)
 - **Phase 7**: Admin Dashboard Features
+  - **Phase 7.1**: Size Monitoring
+  - **Phase 7.2**: Configuration Management
+  - **Phase 7.3**: Service Status Page ⭐ **NEW**
 - **Phase 8**: Integration & Polish
 
 ### ✅ Recently Completed
-- **Phase 6**: Sync Utility (AI Content) - Complete with 62 tests, all passing (100%)
+- **Phase 6**: Sync Utility (AI Content) - Complete with 74 tests, all passing (100%)
   - File scanner for markdown files
   - Frontmatter parser integration
   - Database sync logic (create/update pages)
   - Link and search index updates
   - Admin user assignment
   - CLI commands (sync-all, sync-file, sync-dir)
+  - File watcher service (automatic syncing) ✅
+    - Monitors pages directory for file changes
+    - Automatically syncs files on create/modify
+    - Debouncing prevents rapid-fire syncs
+    - Graceful shutdown on Ctrl+C
 
 ---
 
@@ -955,6 +1101,7 @@ After each phase, validate against design documents:
 - Admin dashboard functional
 - Size monitoring working
 - Notifications integrated
+- Service status page operational ⭐ **NEW**
 
 ### Milestone 4: Production Ready
 - All tests passing

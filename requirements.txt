@@ -11,6 +11,7 @@ Flask-Migrate==4.0.5
 python-dotenv==1.0.0
 pytest==7.4.3
 pytest-cov==4.1.0
+watchdog==3.0.0
 
 # Add other service dependencies here as services are added
 
