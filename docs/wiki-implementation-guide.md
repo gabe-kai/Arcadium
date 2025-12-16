@@ -598,27 +598,112 @@ def test_upload_image_invalid_config_falls_back_to_default() ✅
 
 ---
 
-### Phase 6: Sync Utility (AI Content)
+### Phase 6: Sync Utility (AI Content) ✅ COMPLETE
 
-#### 6.1 Sync Utility Implementation
-- [ ] File scanner for markdown files
-- [ ] Frontmatter parser
-- [ ] Database sync logic
-- [ ] Link updater
-- [ ] Index updater
-- [ ] Admin user assignment
+#### 6.1 Sync Utility Implementation ✅ COMPLETE
+- [x] File scanner for markdown files ✅
+- [x] Frontmatter parser ✅
+- [x] Database sync logic ✅
+- [x] Link updater ✅
+- [x] Index updater ✅
+- [x] Admin user assignment ✅
+- [x] CLI commands (sync-all, sync-file, sync-dir) ✅
 
 **Testing:**
 ```python
-# tests/test_sync/test_sync_utility.py
-def test_file_scanning()
-def test_frontmatter_parsing()
-def test_database_sync()
-def test_parent_slug_resolution()
-def test_admin_assignment()
+# tests/test_sync/test_file_scanner.py (9 tests)
+def test_scan_directory_empty() ✅
+def test_scan_directory_finds_markdown_files() ✅
+def test_scan_directory_nested_structure() ✅
+def test_scan_file_exists() ✅
+def test_scan_file_not_exists() ✅
+def test_scan_file_absolute_path() ✅
+def test_scan_file_absolute_path_outside_directory() ✅
+def test_get_file_modification_time() ✅
+def test_get_file_modification_time_not_exists() ✅
+
+# tests/test_sync/test_sync_utility.py (16 tests)
+def test_resolve_parent_slug_exists() ✅
+def test_resolve_parent_slug_not_exists() ✅
+def test_resolve_parent_slug_none() ✅
+def test_read_file() ✅
+def test_read_file_no_frontmatter() ✅
+def test_should_sync_file_new_file() ✅
+def test_should_sync_file_newer_than_db() ✅
+def test_should_sync_file_older_than_db() ✅
+def test_sync_file_create_new() ✅
+def test_sync_file_update_existing() ✅
+def test_sync_file_with_parent_slug() ✅
+def test_sync_file_skip_not_newer() ✅
+def test_sync_file_force_update() ✅
+def test_sync_file_auto_generate_slug() ✅
+def test_sync_all() ✅
+def test_sync_directory() ✅
+
+# tests/test_sync/test_sync_utility_errors.py (16 tests)
+def test_read_file_not_found() ✅
+def test_read_file_malformed_yaml() ✅
+def test_sync_file_missing_file() ✅
+def test_sync_file_invalid_slug() ✅
+def test_sync_file_duplicate_slug() ✅
+def test_sync_file_missing_title() ✅
+def test_sync_file_parent_slug_not_found() ✅
+def test_sync_all_handles_errors() ✅
+def test_sync_directory_invalid_directory() ✅
+def test_sync_directory_empty_directory() ✅
+def test_sync_directory_nested_subdirectories() ✅
+def test_sync_file_idempotence() ✅
+def test_sync_all_idempotence() ✅
+def test_admin_user_id_from_config() ✅
+def test_admin_user_id_invalid_config_falls_back() ✅
+def test_admin_user_id_explicit_override() ✅
+
+# tests/test_sync/test_sync_integration.py (5 tests)
+def test_sync_file_updates_links() ✅
+def test_sync_file_updates_search_index() ✅
+def test_sync_file_creates_version_on_update() ✅
+def test_sync_file_no_version_on_create() ✅
+def test_sync_file_with_multiple_links() ✅
+
+# tests/test_sync/test_cli.py (16 tests)
+def test_sync_all_command_success() ✅
+def test_sync_all_command_with_force() ✅
+def test_sync_all_command_with_admin_user_id() ✅
+def test_sync_all_command_invalid_admin_user_id() ✅
+def test_sync_file_command_success() ✅
+def test_sync_file_command_updated() ✅
+def test_sync_file_command_skipped() ✅
+def test_sync_file_command_error() ✅
+def test_sync_dir_command_success() ✅
+def test_sync_dir_command_error() ✅
+def test_main_sync_all() ✅
+def test_main_sync_all_with_flags() ✅
+def test_main_sync_file() ✅
+def test_main_sync_file_with_force() ✅
+def test_main_sync_dir() ✅
+def test_main_no_command() ✅
+# 62 total tests, all passing (100%)
 ```
 
 **Validation:** Check against `docs/wiki-ai-content-management.md`
+
+**CLI Usage:**
+```bash
+# Sync all markdown files
+python -m app.sync sync-all
+
+# Sync specific file
+python -m app.sync sync-file section/page.md
+
+# Sync directory
+python -m app.sync sync-dir section/
+
+# Force sync (ignore modification time)
+python -m app.sync sync-all --force
+
+# Specify admin user ID
+python -m app.sync sync-all --admin-user-id <uuid>
+```
 
 ---
 
@@ -752,6 +837,7 @@ pytest --cov=app tests/
 pytest tests/test_models/
 pytest tests/test_services/
 pytest tests/test_api/
+pytest tests/test_sync/
 ```
 
 **Note:** 
@@ -796,7 +882,7 @@ After each phase, validate against design documents:
 1. **Foundation** (Phase 1-2) - Database and models ✅ **COMPLETE**
 2. **Core Services** (Phase 3-4) - File system and business logic ✅ **COMPLETE**
 3. **API Layer** (Phase 5) - REST endpoints ✅ **COMPLETE** (all 11 sub-phases: 5.1-5.11)
-4. **Features** (Phase 6-7) - Sync utility and admin features ⏳ **NEXT**
+4. **Features** (Phase 6-7) - Sync utility and admin features ⏳ **IN PROGRESS** (Phase 6 complete)
 5. **Integration** (Phase 8) - External services and optimization
 
 ## Current Progress
@@ -819,12 +905,34 @@ After each phase, validate against design documents:
   - **Phase 5.10**: Admin Endpoints (dashboard stats, size distribution, config, oversized pages - 7/7 tests passing)
   - **Phase 5.11**: File Upload Endpoints (image upload with validation - 10/10 tests passing)
 - **Total API Tests:** 219 tests, all passing (100%)
+- **Phase 6**: Sync Utility (AI Content) - **COMPLETE** ✅
+  - File scanner for markdown files (9 tests)
+  - Frontmatter parsing and parent slug resolution (3 tests)
+  - Database sync logic (create/update pages) (11 tests)
+  - Error handling and edge cases (16 tests)
+  - Link and search index integration (5 tests)
+  - CLI commands (16 tests)
+  - Admin user assignment (3 tests)
+- **Total Sync Tests:** 62 tests, all passing (100%)
+
+**Overall Test Summary:**
+- **Total Tests:** 463 tests across all phases
+- **Test Status:** All passing (100%)
+- **Coverage:** Comprehensive coverage including happy paths, error handling, edge cases, integration, and CLI testing
 
 ### ⏳ Next Steps
 - **Phase 1.2**: Database migrations (Flask-Migrate setup and initial migration)
-- **Phase 6**: Sync Utility (AI Content)
 - **Phase 7**: Admin Dashboard Features
 - **Phase 8**: Integration & Polish
+
+### ✅ Recently Completed
+- **Phase 6**: Sync Utility (AI Content) - Complete with 62 tests, all passing (100%)
+  - File scanner for markdown files
+  - Frontmatter parser integration
+  - Database sync logic (create/update pages)
+  - Link and search index updates
+  - Admin user assignment
+  - CLI commands (sync-all, sync-file, sync-dir)
 
 ---
 

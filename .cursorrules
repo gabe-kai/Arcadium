@@ -1,0 +1,14 @@
+# Cursor AI Rules for Arcadium Project
+
+## Wiki Content Writing
+
+**When asked to write wiki pages or content:**
+
+1. Always refer to `docs/wiki-ai-content-management.md` for complete instructions
+2. Write markdown files with YAML frontmatter to `services/wiki/data/pages/`
+3. Use `parent_slug` (not `parent_id`) in frontmatter
+4. Always set `created_by: "admin"` and `updated_by: "admin"`
+5. After writing files, remind user to run: `python -m app.sync sync-all`
+
+See `docs/wiki-ai-content-management.md` for the Quick Reference guide and full details.
+

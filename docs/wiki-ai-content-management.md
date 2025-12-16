@@ -1,5 +1,52 @@
 # Wiki AI Content Management
 
+## Quick Reference for AI Agents
+
+**When writing wiki pages, follow these steps:**
+
+1. **Write markdown files** with YAML frontmatter to `services/wiki/data/pages/`
+2. **Required frontmatter:**
+   - `title`: Page title (required)
+   - `slug`: URL-friendly slug (auto-generated from title if omitted)
+   - `parent_slug`: Parent page slug (optional, use slug not UUID)
+   - `section`: Section name (optional)
+   - `order`: Display order (optional, integer)
+   - `status`: "published" or "draft" (default: "published")
+   - `created_by: "admin"` and `updated_by: "admin"` (always use "admin")
+3. **File location:** Mirror hierarchy in filesystem (e.g., `section-name/page.md`)
+4. **After writing:** User will run `python -m app.sync sync-all` to sync to database
+
+**Example:**
+```markdown
+---
+title: "Combat Mechanics"
+slug: "combat-mechanics"
+parent_slug: "game-mechanics"
+section: "game-mechanics"
+order: 1
+status: "published"
+created_by: "admin"
+updated_by: "admin"
+---
+
+# Combat Mechanics
+
+Content here...
+```
+
+**Important Notes:**
+- Use `parent_slug` (slug string), not `parent_id` (UUID) - easier for AI to reference
+- Always set `created_by: "admin"` and `updated_by: "admin"`
+- File paths should mirror the page hierarchy (e.g., `game-mechanics/combat.md`)
+- The sync utility will automatically:
+  - Resolve `parent_slug` to `parent_id`
+  - Update link tracking
+  - Update search index
+  - Create version history (on updates)
+  - Assign pages to admin user
+
+---
+
 ## Overview
 
 This document describes how AI agents (like Cursor's AI assistant) can write and update wiki pages, ensuring proper integration with the wiki system while maintaining database consistency.
