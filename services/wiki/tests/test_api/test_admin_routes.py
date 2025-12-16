@@ -1,6 +1,7 @@
 """Tests for admin dashboard and configuration endpoints."""
 import uuid
 from datetime import datetime, timezone, timedelta
+from unittest.mock import patch, MagicMock
 
 import pytest
 
@@ -269,6 +270,157 @@ def test_get_oversized_pages_and_update_status(client, app, test_admin_id):
         assert updated["status"] == "resolved"
         assert updated["resolved"] is True
         assert updated["due_date"] is not None
+
+
+def test_get_service_status_requires_auth(client):
+    """Service status endpoint should require authentication"""
+    resp = client.get("/api/admin/service-status")
+    assert resp.status_code == 401
+
+
+def test_get_service_status_requires_admin(client, app, test_writer_id):
+    """Service status endpoint should require admin role"""
+    with mock_auth(test_writer_id, "writer"):
+        headers = auth_headers(test_writer_id, "writer")
+        resp = client.get("/api/admin/service-status", headers=headers)
+        assert resp.status_code == 403
+
+
+@patch('app.routes.admin_routes.ServiceStatusService.check_all_services')
+def test_get_service_status_success(mock_check_all, client, app, test_admin_id):
+    """Get service status should return status for all services"""
+    # Mock service checks
+    mock_check_all.return_value = {
+        'wiki': {'status': 'healthy', 'response_time_ms': 5.0, 'error': None, 'details': {'service': 'wiki'}},
+        'auth': {'status': 'healthy', 'response_time_ms': 12.0, 'error': None, 'details': {'service': 'auth'}},
+        'notification': {'status': 'degraded', 'response_time_ms': 250.0, 'error': 'High latency', 'details': {}}
+    }
+    
+    with mock_auth(test_admin_id, "admin"):
+        headers = auth_headers(test_admin_id, "admin")
+        resp = client.get("/api/admin/service-status", headers=headers)
+        assert resp.status_code == 200
+        data = resp.get_json()
+        assert "services" in data
+        assert "last_updated" in data
+        assert "wiki" in data["services"]
+        assert data["services"]["wiki"]["status"] == "healthy"
+        assert data["services"]["notification"]["status"] == "degraded"
+
+
+def test_update_service_status_requires_auth(client):
+    """Update service status should require authentication"""
+    resp = client.put("/api/admin/service-status", json={"service": "auth", "notes": {}})
+    assert resp.status_code == 401
+
+
+def test_update_service_status_requires_admin(client, app, test_writer_id):
+    """Update service status should require admin role"""
+    with mock_auth(test_writer_id, "writer"):
+        headers = auth_headers(test_writer_id, "writer")
+        resp = client.put("/api/admin/service-status", json={"service": "auth", "notes": {}}, headers=headers)
+        assert resp.status_code == 403
+
+
+def test_update_service_status_missing_service(client, app, test_admin_id):
+    """Update service status should return 400 if service is missing"""
+    with mock_auth(test_admin_id, "admin"):
+        headers = auth_headers(test_admin_id, "admin")
+        resp = client.put("/api/admin/service-status", json={"notes": {}}, headers=headers)
+        assert resp.status_code == 400
+        data = resp.get_json()
+        assert "error" in data
+        assert "service" in data["error"].lower()
+
+
+def test_update_service_status_unknown_service(client, app, test_admin_id):
+    """Update service status should return 400 if service is unknown"""
+    with mock_auth(test_admin_id, "admin"):
+        headers = auth_headers(test_admin_id, "admin")
+        resp = client.put("/api/admin/service-status", json={"service": "unknown", "notes": {}}, headers=headers)
+        assert resp.status_code == 400
+        data = resp.get_json()
+        assert "error" in data
+        assert "unknown" in data["error"].lower()
+
+
+def test_update_service_status_success(client, app, test_admin_id):
+    """Update service status should set manual notes"""
+    with mock_auth(test_admin_id, "admin"):
+        headers = auth_headers(test_admin_id, "admin")
+        notes = {
+            "issue": "Planned maintenance",
+            "impact": "Service unavailable",
+            "eta": "2024-01-01T14:00:00Z"
+        }
+        resp = client.put(
+            "/api/admin/service-status",
+            json={"service": "auth", "notes": notes},
+            headers=headers
+        )
+        assert resp.status_code == 200
+        data = resp.get_json()
+        assert data["success"] is True
+        assert data["service"] == "auth"
+        assert "updated_at" in data
+    
+    # Verify notes were stored
+    with app.app_context():
+        import json
+        from app.models.wiki_config import WikiConfig
+        config = db.session.query(WikiConfig).filter_by(key="service_status_notes_auth").first()
+        assert config is not None
+        stored_notes = json.loads(config.value)
+        assert stored_notes["issue"] == "Planned maintenance"
+
+
+def test_refresh_service_status_page_requires_auth(client):
+    """Refresh service status page should require authentication"""
+    resp = client.post("/api/admin/service-status/refresh")
+    assert resp.status_code == 401
+
+
+def test_refresh_service_status_page_requires_admin(client, app, test_writer_id):
+    """Refresh service status page should require admin role"""
+    with mock_auth(test_writer_id, "writer"):
+        headers = auth_headers(test_writer_id, "writer")
+        resp = client.post("/api/admin/service-status/refresh", headers=headers)
+        assert resp.status_code == 403
+
+
+@patch('app.services.service_status_service.requests.get')
+def test_refresh_service_status_page_success(mock_get, client, app, test_admin_id):
+    """Refresh service status page should create or update the page"""
+    from app.models.page import Page
+    
+    # Mock health check responses (most will fail, but that's OK for testing)
+    def mock_get_side_effect(url, timeout=None):
+        mock_response = MagicMock()
+        if 'wiki' in url or 'localhost:5000' in url:
+            mock_response.status_code = 200
+            mock_response.json.return_value = {'status': 'healthy', 'service': 'wiki'}
+        else:
+            # Other services will fail (connection error)
+            raise requests.exceptions.ConnectionError()
+        return mock_response
+    
+    mock_get.side_effect = mock_get_side_effect
+    
+    with mock_auth(test_admin_id, "admin"):
+        headers = auth_headers(test_admin_id, "admin")
+        resp = client.post("/api/admin/service-status/refresh", headers=headers)
+        assert resp.status_code == 200
+        data = resp.get_json()
+        assert data["success"] is True
+        assert data["page_slug"] == "service-status"
+        assert "updated_at" in data
+    
+    # Verify page was created/updated
+    with app.app_context():
+        page = db.session.query(Page).filter_by(slug='service-status').first()
+        assert page is not None
+        assert page.is_system_page is True
+        assert 'Arcadium Service Status' in page.content
 
 
 def test_configure_upload_size_missing_field(client, app, test_admin_id):

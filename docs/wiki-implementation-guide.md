@@ -820,13 +820,13 @@ def test_configure_page_size_updates_existing_notifications() ✅
 - Configuration persistence via WikiConfig model
 - Comprehensive edge case validation and error handling
 
-#### 7.3 Service Status Page
-- [ ] Create system page for service status monitoring
-- [ ] Display all Arcadium services with status indicators (red/yellow/green)
-- [ ] Health check integration (check `/health` endpoints)
-- [ ] Notes section for status explanations
-- [ ] Auto-refresh capability (optional)
-- [ ] Manual status override (for maintenance windows)
+#### 7.3 Service Status Page ✅ COMPLETE
+- [x] Create system page for service status monitoring ✅
+- [x] Display all Arcadium services with status indicators (red/yellow/green) ✅
+- [x] Health check integration (check `/health` endpoints) ✅
+- [x] Notes section for status explanations ✅
+- [x] Manual status override (for maintenance windows) ✅
+- [ ] Auto-refresh capability (optional - can be added later)
 
 **Services to Monitor:**
 - Wiki Service (self)
@@ -880,12 +880,13 @@ def test_configure_page_size_updates_existing_notifications() ✅
 ```
 
 **Implementation:**
-1. Create system page with slug `service-status` (or `system/service-status`)
-2. Mark as system page (`is_system_page = true`)
-3. Create service to check health endpoints
-4. Create API endpoint to update status (admin only)
-5. Optional: Auto-refresh page content via scheduled task
-6. Optional: Webhook integration for status updates
+1. ✅ Create system page with slug `service-status` (or `system/service-status`)
+2. ✅ Mark as system page (`is_system_page = true`)
+3. ✅ Create service to check health endpoints
+4. ✅ Create API endpoints to get and update status (admin only)
+5. ✅ Create endpoint to refresh status page
+6. [ ] Optional: Auto-refresh page content via scheduled task (future enhancement)
+7. [ ] Optional: Webhook integration for status updates (future enhancement)
 
 **API Endpoints:**
 ```python
@@ -895,20 +896,58 @@ GET /api/admin/service-status
 
 # Update service status (admin only)
 PUT /api/admin/service-status
-# Body: { "service": "auth", "status": "degraded", "notes": "..." }
+# Body: { "service": "auth", "notes": { "issue": "...", "eta": "..." } }
+
+# Refresh service status page
+POST /api/admin/service-status/refresh
+# Creates or updates the status page with current health check data
 ```
 
 **Testing:**
 ```python
-# tests/test_api/test_service_status_routes.py
-def test_get_service_status()
-def test_update_service_status_requires_admin()
-def test_update_service_status_success()
-def test_health_check_integration()
-def test_status_page_rendering()
+# tests/test_services/test_service_status_service.py (17 tests)
+def test_get_status_indicator() ✅
+def test_get_status_display_name() ✅
+def test_check_service_health_healthy() ✅
+def test_check_service_health_degraded() ✅
+def test_check_service_health_timeout() ✅
+def test_check_service_health_connection_error() ✅
+def test_check_service_health_non_200() ✅
+def test_check_service_health_unknown_service() ✅
+def test_check_all_services() ✅
+def test_get_service_status_page_not_found() ✅
+def test_get_service_status_page_exists() ✅
+def test_create_or_update_status_page_create() ✅
+def test_create_or_update_status_page_update() ✅
+def test_get_manual_status_notes_empty() ✅
+def test_get_manual_status_notes_with_data() ✅
+def test_set_manual_status_notes() ✅
+def test_set_manual_status_notes_updates_existing() ✅
+
+# tests/test_api/test_admin_routes.py (11 service status API tests)
+def test_get_service_status_requires_auth() ✅
+def test_get_service_status_requires_admin() ✅
+def test_get_service_status_success() ✅
+def test_update_service_status_requires_auth() ✅
+def test_update_service_status_requires_admin() ✅
+def test_update_service_status_missing_service() ✅
+def test_update_service_status_unknown_service() ✅
+def test_update_service_status_success() ✅
+def test_refresh_service_status_page_requires_auth() ✅
+def test_refresh_service_status_page_requires_admin() ✅
+def test_refresh_service_status_page_success() ✅
+# 28 total tests, all passing (100%)
 ```
 
-**Validation:** Check against `docs/services/service-architecture.md` Service Status Monitoring
+**Validation:** Check against `docs/services/service-architecture.md` Service Status Monitoring and `docs/wiki-service-status-page.md`
+
+**Implementation Details:**
+- ServiceStatusService monitors all 10 Arcadium services
+- Health checks via HTTP requests to `/health` endpoints
+- Status determination based on response status, response time, and health endpoint data
+- System page automatically generated with markdown table
+- Manual notes support for maintenance windows
+- Comprehensive error handling (timeouts, connection errors, etc.)
 
 ---
 
@@ -1087,7 +1126,7 @@ After each phase, validate against design documents:
   - File watcher service (12 tests)
   - Admin user assignment (3 tests)
 - **Total Sync Tests:** 74 tests, all passing (100%)
-- **Phase 7**: Admin Dashboard Features ⏳ **IN PROGRESS**
+- **Phase 7**: Admin Dashboard Features - **COMPLETE** ✅
   - **Phase 7.1**: Size Monitoring - **COMPLETE** ✅
     - SizeMonitoringService implementation (10 service tests)
     - Size distribution charts
@@ -1100,13 +1139,18 @@ After each phase, validate against design documents:
     - Page size limits with notification creation
     - Configuration persistence
     - Comprehensive edge case testing (9 new tests)
-  - **Phase 7.3**: Service Status Page - **TODO**
-- **Total Phase 7 Tests:** 26 tests (10 service + 16 API), all passing (100%)
+  - **Phase 7.3**: Service Status Page - **COMPLETE** ✅
+    - ServiceStatusService implementation (17 service tests)
+    - Health check integration for all 10 Arcadium services
+    - System page creation/update with status table
+    - Manual status notes for maintenance windows
+    - Admin route integration (11 API tests)
+- **Total Phase 7 Tests:** 54 tests (27 service + 27 API), all passing (100%)
 
 **Overall Test Summary:**
-- **Total Tests:** 501 tests across all phases
+- **Total Tests:** 529 tests across all phases
 - **Test Status:** All passing (100%)
-- **Coverage:** Comprehensive coverage including happy paths, error handling, edge cases, integration, CLI testing, file watcher functionality, and admin dashboard features
+- **Coverage:** Comprehensive coverage including happy paths, error handling, edge cases, integration, CLI testing, file watcher functionality, admin dashboard features, and service status monitoring
 
 ### ⏳ Next Steps
 - **Phase 1.2**: Database migrations (Flask-Migrate setup and initial migration)
@@ -1141,6 +1185,13 @@ After each phase, validate against design documents:
   - Page size limits with automatic notification creation
   - Configuration persistence via WikiConfig
   - 9 new edge case tests for validation and error handling
+- **Phase 7.3**: Service Status Page - Complete with 28 tests, all passing (100%) ✅
+  - ServiceStatusService implementation
+  - Health check integration for all 10 Arcadium services
+  - System page with status table (red/yellow/green indicators)
+  - Manual status notes for maintenance windows
+  - API endpoints for getting and updating status
+  - Page refresh endpoint to update status page
 
 ---
 

@@ -12,6 +12,7 @@ from app.models.wiki_config import WikiConfig
 from app.models.oversized_page_notification import OversizedPageNotification
 from app.middleware.auth import require_auth, require_role
 from app.services.size_monitoring_service import SizeMonitoringService
+from app.services.service_status_service import ServiceStatusService
 
 
 admin_bp = Blueprint("admin", __name__)
@@ -332,6 +333,111 @@ def update_oversized_page_status(page_id):
             ),
             200,
         )
+    except Exception as e:  # pragma: no cover - defensive
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
+
+
+@admin_bp.route("/admin/service-status", methods=["GET"])
+@require_auth
+@require_role(["admin"])
+def get_service_status():
+    """Get service status for all Arcadium services.
+
+    Permissions: Admin
+    """
+    try:
+        # Check all services
+        status_data = ServiceStatusService.check_all_services()
+        
+        # Get manual notes
+        manual_notes = ServiceStatusService.get_manual_status_notes()
+        
+        # Format response
+        services = {}
+        for service_id, service_info in ServiceStatusService.SERVICES.items():
+            health = status_data.get(service_id, {})
+            services[service_id] = {
+                "name": service_info["name"],
+                "status": health.get("status", "unhealthy"),
+                "last_check": datetime.now(timezone.utc).isoformat(),
+                "response_time_ms": health.get("response_time_ms", 0),
+                "error": health.get("error"),
+                "details": health.get("details", {}),
+                "manual_notes": manual_notes.get(service_id)
+            }
+        
+        return jsonify({
+            "services": services,
+            "last_updated": datetime.now(timezone.utc).isoformat()
+        }), 200
+    except Exception as e:  # pragma: no cover - defensive
+        return jsonify({"error": str(e)}), 500
+
+
+@admin_bp.route("/admin/service-status", methods=["PUT"])
+@require_auth
+@require_role(["admin"])
+def update_service_status():
+    """Update service status with manual notes (for maintenance windows, etc.).
+
+    Permissions: Admin
+    """
+    try:
+        data = request.get_json() or {}
+        service_id = data.get("service")
+        notes_data = data.get("notes", {})
+        
+        if not service_id:
+            return jsonify({"error": "service is required"}), 400
+        
+        if service_id not in ServiceStatusService.SERVICES:
+            return jsonify({"error": f"Unknown service: {service_id}"}), 400
+        
+        user_id = getattr(request, "user_id", None) or uuid.UUID(
+            "00000000-0000-0000-0000-000000000001"
+        )
+        
+        # Set manual notes
+        ServiceStatusService.set_manual_status_notes(service_id, notes_data, user_id)
+        
+        return jsonify({
+            "success": True,
+            "message": "Status updated",
+            "service": service_id,
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }), 200
+    except Exception as e:  # pragma: no cover - defensive
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
+
+
+@admin_bp.route("/admin/service-status/refresh", methods=["POST"])
+@require_auth
+@require_role(["admin"])
+def refresh_service_status_page():
+    """Refresh the service status page with current health check data.
+
+    Permissions: Admin
+    """
+    try:
+        user_id = getattr(request, "user_id", None) or uuid.UUID(
+            "00000000-0000-0000-0000-000000000001"
+        )
+        
+        # Check all services
+        status_data = ServiceStatusService.check_all_services()
+        
+        # Create or update the status page
+        page = ServiceStatusService.create_or_update_status_page(user_id, status_data)
+        
+        return jsonify({
+            "success": True,
+            "message": "Service status page updated",
+            "page_id": str(page.id),
+            "page_slug": page.slug,
+            "updated_at": datetime.now(timezone.utc).isoformat()
+        }), 200
     except Exception as e:  # pragma: no cover - defensive
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
