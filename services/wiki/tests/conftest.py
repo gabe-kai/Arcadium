@@ -9,12 +9,19 @@ os.environ['FLASK_ENV'] = 'testing'
 
 # PostgreSQL test database configuration
 # Use a dedicated test database to avoid conflicts with development data
-# These credentials match the development PostgreSQL setup
-TEST_DB_NAME = 'wiki_test'
-TEST_DB_USER = 'postgres'
-TEST_DB_PASSWORD = 'Le555ecure'
-TEST_DB_HOST = 'localhost'
-TEST_DB_PORT = '5432'
+# Uses arcadium_user and arcadium_pass for consistency across all services
+TEST_DB_NAME = 'arcadium_testing_wiki'
+TEST_DB_USER = os.environ.get('arcadium_user')
+TEST_DB_PASSWORD = os.environ.get('arcadium_pass')
+TEST_DB_HOST = os.environ.get('DB_HOST', 'localhost')
+TEST_DB_PORT = os.environ.get('DB_PORT', '5432')
+
+# Validate required credentials
+if not TEST_DB_USER or not TEST_DB_PASSWORD:
+    raise ValueError(
+        "arcadium_user and arcadium_pass environment variables are required for testing. "
+        "These variables are used across all Arcadium services for consistency."
+    )
 
 # Construct test database URL
 TEST_DATABASE_URL = f'postgresql://{TEST_DB_USER}:{TEST_DB_PASSWORD}@{TEST_DB_HOST}:{TEST_DB_PORT}/{TEST_DB_NAME}'

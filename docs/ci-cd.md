@@ -38,7 +38,7 @@ The project uses **GitHub Actions** for CI/CD. Currently, CI is configured for t
 3. **Sets up PostgreSQL:**
    - Starts PostgreSQL 14 container
    - Installs PostgreSQL client tools
-   - Creates `wiki_test` database
+   - Creates `arcadium_testing_wiki` database
    - Waits for PostgreSQL to be ready
 
 4. **Runs tests:**
@@ -50,7 +50,8 @@ The project uses **GitHub Actions** for CI/CD. Currently, CI is configured for t
 
 The workflow sets:
 - `FLASK_ENV=testing`
-- `TEST_DATABASE_URL=postgresql://postgres:Le555ecure@localhost:5432/wiki_test`
+- `TEST_DATABASE_URL=postgresql://arcadium:password@localhost:5432/wiki_test`
+  - Or use `arcadium_user` and `arcadium_pass` (will construct TEST_DATABASE_URL automatically)
 
 #### Test Configuration
 
@@ -156,8 +157,8 @@ To verify tests will pass in CI before pushing, replicate the CI environment loc
    - Host: `localhost`
    - Port: `5432`
    - User: `postgres`
-   - Password: `Le555ecure`
-   - Test database: `wiki_test` (will be created automatically if missing)
+   - Password: Set via `arcadium_pass` environment variable
+   - Test database: `arcadium_testing_wiki` (will be created automatically if missing)
 
 2. **Python environment:**
    - Python 3.11+
@@ -185,7 +186,9 @@ To verify tests will pass in CI before pushing, replicate the CI environment loc
    **Windows (PowerShell):**
    ```powershell
    $env:FLASK_ENV = "testing"
-   $env:TEST_DATABASE_URL = "postgresql://postgres:Le555ecure@localhost:5432/wiki_test"
+   # TEST_DATABASE_URL will be constructed from arcadium_user and arcadium_pass if not set
+   # Or set explicitly:
+   $env:TEST_DATABASE_URL = "postgresql://$env:arcadium_user:$env:arcadium_pass@localhost:5432/arcadium_testing_wiki"
    cd services/wiki
    pytest
    ```
@@ -193,7 +196,9 @@ To verify tests will pass in CI before pushing, replicate the CI environment loc
    **Linux/Mac (Bash):**
    ```bash
    export FLASK_ENV=testing
-   export TEST_DATABASE_URL="postgresql://postgres:Le555ecure@localhost:5432/wiki_test"
+   # TEST_DATABASE_URL will be constructed from arcadium_user and arcadium_pass if not set
+   # Or set explicitly:
+   export TEST_DATABASE_URL="postgresql://${arcadium_user}:${arcadium_pass}@localhost:5432/wiki_test"
    cd services/wiki
    pytest
    ```
@@ -206,7 +211,8 @@ You can create a simple script to run tests like CI:
 ```bash
 #!/bin/bash
 export FLASK_ENV=testing
-export TEST_DATABASE_URL="postgresql://postgres:Le555ecure@localhost:5432/wiki_test"
+# TEST_DATABASE_URL will be constructed from arcadium_user and arcadium_pass if not set
+# Or set explicitly: export TEST_DATABASE_URL="postgresql://${arcadium_user}:${arcadium_pass}@localhost:5432/arcadium_testing_wiki"
 cd services/wiki
 pytest "$@"
 ```
@@ -214,7 +220,8 @@ pytest "$@"
 **`scripts/test-ci-local.ps1` (Windows PowerShell):**
 ```powershell
 $env:FLASK_ENV = "testing"
-$env:TEST_DATABASE_URL = "postgresql://postgres:Le555ecure@localhost:5432/wiki_test"
+# TEST_DATABASE_URL will be constructed from arcadium_user and arcadium_pass if not set
+# Or set explicitly: $env:TEST_DATABASE_URL = "postgresql://$env:arcadium_user:$env:arcadium_pass@localhost:5432/wiki_test"
 Set-Location services/wiki
 pytest $args
 ```
@@ -269,7 +276,7 @@ If tests fail with PostgreSQL connection errors:
    - Ensure port 5432 is exposed
 
 2. **Check database creation:**
-   - Verify `wiki_test` database is created
+   - Verify `arcadium_testing_wiki` database is created
    - Check PostgreSQL logs in CI output
 
 3. **Check credentials:**

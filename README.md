@@ -44,14 +44,20 @@ pip install psycopg2-binary --only-binary :all:
 
 Each service uses its own PostgreSQL database. See [Database Configuration](docs/architecture/database-configuration.md) for details.
 
-**Default PostgreSQL credentials:**
-- Username: `postgres`
-- Password: `Le555ecure` (configurable via environment variables)
+**Database Credentials:**
+- Username: Set via `arcadium_user` environment variable
+- Password: Set via `arcadium_pass` environment variable
+- The user has full permissions to do anything in the database
+- These variables are used across all Arcadium services for consistency
 
 **Create databases:**
 ```sql
-CREATE DATABASE wiki;
--- Add other service databases as needed
+-- All databases use arcadium_ prefix
+CREATE DATABASE arcadium_wiki;
+CREATE DATABASE arcadium_auth;
+-- Test databases use arcadium_testing_ prefix
+CREATE DATABASE arcadium_testing_wiki;
+CREATE DATABASE arcadium_testing_auth;
 ```
 
 ### Running Services
@@ -93,7 +99,8 @@ The project uses GitHub Actions for continuous integration. Tests run automatica
 ```bash
 # Set environment variables (matches CI)
 export FLASK_ENV=testing
-export TEST_DATABASE_URL="postgresql://postgres:Le555ecure@localhost:5432/wiki_test"
+# TEST_DATABASE_URL will be constructed from arcadium_user and arcadium_pass if not set
+# Or set explicitly: export TEST_DATABASE_URL="postgresql://${arcadium_user}:${arcadium_pass}@localhost:5432/arcadium_testing_wiki"
 cd services/wiki
 pytest
 ```

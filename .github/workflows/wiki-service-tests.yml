@@ -81,13 +81,13 @@ jobs:
             sleep 2
           done
           # Create test database (if it doesn't exist)
-          psql -h localhost -U postgres -tc "SELECT 1 FROM pg_database WHERE datname = 'wiki_test'" | grep -q 1 || \
-          psql -h localhost -U postgres -c "CREATE DATABASE wiki_test"
+          psql -h localhost -U postgres -tc "SELECT 1 FROM pg_database WHERE datname = 'arcadium_testing_wiki'" | grep -q 1 || \
+          psql -h localhost -U postgres -c "CREATE DATABASE arcadium_testing_wiki"
 
       - name: Run pytest for Wiki Service
         env:
           FLASK_ENV: testing
-          TEST_DATABASE_URL: postgresql://postgres:Le555ecure@localhost:5432/wiki_test
+          TEST_DATABASE_URL: postgresql://postgres:Le555ecure@localhost:5432/arcadium_testing_wiki
         run: |
           pytest
 

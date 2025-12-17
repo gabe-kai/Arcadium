@@ -145,6 +145,11 @@ class SyncUtility:
         slug = frontmatter.get('slug')
         title = frontmatter.get('title', 'Untitled')
         
+        # Truncate title if too long (database limit is 255 characters)
+        if len(title) > 255:
+            current_app.logger.warning(f"Title too long ({len(title)} chars) for {file_path}, truncating to 255 characters")
+            title = title[:252] + "..."
+        
         if not slug:
             # Generate slug from title
             existing_slugs = [p.slug for p in db.session.query(Page.slug).all()]
@@ -284,6 +289,11 @@ class SyncUtility:
                 else:  # status is None (skipped)
                     stats['skipped'] += 1
             except Exception as e:
+                # Rollback session on error to prevent cascading failures
+                try:
+                    db.session.rollback()
+                except Exception:
+                    pass  # Ignore rollback errors
                 current_app.logger.error(f"Error syncing {file_path}: {e}")
                 stats['errors'] += 1
         
@@ -334,6 +344,11 @@ class SyncUtility:
                 else:  # status is None (skipped)
                     stats['skipped'] += 1
             except Exception as e:
+                # Rollback session on error to prevent cascading failures
+                try:
+                    db.session.rollback()
+                except Exception:
+                    pass  # Ignore rollback errors
                 current_app.logger.error(f"Error syncing {file_path}: {e}")
                 stats['errors'] += 1
         

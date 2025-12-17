@@ -88,7 +88,18 @@ def main():
         sys.exit(1)
     
     print(f"Setting up database: {db_name}")
-    print(f"Database URL: {database_url.replace(database_url.split('@')[0].split('://')[1].split(':')[0], '***')}")
+    # Mask password in URL for display
+    if '@' in database_url:
+        url_parts = database_url.split('@')
+        auth_part = url_parts[0].split('://')[1] if '://' in url_parts[0] else url_parts[0]
+        if ':' in auth_part:
+            user = auth_part.split(':')[0]
+            display_url = database_url.replace(auth_part, f"{user}:***")
+        else:
+            display_url = database_url
+    else:
+        display_url = database_url
+    print(f"Database URL: {display_url}")
     
     # Create database if it doesn't exist
     if not create_database_if_not_exists(database_url, db_name):

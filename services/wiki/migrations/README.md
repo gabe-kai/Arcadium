@@ -14,12 +14,12 @@ This directory contains Flask-Migrate (Alembic) migration files for the Wiki Ser
 psql -U postgres
 
 -- Create the wiki database
-CREATE DATABASE wiki;
+CREATE DATABASE arcadium_wiki;
 ```
 
 Or using command line:
 ```bash
-psql -U postgres -c "CREATE DATABASE wiki;"
+psql -U postgres -c "CREATE DATABASE arcadium_wiki;"
 ```
 
 ### Initialize Migrations
@@ -165,6 +165,12 @@ flask db merge -m "Merge branches"
 ### Database connection errors
 Ensure `DATABASE_URL` is set correctly in your `.env` file:
 ```
+# Option 1: Using arcadium_user and arcadium_pass (recommended)
+arcadium_user=your-database-username
+arcadium_pass=your-database-password
+DB_NAME=arcadium_wiki
+
+# Option 2: Using DATABASE_URL directly
 DATABASE_URL=postgresql://username:password@host:port/database
 ```
 

@@ -44,7 +44,7 @@ Each service uses its own PostgreSQL database. See [Database Configuration](../a
 
 ```sql
 -- Create wiki database
-CREATE DATABASE wiki;
+CREATE DATABASE arcadium_wiki;
 ```
 
 **Environment Variables:**
@@ -486,7 +486,7 @@ import os
 from sqlalchemy import create_engine, text
 
 # PostgreSQL test database configuration
-TEST_DB_NAME = 'wiki_test'
+TEST_DB_NAME = 'arcadium_testing_wiki'
 TEST_DB_USER = 'postgres'
 TEST_DB_PASSWORD = 'your_password'
 TEST_DB_HOST = 'localhost'
@@ -516,7 +516,8 @@ def ensure_test_database():
 # config.py
 class TestingConfig(Config):
     TESTING = True
-    SQLALCHEMY_DATABASE_URI = os.environ.get('TEST_DATABASE_URL') or 'postgresql://postgres:password@localhost:5432/wiki_test'
+    # TEST_DATABASE_URL will be constructed from arcadium_user and arcadium_pass if not set
+    SQLALCHEMY_DATABASE_URI = os.environ.get('TEST_DATABASE_URL') or 'sqlite:///:memory:'
 ```
 
 ### Critical: Database Fixture Teardown

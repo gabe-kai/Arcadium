@@ -24,7 +24,7 @@ pip install -r requirements.txt
 The Wiki Service uses **PostgreSQL** for development and production. Tests use SQLite in-memory for faster execution.
 
 **Database Setup:**
-1. Create PostgreSQL database: `CREATE DATABASE wiki;`
+1. Create PostgreSQL database: `CREATE DATABASE arcadium_wiki;`
 2. Configure `DATABASE_URL` in `.env` file
 3. See [Database Configuration](../architecture/database-configuration.md) for details
 

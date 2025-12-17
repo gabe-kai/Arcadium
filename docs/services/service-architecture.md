@@ -113,7 +113,13 @@ CREATE SCHEMA notification;
 
 **Connection String:**
 ```
-DATABASE_URL=postgresql://user:password@host:5432/arcadium
+# Option 1: Using arcadium_user and arcadium_pass (recommended)
+arcadium_user=arcadium
+arcadium_pass=your-secure-password
+DB_NAME=arcadium_game_server
+
+# Option 2: Using DATABASE_URL directly
+DATABASE_URL=postgresql://arcadium:your-secure-password@host:5432/arcadium_game_server
 ```
 
 **Migration Strategy:**

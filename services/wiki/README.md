@@ -116,19 +116,23 @@ To verify tests will pass in CI before pushing:
 **Windows (PowerShell):**
 ```powershell
 $env:FLASK_ENV = "testing"
-$env:TEST_DATABASE_URL = "postgresql://postgres:Le555ecure@localhost:5432/wiki_test"
+# TEST_DATABASE_URL will be constructed from arcadium_user and arcadium_pass if not set
+# Or set explicitly:
+# $env:TEST_DATABASE_URL = "postgresql://$env:arcadium_user:$env:arcadium_pass@localhost:5432/arcadium_testing_wiki"
 pytest
 ```
 
 **Linux/Mac (Bash):**
 ```bash
 export FLASK_ENV=testing
-export TEST_DATABASE_URL="postgresql://postgres:Le555ecure@localhost:5432/wiki_test"
+# TEST_DATABASE_URL will be constructed from arcadium_user and arcadium_pass if not set
+# Or set explicitly:
+# export TEST_DATABASE_URL="postgresql://${arcadium_user}:${arcadium_pass}@localhost:5432/wiki_test"
 pytest
 ```
 
 **Prerequisites:**
-- PostgreSQL running locally with test database `wiki_test`
+- PostgreSQL running locally with test database `arcadium_testing_wiki`
 - All dependencies installed from root `requirements.txt`
 
 **Note:** Tests use PostgreSQL (not SQLite) to avoid UUID compatibility issues and match production behavior.
