@@ -463,6 +463,9 @@ def get_page(page_id):
             'slug': link.slug
         } for link in backlinks]
         
+        # Check if user can edit this page
+        can_edit = PageService.can_edit(page, user_role, user_id)
+        
         # Build response
         response_data = {
             'id': str(page.id),
@@ -481,7 +484,8 @@ def get_page(page_id):
             'backlinks': backlinks_data,
             'created_at': page.created_at.isoformat() if page.created_at else None,
             'updated_at': page.updated_at.isoformat() if page.updated_at else None,
-            'version': page.version
+            'version': page.version,
+            'can_edit': can_edit
         }
         
         # Add user info if available (would come from Auth Service in production)

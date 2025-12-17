@@ -15,8 +15,8 @@ This guide outlines the implementation plan for building the Wiki User Interface
 - Admin dashboard endpoints
 - Service status endpoints
 
-### 🧩 Frontend UI (In Progress - Phases 1-4, 7-8 Complete)
-**Test Coverage**: 485+ passing unit/integration tests across 30 test files, 32+ E2E tests
+### 🧩 Frontend UI (In Progress - Phases 1-5, 7-8 Complete)
+**Test Coverage**: 523+ passing unit/integration tests across 34 test files, 32+ E2E tests
 
 #### ✅ Phase 1: Foundation & Setup (Complete)
 - React + Vite client bootstrapped in `client/`
@@ -33,6 +33,7 @@ This guide outlines the implementation plan for building the Wiki User Interface
 
 #### ✅ Phase 2: Reading View - Core Components (Complete)
 - **PageView component** - Full reading experience with content rendering, metadata display
+- **Edit button** - Edit button in page header (shown for writers/admins with edit permissions)
 - **Breadcrumb Navigation** - Component implemented with API integration, tests included
 - **Previous/Next Navigation** - Component implemented with API integration, tests included
 - **Enhanced Content Styling**:
@@ -83,6 +84,32 @@ This guide outlines the implementation plan for building the Wiki User Interface
   - TableOfContents component tests (10 test cases)
   - Backlinks component tests (9 test cases)
   - PageView integration tests for TOC and Backlinks
+
+#### ✅ Phase 5: Comments System (Complete)
+- **CommentsList component** - Displays all comments for a page with threading
+- **CommentItem component** - Displays single comment with nested replies (up to 5 levels)
+- **CommentForm component** - Form for creating new comments and replies
+- **Features**:
+  - Threaded comments with visual indentation
+  - Collapsible reply threads
+  - Edit own comments (inline editing)
+  - Delete own comments (with confirmation)
+  - Recommendation badge and styling (for player suggestions)
+  - Relative and absolute timestamps
+  - Reply button disabled at max depth (5 levels)
+  - Sign-in prompt for unauthenticated users
+- **API Integration**:
+  - `useComments` hook for fetching comments
+  - `useCreateComment`, `useUpdateComment`, `useDeleteComment` mutations
+  - Automatic refetch on mutations
+- **Integration**:
+  - Fully integrated into PageView component
+  - Rendered below page content
+- **Tests added**:
+  - CommentsList component tests (7 tests)
+  - CommentItem component tests (15 tests)
+  - CommentForm component tests (16 tests)
+  - Comments API service tests
 
 #### ✅ Phase 7: WYSIWYG Editor Integration (Complete)
 - **Editor Component** - Tiptap-based rich text editor
@@ -190,7 +217,7 @@ This guide outlines the implementation plan for building the Wiki User Interface
   - [x] Display page title
   - [x] Show metadata (last updated, word count, size)
   - [x] Status indicator (published/draft)
-  - [ ] Edit button (for writers/admins) - **TODO** (requires auth integration)
+  - [x] Edit button (for writers/admins) - ✅ Complete (auth integration complete)
 
 #### API Endpoints Used:
 - `GET /api/pages/{page_id}` - Get page content ✅ (in use)
@@ -205,7 +232,7 @@ This guide outlines the implementation plan for building the Wiki User Interface
 - ✅ Component tests for all navigation components - **COMPLETE**
 - ✅ Enhanced content styling (syntax highlighting, tables, images, blockquotes, links) - **COMPLETE**
 
-**Phase 2 Status: ✅ COMPLETE** (except Edit button which requires auth integration)
+**Phase 2 Status: ✅ COMPLETE**
 
 ---
 
@@ -248,43 +275,6 @@ This guide outlines the implementation plan for building the Wiki User Interface
 
 ---
 
-### Phase 3: Navigation Tree (Left Sidebar)
-**Goal**: Implement hierarchical page navigation
-
-#### Tasks:
-- [x] **Navigation Tree Component** ✅
-  - [x] Fetch and build page hierarchy
-  - [x] Expandable/collapsible tree nodes
-  - [x] Highlight current page
-  - [x] Click to navigate
-  - [x] Hover effects
-  - [x] Active state highlighting
-  - [x] Auto-expand path to current page
-  - [ ] Icons for pages vs sections - **TODO** (optional enhancement)
-
-- [x] **Tree Search** ✅
-  - [x] Search/filter within tree
-  - [x] Auto-expand matching branches
-  - [x] Filter non-matching branches
-
-- [x] **Tree Features** ✅
-  - [x] Remember expanded state (localStorage)
-  - [x] Draft badge indicator
-  - [ ] Show page count per section - **TODO** (optional enhancement)
-  - [ ] Lazy load children - **TODO** (not needed yet, performance is good)
-
-#### API Endpoints Used:
-- `GET /api/navigation` - Get hierarchical structure ✅ (in use)
-
-#### Deliverables:
-- ✅ Functional navigation tree
-- ✅ Search within tree
-- ✅ Smooth expand/collapse (CSS transitions)
-- ✅ Expanded state persistence
-- ✅ Current page highlighting
-
----
-
 ### Phase 4: Table of Contents & Backlinks (Right Sidebar)
 **Goal**: Implement right sidebar with TOC and backlinks
 
@@ -322,45 +312,49 @@ This guide outlines the implementation plan for building the Wiki User Interface
 **Goal**: Implement threaded comments below page content
 
 #### Tasks:
-- [ ] **Comments List Component**
-  - Display threaded comments (max 5 levels deep)
-  - Visual indentation for thread depth
-  - User avatars/names
-  - Timestamps (relative and absolute)
-  - Collapsible threads
-  - Pagination for long threads
+- [x] **Comments List Component** ✅
+  - [x] Display threaded comments (max 5 levels deep)
+  - [x] Visual indentation for thread depth
+  - [x] User avatars/names
+  - [x] Timestamps (relative and absolute)
+  - [x] Collapsible threads
+  - [ ] Pagination for long threads - **TODO** (optional enhancement)
 
-- [ ] **Comment Form Component**
-  - Text area for new comment
-  - Reply button on each comment (disabled at max depth)
-  - "Recommend update" checkbox (for players)
-  - Submit button
-  - Loading states
-  - Error handling
+- [x] **Comment Form Component** ✅
+  - [x] Text area for new comment
+  - [x] Reply button on each comment (disabled at max depth)
+  - [x] "Recommend update" checkbox (for players)
+  - [x] Submit button
+  - [x] Loading states
+  - [x] Error handling
 
-- [ ] **Comment Actions**
-  - Edit own comments (inline editing)
-  - Delete own comments (with confirmation)
-  - Mark as recommendation (special styling)
-  - Visual indicator for thread depth
+- [x] **Comment Actions** ✅
+  - [x] Edit own comments (inline editing)
+  - [x] Delete own comments (with confirmation)
+  - [x] Mark as recommendation (special styling)
+  - [x] Visual indicator for thread depth
 
-- [ ] **Comment Styling**
-  - Light background for comments section
-  - Clear separation between threads
-  - Highlight recommendations
-  - Responsive layout
+- [x] **Comment Styling** ✅
+  - [x] Light background for comments section
+  - [x] Clear separation between threads
+  - [x] Highlight recommendations
+  - [x] Responsive layout
 
 #### API Endpoints Used:
-- `GET /api/pages/{page_id}/comments` - List comments
-- `POST /api/pages/{page_id}/comments` - Create comment
-- `PUT /api/comments/{comment_id}` - Update comment
-- `DELETE /api/comments/{comment_id}` - Delete comment
+- `GET /api/pages/{page_id}/comments` - List comments ✅ (in use)
+- `POST /api/pages/{page_id}/comments` - Create comment ✅ (in use)
+- `PUT /api/comments/{comment_id}` - Update comment ✅ (in use)
+- `DELETE /api/comments/{comment_id}` - Delete comment ✅ (in use)
 
 #### Deliverables:
-- Fully functional threaded comments
-- Reply, edit, delete functionality
-- Recommendation styling
-- Pagination
+- ✅ Fully functional threaded comments
+- ✅ Reply, edit, delete functionality
+- ✅ Recommendation styling
+- ✅ Integration with PageView
+- ✅ Comprehensive test coverage
+- [ ] Pagination - **TODO** (optional enhancement)
+
+**Phase 5 Status: ✅ COMPLETE** (except optional pagination enhancement)
 
 ---
 
@@ -895,13 +889,15 @@ src/
 - Component tests (React Testing Library)
 - Utility function tests
 - API service tests (mocked)
-- **Status**: ✅ Comprehensive coverage (485+ passing tests across 30 test files)
+- **Status**: ✅ Comprehensive coverage (523+ passing tests across 34 test files)
   - All components fully tested
   - Edge cases covered
   - Error scenarios handled
   - Integration flows tested
+  - Phase 5: 38+ new tests (CommentsList, CommentItem, CommentForm, comments API)
   - Phase 8: 86+ new tests (MetadataForm, slug utility, API functions)
   - Auth system: 90+ new tests (AuthContext, auth API, sign-in page, header auth)
+  - Phase 5: 38+ new tests (CommentsList, CommentItem, CommentForm, comments API)
 
 ### Integration Tests
 - User flows (create page, edit page, comment)
@@ -909,6 +905,10 @@ src/
 - Search flows
 - Metadata editing flows
 - **Status**: ✅ Core flows tested (11+ integration tests)
+  - Page creation/editing flows
+  - Metadata editing flows
+  - Authentication flows
+  - Comments flows (create, edit, delete, reply)
 
 ### E2E Tests ✅ (Implemented)
 - **Playwright** - Full browser testing
@@ -931,13 +931,13 @@ src/
 2. Phase 2: Reading View - Core Components
 3. Phase 3: Navigation Tree
 4. Phase 4: Table of Contents & Backlinks
-5. Phase 7: WYSIWYG Editor Integration (basic)
-6. Phase 8: Page Metadata Editor
-7. Phase 9: Editing View Layout
-8. Phase 10: Page Creation Flow
+5. Phase 5: Comments System
+6. Phase 7: WYSIWYG Editor Integration (basic)
+7. Phase 8: Page Metadata Editor
+8. Phase 9: Editing View Layout
+9. Phase 10: Page Creation Flow
 
 ### Enhanced Features
-- Phase 5: Comments System
 - Phase 6: Search Interface
 - Phase 11: Responsive Design
 - Phase 12: Accessibility
@@ -967,10 +967,10 @@ src/
    - Open editor with empty content - ✅ Implemented
    - Save page and redirect - ✅ Implemented
 
-3. **Phase 5: Comments System**
-   - Threaded comments display
-   - Comment form (create, reply, edit, delete)
-   - Recommendation styling for player suggestions
+3. **Phase 6: Search Interface** (Next Priority)
+   - Global search bar in header
+   - Search results page
+   - Alphabetical index view
 
 4. **Phase 6: Search Interface**
    - Global search bar in header
@@ -980,13 +980,14 @@ src/
 ### Completed Phases
 
 - ✅ **Phase 1: Foundation & Setup** - Complete
-- ✅ **Phase 2: Reading View - Core Components** - Complete (except Edit button, requires auth)
+- ✅ **Phase 2: Reading View - Core Components** - Complete (including Edit button)
 - ✅ **Phase 3: Navigation Tree (Left Sidebar)** - Complete
 - ✅ **Phase 4: Table of Contents & Backlinks (Right Sidebar)** - Complete
+- ✅ **Phase 5: Comments System** - Complete (except optional pagination)
 - ✅ **Phase 7: WYSIWYG Editor Integration** - Complete (except optional enhancements)
 - ✅ **Phase 8: Page Metadata Editor** - Complete
 
-**Test Coverage**: 485+ passing tests across 30 test files, comprehensive edge case coverage
+**Test Coverage**: 523+ passing tests across 34 test files, comprehensive edge case coverage
 - ✅ **Phase 7: WYSIWYG Editor Integration** - Complete (except optional enhancements)
 - ✅ **Phase 8: Page Metadata Editor** - Complete
 
@@ -1000,6 +1001,38 @@ src/
 - This guide assumes React, but can be adapted for other frameworks
 - Tiptap is the specified editor (design doc requirement)
 - Focus on MVP first, then enhance with additional features
+
+## Phase 5 Implementation Summary
+
+Phase 5: Comments System has been completed with comprehensive test coverage.
+
+**Key Achievements**:
+- ✅ Threaded comments system (up to 5 levels deep)
+- ✅ CommentsList, CommentItem, and CommentForm components
+- ✅ Full CRUD operations (create, read, update, delete)
+- ✅ Reply functionality with depth limits
+- ✅ Edit/delete own comments
+- ✅ Recommendation badge for player suggestions
+- ✅ Collapsible reply threads
+- ✅ Relative and absolute timestamps
+- ✅ 38+ new test cases
+- ✅ Full integration with PageView component
+- ✅ Comprehensive error handling and edge cases
+
+## Phase 7 Implementation Summary
+
+Phase 7: WYSIWYG Editor Integration has been completed with comprehensive test coverage.
+
+**Key Achievements**:
+- ✅ Tiptap-based rich text editor with full formatting capabilities
+- ✅ Editor component with markdown import/export
+- ✅ EditorToolbar component with all formatting tools (headings, bold, italic, code, lists, links, images, tables)
+- ✅ Code blocks with syntax highlighting
+- ✅ Undo/redo functionality
+- ✅ EditPage component with auto-save drafts to localStorage
+- ✅ 69+ new test cases (Editor: 14, EditorToolbar: 33, EditPage: 22)
+- ✅ Full integration with page creation and editing flows
+- ✅ Comprehensive error handling and edge cases
 
 ## Phase 8 Implementation Summary
 

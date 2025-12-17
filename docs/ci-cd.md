@@ -107,11 +107,14 @@ The workflow runs three jobs in parallel:
 
 #### Test Coverage
 
-**Unit & Integration Tests (485+ passing tests):**
+**Unit & Integration Tests (523+ passing tests):**
 - ✅ All React components (Editor, EditorToolbar, Navigation, Layout, Footer, Sidebar, etc.)
 - ✅ Page components (PageView, EditPage, SignInPage, HomePage, SearchPage, IndexPage)
+- ✅ Comments components (CommentsList, CommentItem, CommentForm) - Phase 5
+- ✅ Editor components (Editor, EditorToolbar) - Phase 7: WYSIWYG Editor Integration
+- ✅ Metadata form component (MetadataForm) - Phase 8: Page Metadata Editor
 - ✅ Utility functions (markdown conversion, link handling, slug generation, syntax highlighting)
-- ✅ API service functions (Wiki API, Auth API)
+- ✅ API service functions (Wiki API, Auth API, Comments API)
 - ✅ API client interceptors (request/response handling, token management)
 - ✅ Authentication system (AuthContext, auth API, sign-in page, header auth)
 - ✅ Routing and navigation

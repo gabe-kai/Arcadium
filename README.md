@@ -121,13 +121,13 @@ The web client is a React-based SPA located in `client/`. See [Client README](cl
 
 **Current Status:**
 - ✅ Phase 1: Foundation & Setup (Complete)
-- ✅ Phase 2: Reading View - Core Components (Complete)
+- ✅ Phase 2: Reading View - Core Components (Complete, including Edit button)
 - ✅ Phase 3: Navigation Tree (Complete)
 - ✅ Phase 4: Table of Contents & Backlinks (Complete)
+- ✅ Phase 5: Comments System (Complete)
 - ✅ Phase 7: WYSIWYG Editor Integration (Complete)
 - ✅ Phase 8: Page Metadata Editor (Complete)
 - ✅ Authentication System (Sign In/Register UI Complete)
-- 🚧 Phase 5: Comments System (Planned)
 - 🚧 Phase 6: Search Interface (Planned)
 
 ## Documentation

@@ -34,14 +34,48 @@ Web client application for the **Arcadium Wiki**. This frontend consumes the Wik
   - `useBreadcrumb` hook for breadcrumb trail
   - `usePageNavigation` hook for previous/next pages
 
+### ✅ Phase 3: Navigation Tree (Complete)
+- **NavigationTree component** – Hierarchical page navigation
+  - Expandable/collapsible tree nodes
+  - Search/filter within tree
+  - Highlights current page
+  - Auto-expands path to current page
+  - Persists expanded state in localStorage
+  - Draft badge indicator
+
+### ✅ Phase 4: Table of Contents & Backlinks (Complete)
+- **TableOfContents component** – Auto-generated from page headings
+  - Click to scroll to section
+  - Highlights current section while scrolling
+  - Sticky positioning
+- **Backlinks component** – Displays pages that link to current page
+  - Click to navigate to linking page
+
+### ✅ Phase 5: Comments System (Complete)
+- **CommentsList component** – Displays threaded comments
+- **CommentItem component** – Single comment with nested replies (up to 5 levels)
+- **CommentForm component** – Form for creating comments/replies
+- Features:
+  - Threaded comments with visual indentation
+  - Collapsible reply threads
+  - Edit/delete own comments
+  - Recommendation badge for player suggestions
+  - Relative and absolute timestamps
+
+### ✅ Phase 7: WYSIWYG Editor Integration (Complete)
+- **Editor component** – Tiptap-based rich text editor
+- **EditorToolbar component** – Full formatting toolbar
+- **EditPage component** – Full editing interface with auto-save
+
+### ✅ Phase 8: Page Metadata Editor (Complete)
+- **MetadataForm component** – Complete metadata editing form
+  - Title, slug, parent page, section, order, status
+  - Real-time validation
+  - Auto-slug generation
+
 ### 🚧 In Progress / Planned
-- `HomePage` – welcome view (basic implementation)
-- `EditPage` – WYSIWYG editor view (Phase 7)
 - `SearchPage` – search results (Phase 6)
 - `IndexPage` – alphabetical index (Phase 6)
-- Navigation Tree sidebar (Phase 3)
-- Table of Contents & Backlinks sidebar (Phase 4)
-- Comments system (Phase 5)
 
 ## Setup
 
@@ -150,10 +184,11 @@ See `e2e/README.md` for detailed E2E testing documentation.
 
 ### Test Coverage
 
-- **Component tests**: 430+ test cases covering all components
+- **Component tests**: 460+ test cases covering all components
   - PageView, Breadcrumb, PageNavigation, NavigationTree
   - TableOfContents, Backlinks, Layout, Footer, Sidebar
   - Editor, EditorToolbar, MetadataForm
+  - CommentsList, CommentItem, CommentForm
   - EditPage, HomePage, SearchPage, IndexPage, SignInPage
   - All utility functions
 - **Integration tests**: 25+ test cases
@@ -161,6 +196,7 @@ See `e2e/README.md` for detailed E2E testing documentation.
   - Metadata integration
   - Navigation flows
   - Authentication flows
+  - Comments flows
 - **E2E tests**: 32+ Playwright tests
   - Full user journeys
   - Browser-based testing
@@ -169,7 +205,7 @@ See `e2e/README.md` for detailed E2E testing documentation.
   - All components fully tested
   - Edge cases and error scenarios covered
   - API error handling tested
-  - **Total**: 485+ tests across 30 test files
+  - **Total**: 523+ tests across 34 test files
 
 ## Related Documentation
 

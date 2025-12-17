@@ -350,10 +350,15 @@ This document summarizes the aggressive test coverage review and enhancements ma
 - **Test Cases**: ~112
 - **Coverage**: Good for implemented features
 
-### After Enhancement (Phase 8 Update)
-- **Test Files**: 30 test files
-- **Test Cases**: 485+ passing tests
-  - Phase 8 additions:
+### After Enhancement (Phase 5 & 8 Updates)
+- **Test Files**: 34 test files
+- **Test Cases**: 523+ passing tests
+  - Phase 5 additions (Comments System):
+    - CommentsList: 7 tests
+    - CommentItem: 15 tests
+    - CommentForm: 16 tests
+    - Comments API: service tests
+  - Phase 8 additions (Page Metadata Editor):
     - MetadataForm: 40+ tests
     - Slug utility: 20 tests
     - API functions: 16 tests
@@ -372,6 +377,9 @@ This document summarizes the aggressive test coverage review and enhancements ma
 - Layout: 4 → 11 tests (+7)
 - Editor: 0 → 14 tests (NEW)
 - EditorToolbar: 0 → 33 tests (NEW)
+- CommentsList: 0 → 7 tests (NEW - Phase 5)
+- CommentItem: 0 → 15 tests (NEW - Phase 5)
+- CommentForm: 0 → 16 tests (NEW - Phase 5)
 - PageView: 15 → 26 tests (+11)
 
 #### Page Tests
@@ -383,6 +391,7 @@ This document summarizes the aggressive test coverage review and enhancements ma
 
 #### Service Tests
 - pages-api: 11 → 23 tests (+12)
+- comments-api: 0 → service tests (NEW - Phase 5)
 - api-client: 5 → 7 tests (+2)
 - tokenStorage: 9 tests (existing)
 
