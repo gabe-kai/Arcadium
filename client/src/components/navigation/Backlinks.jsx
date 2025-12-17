@@ -8,6 +8,7 @@ import { Link } from 'react-router-dom';
  * - Display pages that link to current page
  * - Click to navigate to linking page
  * - Display backlink count
+ * - Show context snippet (where link appears) if available
  * - Styled list with hover effects
  */
 export function Backlinks({ backlinks }) {
@@ -28,7 +29,12 @@ export function Backlinks({ backlinks }) {
               to={`/pages/${backlink.page_id}`}
               className="arc-backlinks-link"
             >
-              {backlink.title}
+              <span className="arc-backlinks-link-title">{backlink.title}</span>
+              {backlink.context && (
+                <span className="arc-backlinks-context" title="Context where link appears">
+                  {backlink.context}
+                </span>
+              )}
             </Link>
           </li>
         ))}

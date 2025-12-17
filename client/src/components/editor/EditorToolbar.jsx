@@ -1,26 +1,29 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useEditor } from '@tiptap/react';
+import { LinkDialog } from './LinkDialog';
+import { ImageUploadDialog } from './ImageUploadDialog';
 
 /**
  * Editor Toolbar Component
  * Provides formatting buttons for the Tiptap editor
  */
-export function EditorToolbar({ editor }) {
+export function EditorToolbar({ editor, pageId }) {
+  const [showLinkDialog, setShowLinkDialog] = useState(false);
+  const [showImageDialog, setShowImageDialog] = useState(false);
+
   if (!editor) {
     return null;
   }
 
   const setLink = () => {
-    const previousUrl = editor.getAttributes('link').href;
-    const url = window.prompt('URL', previousUrl);
+    setShowLinkDialog(true);
+  };
 
-    // Cancel
-    if (url === null) {
-      return;
-    }
+  const previousUrl = editor.getAttributes('link').href || '';
 
-    // Empty URL removes the link
-    if (url === '') {
+  const handleInsertLink = (url) => {
+    if (!url) {
+      // Empty URL removes the link
       editor.chain().focus().extendMarkRange('link').unsetLink().run();
       return;
     }
@@ -30,8 +33,10 @@ export function EditorToolbar({ editor }) {
   };
 
   const addImage = () => {
-    const url = window.prompt('Image URL');
+    setShowImageDialog(true);
+  };
 
+  const handleInsertImage = (url) => {
     if (url) {
       editor.chain().focus().setImage({ src: url }).run();
     }
@@ -169,6 +174,20 @@ export function EditorToolbar({ editor }) {
           ↷ Redo
         </button>
       </div>
+
+      <LinkDialog
+        isOpen={showLinkDialog}
+        onClose={() => setShowLinkDialog(false)}
+        onInsert={handleInsertLink}
+        initialUrl={previousUrl}
+      />
+
+      <ImageUploadDialog
+        isOpen={showImageDialog}
+        onClose={() => setShowImageDialog(false)}
+        onInsert={handleInsertImage}
+        pageId={pageId}
+      />
     </div>
   );
 }

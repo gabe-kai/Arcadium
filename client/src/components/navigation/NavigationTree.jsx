@@ -171,12 +171,27 @@ export function NavigationTree() {
 }
 
 /**
+ * Count all descendant pages recursively
+ */
+function countDescendantPages(node) {
+  let count = 0;
+  if (node.children && node.children.length > 0) {
+    count += node.children.length;
+    node.children.forEach((child) => {
+      count += countDescendantPages(child);
+    });
+  }
+  return count;
+}
+
+/**
  * TreeNode component for recursive tree rendering
  */
 function TreeNode({ node, currentPageId, expandedNodes, onToggle, level }) {
   const hasChildren = node.children && node.children.length > 0;
   const isExpanded = expandedNodes.includes(node.id);
   const isCurrent = currentPageId === node.id;
+  const pageCount = hasChildren ? countDescendantPages(node) : 0;
 
   return (
     <li className="arc-nav-tree-item">
@@ -202,7 +217,15 @@ function TreeNode({ node, currentPageId, expandedNodes, onToggle, level }) {
           to={`/pages/${node.id}`}
           className={`arc-nav-tree-link ${isCurrent ? 'arc-nav-tree-link-current' : ''}`}
         >
-          {node.title}
+          <span className="arc-nav-tree-icon" aria-hidden="true">
+            {hasChildren ? '📁' : '📄'}
+          </span>
+          <span className="arc-nav-tree-title">{node.title}</span>
+          {hasChildren && pageCount > 0 && (
+            <span className="arc-nav-tree-page-count" title={`${pageCount} page${pageCount !== 1 ? 's' : ''}`}>
+              ({pageCount})
+            </span>
+          )}
           {node.status === 'draft' && (
             <span className="arc-nav-tree-draft-badge" title="Draft">D</span>
           )}

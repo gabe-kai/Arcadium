@@ -10,10 +10,15 @@ import React, { useState, useEffect, useRef } from 'react';
  * - Sticky positioning
  * - Indentation for nested headings
  * - Active section highlighting
+ * - Collapsible for short pages
  */
 export function TableOfContents({ toc, contentRef }) {
   const [activeSection, setActiveSection] = useState(null);
+  const [isCollapsed, setIsCollapsed] = useState(false);
   const tocRef = useRef(null);
+  
+  // Determine if page is "short" (fewer than 5 TOC items)
+  const isShortPage = toc && toc.length < 5;
 
   // Scroll to section when TOC item is clicked
   const scrollToSection = (anchor) => {
@@ -68,26 +73,43 @@ export function TableOfContents({ toc, contentRef }) {
 
   return (
     <nav className="arc-toc" ref={tocRef} aria-label="Table of contents">
-      <h3 className="arc-toc-title">Contents</h3>
-      <ul className="arc-toc-list">
-        {toc.map((item, index) => (
-          <li
-            key={`${item.anchor}-${index}`}
-            className={`arc-toc-item arc-toc-item-level-${item.level} ${
-              activeSection === item.anchor ? 'arc-toc-item-active' : ''
-            }`}
+      <div className="arc-toc-header">
+        <h3 className="arc-toc-title">Contents</h3>
+        {isShortPage && (
+          <button
+            type="button"
+            className="arc-toc-toggle"
+            onClick={() => setIsCollapsed(!isCollapsed)}
+            aria-expanded={!isCollapsed}
+            aria-label={isCollapsed ? 'Expand table of contents' : 'Collapse table of contents'}
           >
-            <button
-              type="button"
-              className="arc-toc-link"
-              onClick={() => scrollToSection(item.anchor)}
-              aria-current={activeSection === item.anchor ? 'location' : undefined}
+            <span className="arc-toc-toggle-icon">
+              {isCollapsed ? '▶' : '▼'}
+            </span>
+          </button>
+        )}
+      </div>
+      {!isCollapsed && (
+        <ul className="arc-toc-list">
+          {toc.map((item, index) => (
+            <li
+              key={`${item.anchor}-${index}`}
+              className={`arc-toc-item arc-toc-item-level-${item.level} ${
+                activeSection === item.anchor ? 'arc-toc-item-active' : ''
+              }`}
             >
-              {item.text}
-            </button>
-          </li>
-        ))}
-      </ul>
+              <button
+                type="button"
+                className="arc-toc-link"
+                onClick={() => scrollToSection(item.anchor)}
+                aria-current={activeSection === item.anchor ? 'location' : undefined}
+              >
+                {item.text}
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
     </nav>
   );
 }

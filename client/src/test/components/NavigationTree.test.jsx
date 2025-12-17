@@ -496,4 +496,87 @@ describe('NavigationTree', () => {
     // Should handle rapid changes without errors
     expect(searchInput).toHaveValue('Section');
   });
+
+  it('displays folder icon for sections (nodes with children)', () => {
+    pagesApi.useNavigationTree.mockReturnValue({
+      data: mockTree,
+      isLoading: false,
+      isError: false,
+    });
+
+    renderNavigationTree();
+    
+    // Home has children, should show folder icon
+    const homeLink = screen.getByText('Home').closest('a');
+    expect(homeLink).toBeInTheDocument();
+    const icons = homeLink?.querySelectorAll('.arc-nav-tree-icon');
+    expect(icons?.length).toBeGreaterThan(0);
+    if (icons && icons[0]) {
+      expect(icons[0].textContent).toBe('📁');
+    }
+  });
+
+  it('displays document icon for pages (leaf nodes)', () => {
+    pagesApi.useNavigationTree.mockReturnValue({
+      data: mockTree,
+      isLoading: false,
+      isError: false,
+    });
+
+    renderNavigationTree();
+    
+    // Expand to see leaf nodes
+    const expandButton = screen.getByLabelText(/expand/i);
+    fireEvent.click(expandButton);
+    
+    // Wait for children to render
+    waitFor(() => {
+      const pageLink = screen.getByText('Page 1.1').closest('a');
+      expect(pageLink).toBeInTheDocument();
+      const icons = pageLink?.querySelectorAll('.arc-nav-tree-icon');
+      expect(icons?.length).toBeGreaterThan(0);
+      if (icons && icons[0]) {
+        expect(icons[0].textContent).toBe('📄');
+      }
+    });
+  });
+
+  it('displays page count for sections', () => {
+    pagesApi.useNavigationTree.mockReturnValue({
+      data: mockTree,
+      isLoading: false,
+      isError: false,
+    });
+
+    renderNavigationTree();
+
+    // Home has 2 direct children + 1 grandchild (Page 1.1) = 3 total descendant pages
+    const homeLink = screen.getByText('Home').closest('a');
+    expect(homeLink).toBeInTheDocument();
+    const pageCount = homeLink?.querySelector('.arc-nav-tree-page-count');
+    expect(pageCount).toBeInTheDocument();
+    expect(pageCount?.textContent).toBe('(3)');
+  });
+
+  it('does not display page count for leaf nodes', () => {
+    pagesApi.useNavigationTree.mockReturnValue({
+      data: mockTree,
+      isLoading: false,
+      isError: false,
+    });
+
+    renderNavigationTree();
+    
+    // Expand to see leaf nodes
+    const expandButton = screen.getByLabelText(/expand/i);
+    fireEvent.click(expandButton);
+    
+    // Wait for children to render
+    waitFor(() => {
+      const pageLink = screen.getByText('Page 1.1').closest('a');
+      expect(pageLink).toBeInTheDocument();
+      const pageCount = pageLink?.querySelector('.arc-nav-tree-page-count');
+      expect(pageCount).not.toBeInTheDocument();
+    });
+  });
 });

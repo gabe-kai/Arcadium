@@ -293,6 +293,25 @@ body {
   font-weight: 500;
 }
 
+.arc-nav-tree-icon {
+  font-size: 1rem;
+  flex-shrink: 0;
+  opacity: 0.7;
+}
+
+.arc-nav-tree-title {
+  flex: 1;
+  min-width: 0;
+}
+
+.arc-nav-tree-page-count {
+  color: var(--arc-text-subtle);
+  font-size: 0.75rem;
+  font-weight: normal;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
 .arc-nav-tree-draft-badge {
   display: inline-flex;
   align-items: center;
@@ -679,11 +698,41 @@ body {
   font-size: 0.875rem;
 }
 
+.arc-toc-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
 .arc-toc-title {
-  margin: 0 0 1rem 0;
+  margin: 0;
   font-size: 1rem;
   font-weight: 600;
   color: var(--arc-text);
+}
+
+.arc-toc-toggle {
+  background: none;
+  border: none;
+  color: var(--arc-text-subtle);
+  cursor: pointer;
+  padding: 0.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.25rem;
+  transition: color 0.15s, background 0.15s;
+}
+
+.arc-toc-toggle:hover {
+  color: var(--arc-text);
+  background: var(--arc-surface);
+}
+
+.arc-toc-toggle-icon {
+  font-size: 0.75rem;
+  transition: transform 0.2s;
 }
 
 .arc-toc-list {
@@ -773,17 +822,40 @@ body {
 }
 
 .arc-backlinks-link {
-  display: block;
+  display: flex;
+  flex-direction: column;
   padding: 0.5rem 0.75rem;
   color: var(--arc-text-subtle);
   text-decoration: none;
   border-radius: 0.25rem;
   transition: all 0.15s;
+  gap: 0.25rem;
 }
 
 .arc-backlinks-link:hover {
   color: var(--arc-accent);
   background: var(--arc-surface);
+}
+
+.arc-backlinks-link-title {
+  font-weight: 500;
+  color: var(--arc-text);
+}
+
+.arc-backlinks-link:hover .arc-backlinks-link-title {
+  color: var(--arc-accent);
+}
+
+.arc-backlinks-context {
+  font-size: 0.75rem;
+  color: var(--arc-text-subtle);
+  font-style: italic;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  line-height: 1.4;
 }
 
 .arc-footer {
@@ -1136,8 +1208,45 @@ body {
   margin-bottom: 1rem;
 }
 
+.arc-edit-page-toolbar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.arc-edit-page-preview-toggle {
+  padding: 0.5rem 1rem;
+  background: var(--arc-surface);
+  border: 1px solid var(--arc-border);
+  border-radius: var(--arc-radius-md);
+  color: var(--arc-text);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.arc-edit-page-preview-toggle:hover {
+  background: var(--arc-accent-soft);
+  border-color: var(--arc-accent);
+  color: var(--arc-accent);
+}
+
 .arc-edit-page-editor-wrapper {
   margin-bottom: 1.5rem;
+  min-height: 400px;
+}
+
+.arc-edit-page-preview {
+  padding: 1.5rem;
+  background: var(--arc-bg);
+  border: 1px solid var(--arc-border);
+  border-radius: var(--arc-radius-md);
+  min-height: 400px;
+  max-height: 70vh;
+  overflow-y: auto;
 }
 
 .arc-edit-page-actions {

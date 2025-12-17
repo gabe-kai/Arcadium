@@ -336,3 +336,42 @@
   color: var(--arc-error-text);
   font-size: 0.875rem;
 }
+
+/* Comments Pagination */
+.arc-comments-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--arc-border);
+}
+
+.arc-comments-pagination-button {
+  padding: 0.5rem 1rem;
+  background: var(--arc-surface);
+  border: 1px solid var(--arc-border);
+  border-radius: var(--arc-radius-md);
+  color: var(--arc-text);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.arc-comments-pagination-button:hover:not(:disabled) {
+  background: var(--arc-accent-soft);
+  border-color: var(--arc-accent);
+  color: var(--arc-accent);
+}
+
+.arc-comments-pagination-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.arc-comments-pagination-info {
+  color: var(--arc-text-subtle);
+  font-size: 0.875rem;
+}

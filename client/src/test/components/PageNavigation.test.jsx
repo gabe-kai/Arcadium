@@ -201,9 +201,17 @@ describe('PageNavigation', () => {
       </MemoryRouter>
     );
 
-    // Should still render navigation structure
-    expect(screen.getByText('Previous')).toBeInTheDocument();
-    expect(screen.getByText('Next')).toBeInTheDocument();
+    // Should still render navigation structure with labels
+    // Previous label should be visible (title will be empty string, but label shows)
+    const previousLabels = screen.getAllByText(/Previous/i);
+    expect(previousLabels.length).toBeGreaterThan(0);
+    
+    // Next label should be visible (may appear multiple times - label and title)
+    const nextLabels = screen.getAllByText(/Next/i);
+    expect(nextLabels.length).toBeGreaterThan(0);
+    
+    // Navigation should still be functional
+    expect(screen.getByRole('link', { name: /Next/i })).toBeInTheDocument();
   });
 
   it('renders inner container with proper structure', () => {

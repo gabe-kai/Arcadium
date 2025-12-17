@@ -1,18 +1,43 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { CommentItem } from './CommentItem';
 import { CommentForm } from './CommentForm';
 import { useCreateComment, useUpdateComment, useDeleteComment } from '../../services/api/comments';
 import { useAuth } from '../../services/auth/AuthContext';
 import './CommentsList.css';
 
+const COMMENTS_PER_PAGE = 10;
+
 /**
  * CommentsList component - Displays all comments for a page with threading
+ * 
+ * Features:
+ * - Threaded comments display
+ * - Pagination for long threads
+ * - Load more / page navigation
  */
 export function CommentsList({ pageId, comments = [] }) {
   const { isAuthenticated } = useAuth();
+  const [currentPage, setCurrentPage] = useState(1);
   const createCommentMutation = useCreateComment(pageId);
   const updateCommentMutation = useUpdateComment(pageId);
   const deleteCommentMutation = useDeleteComment(pageId);
+  
+  // Paginate top-level comments only (replies are always shown)
+  const topLevelComments = useMemo(() => {
+    return comments.filter((comment) => !comment.parent_comment_id);
+  }, [comments]);
+  
+  const totalPages = Math.ceil(topLevelComments.length / COMMENTS_PER_PAGE);
+  const paginatedComments = useMemo(() => {
+    const startIndex = (currentPage - 1) * COMMENTS_PER_PAGE;
+    const endIndex = startIndex + COMMENTS_PER_PAGE;
+    return topLevelComments.slice(startIndex, endIndex);
+  }, [topLevelComments, currentPage]);
+  
+  // Reset to page 1 when comments change (e.g., after new comment)
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [pageId]);
 
   const handleReply = async (parentCommentId, commentData) => {
     if (commentData) {
@@ -58,19 +83,49 @@ export function CommentsList({ pageId, comments = [] }) {
           <p>No comments yet. Be the first to comment!</p>
         </div>
       ) : (
-        <div className="arc-comments-list">
-          {comments.map((comment) => (
-            <CommentItem
-              key={comment.id}
-              comment={comment}
-              onReply={handleReply}
-              onEdit={handleEdit}
-              onDelete={handleDelete}
-              depth={0}
-              pageId={pageId}
-            />
-          ))}
-        </div>
+        <>
+          <div className="arc-comments-list">
+            {paginatedComments.map((comment) => (
+              <CommentItem
+                key={comment.id}
+                comment={comment}
+                onReply={handleReply}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+                depth={0}
+                pageId={pageId}
+              />
+            ))}
+          </div>
+          
+          {totalPages > 1 && (
+            <div className="arc-comments-pagination">
+              <button
+                type="button"
+                className="arc-comments-pagination-button"
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                aria-label="Previous page"
+              >
+                Previous
+              </button>
+              
+              <span className="arc-comments-pagination-info">
+                Page {currentPage} of {totalPages} ({topLevelComments.length} comment{topLevelComments.length !== 1 ? 's' : ''})
+              </span>
+              
+              <button
+                type="button"
+                className="arc-comments-pagination-button"
+                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                aria-label="Next page"
+              >
+                Next
+              </button>
+            </div>
+          )}
+        </>
       )}
 
       {createCommentMutation.isError && (

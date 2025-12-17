@@ -10,32 +10,38 @@ vi.mock('@tiptap/react', () => ({
   EditorContent: () => <div data-testid="editor-content" />,
 }));
 
+// Create a chainable mock that supports the full Tiptap API
+const createChainable = () => ({
+  chain: vi.fn(() => createChainable()),
+  focus: vi.fn(() => createChainable()),
+  extendMarkRange: vi.fn(() => createChainable()),
+  toggleBold: vi.fn(() => createChainable()),
+  toggleItalic: vi.fn(() => createChainable()),
+  toggleCode: vi.fn(() => createChainable()),
+  toggleBulletList: vi.fn(() => createChainable()),
+  toggleOrderedList: vi.fn(() => createChainable()),
+  toggleCodeBlock: vi.fn(() => createChainable()),
+  insertTable: vi.fn(() => createChainable()),
+  undo: vi.fn(() => createChainable()),
+  redo: vi.fn(() => createChainable()),
+  setParagraph: vi.fn(() => createChainable()),
+  toggleHeading: vi.fn(() => createChainable()),
+  setLink: vi.fn(() => createChainable()),
+  unsetLink: vi.fn(() => createChainable()),
+  setImage: vi.fn(() => createChainable()),
+  run: vi.fn(),
+});
+
 describe('EditorToolbar', () => {
   let mockEditor;
 
   beforeEach(() => {
     mockEditor = {
-      chain: vi.fn(() => mockEditor),
-      focus: vi.fn(() => mockEditor),
-      extendMarkRange: vi.fn(() => mockEditor),
-      toggleBold: vi.fn(() => mockEditor),
-      toggleItalic: vi.fn(() => mockEditor),
-      toggleCode: vi.fn(() => mockEditor),
-      toggleBulletList: vi.fn(() => mockEditor),
-      toggleOrderedList: vi.fn(() => mockEditor),
-      toggleCodeBlock: vi.fn(() => mockEditor),
-      insertTable: vi.fn(() => mockEditor),
-      undo: vi.fn(() => mockEditor),
-      redo: vi.fn(() => mockEditor),
-      setParagraph: vi.fn(() => mockEditor),
-      toggleHeading: vi.fn(() => mockEditor),
-      setLink: vi.fn(() => mockEditor),
-      unsetLink: vi.fn(() => mockEditor),
-      setImage: vi.fn(() => mockEditor),
-      run: vi.fn(),
-      can: vi.fn(() => mockEditor),
+      ...createChainable(),
+      can: vi.fn(() => createChainable()),
       isActive: vi.fn(() => false),
       getAttributes: vi.fn(() => ({})),
+      getHTML: vi.fn(() => '<p>Content</p>'),
     };
 
     useEditor.mockReturnValue(mockEditor);
@@ -202,11 +208,17 @@ describe('EditorToolbar', () => {
   });
 
   it('disables buttons when command cannot be executed', () => {
-    mockEditor.can.mockReturnValue({ chain: () => ({ focus: () => ({ toggleBold: () => ({ run: () => false }) }) }) });
-    
+    // The disabled check is: !editor.can().chain().focus().toggleBold().run()
+    // So we need can() to return a chainable where run() returns false
+    // Create a chainable that supports all commands but run() returns false
+    const cannotExecuteChain = createChainable();
+    // Override run to return false (cannot execute)
+    cannotExecuteChain.run = vi.fn(() => false);
+    mockEditor.can.mockReturnValue(cannotExecuteChain);
+
     render(<EditorToolbar editor={mockEditor} />);
     const boldButton = screen.getByTitle(/Bold/i);
-    
+
     expect(boldButton).toBeDisabled();
   });
 
@@ -294,88 +306,28 @@ describe('EditorToolbar', () => {
     expect(mockEditor.run).toHaveBeenCalled();
   });
 
-  it('opens prompt for link URL when link button is clicked', () => {
-    const promptSpy = vi.spyOn(window, 'prompt').mockReturnValue('https://example.com');
-    
-    render(<EditorToolbar editor={mockEditor} />);
-    const linkButton = screen.getByTitle(/Insert Link/i);
-    
-    fireEvent.click(linkButton);
-    
-    expect(promptSpy).toHaveBeenCalled();
-    expect(mockEditor.setLink).toHaveBeenCalledWith({ href: 'https://example.com' });
-    expect(mockEditor.run).toHaveBeenCalled();
-    
-    promptSpy.mockRestore();
-  });
 
-  it('removes link when link button is clicked with empty URL', () => {
-    const promptSpy = vi.spyOn(window, 'prompt').mockReturnValue('');
-    
-    render(<EditorToolbar editor={mockEditor} />);
-    const linkButton = screen.getByTitle(/Insert Link/i);
-    
-    fireEvent.click(linkButton);
-    
-    expect(mockEditor.unsetLink).toHaveBeenCalled();
-    expect(mockEditor.run).toHaveBeenCalled();
-    
-    promptSpy.mockRestore();
-  });
-
-  it('does not set link when prompt is cancelled', () => {
-    const promptSpy = vi.spyOn(window, 'prompt').mockReturnValue(null);
-    
-    render(<EditorToolbar editor={mockEditor} />);
-    const linkButton = screen.getByTitle(/Insert Link/i);
-    
-    fireEvent.click(linkButton);
-    
-    expect(mockEditor.setLink).not.toHaveBeenCalled();
-    expect(mockEditor.unsetLink).not.toHaveBeenCalled();
-    
-    promptSpy.mockRestore();
-  });
-
-  it('opens prompt for image URL when image button is clicked', () => {
-    const promptSpy = vi.spyOn(window, 'prompt').mockReturnValue('https://example.com/image.jpg');
-    
+  it('opens image dialog when image button is clicked', () => {
     render(<EditorToolbar editor={mockEditor} />);
     const imageButton = screen.getByTitle(/Insert Image/i);
     
     fireEvent.click(imageButton);
     
-    expect(promptSpy).toHaveBeenCalled();
-    expect(mockEditor.setImage).toHaveBeenCalledWith({ src: 'https://example.com/image.jpg' });
-    expect(mockEditor.run).toHaveBeenCalled();
-    
-    promptSpy.mockRestore();
+    // Dialog should open
+    expect(screen.getByText('Insert Image')).toBeInTheDocument();
   });
 
-  it('does not set image when prompt is cancelled', () => {
-    const promptSpy = vi.spyOn(window, 'prompt').mockReturnValue(null);
-    
-    render(<EditorToolbar editor={mockEditor} />);
-    const imageButton = screen.getByTitle(/Insert Image/i);
-    
-    fireEvent.click(imageButton);
-    
-    expect(mockEditor.setImage).not.toHaveBeenCalled();
-    
-    promptSpy.mockRestore();
-  });
-
-  it('uses previous URL when setting link', () => {
+  it('opens link dialog when link button is clicked', () => {
     mockEditor.getAttributes.mockReturnValue({ href: 'https://previous.com' });
-    const promptSpy = vi.spyOn(window, 'prompt').mockReturnValue('https://new.com');
     
     render(<EditorToolbar editor={mockEditor} />);
     const linkButton = screen.getByTitle(/Insert Link/i);
     
     fireEvent.click(linkButton);
     
-    expect(promptSpy).toHaveBeenCalledWith('URL', 'https://previous.com');
-    
-    promptSpy.mockRestore();
+    // Dialog should open with previous URL pre-filled
+    expect(screen.getByText('Insert Link')).toBeInTheDocument();
+    const urlInput = screen.getByPlaceholderText(/https:\/\/example.com/i);
+    expect(urlInput).toHaveValue('https://previous.com');
   });
 });

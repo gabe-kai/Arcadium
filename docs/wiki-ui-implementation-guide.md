@@ -248,7 +248,7 @@ This guide outlines the implementation plan for building the Wiki User Interface
   - [x] Hover effects
   - [x] Active state highlighting
   - [x] Auto-expand path to current page
-  - [ ] Icons for pages vs sections - **TODO** (optional enhancement)
+  - [x] Icons for pages vs sections - ✅ Complete (folder icon for sections, document icon for pages)
 
 - [x] **Tree Search** ✅
   - [x] Search/filter within tree
@@ -258,7 +258,7 @@ This guide outlines the implementation plan for building the Wiki User Interface
 - [x] **Tree Features** ✅
   - [x] Remember expanded state (localStorage)
   - [x] Draft badge indicator
-  - [ ] Show page count per section - **TODO** (optional enhancement)
+  - [x] Show page count per section - ✅ Complete (displays count of all descendant pages)
   - [ ] Lazy load children - **TODO** (not needed yet, performance is good)
 
 #### API Endpoints Used:
@@ -286,11 +286,11 @@ This guide outlines the implementation plan for building the Wiki User Interface
   - [x] Sticky positioning (stays visible)
   - [x] Indentation for nested headings
   - [x] Active section highlighting
-  - [ ] Collapsible if page is short - **TODO** (optional enhancement)
+  - [x] Collapsible if page is short - ✅ Complete (collapsible for pages with < 5 TOC items)
 
 - [x] **Backlinks Component** ✅
   - [x] Display pages that link to current page
-  - [ ] Show context snippet (where link appears) - **TODO** (optional enhancement)
+  - [x] Show context snippet (where link appears) - ✅ Complete (frontend ready, requires backend support for context data)
   - [x] Click to navigate to linking page
   - [x] Display backlink count
   - [x] Styled list with hover effects
@@ -318,7 +318,7 @@ This guide outlines the implementation plan for building the Wiki User Interface
   - [x] User avatars/names
   - [x] Timestamps (relative and absolute)
   - [x] Collapsible threads
-  - [ ] Pagination for long threads - **TODO** (optional enhancement)
+  - [x] Pagination for long threads - ✅ Complete (10 comments per page with navigation)
 
 - [x] **Comment Form Component** ✅
   - [x] Text area for new comment
@@ -426,9 +426,9 @@ This guide outlines the implementation plan for building the Wiki User Interface
   - [x] Image insertion (basic prompt)
   - [x] Table editor (visual grid)
   - [x] Keyboard shortcuts (Tiptap built-in)
-  - [ ] Real-time preview toggle - **TODO** (optional enhancement)
-  - [ ] Link insertion dialog with page search - **TODO** (optional enhancement)
-  - [ ] Image upload with preview - **TODO** (optional enhancement)
+  - [x] Real-time preview toggle - ✅ Complete (toggle between editor and preview)
+  - [x] Link insertion dialog with page search - ✅ Complete (searchable dialog for internal/external links)
+  - [x] Image upload with preview - ✅ Complete (file upload with preview and URL input)
 
 - [x] **Editor Styling** ✅
   - [x] Clean background with theme colors

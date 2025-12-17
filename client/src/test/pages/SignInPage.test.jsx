@@ -57,7 +57,8 @@ describe('SignInPage', () => {
   describe('Login Mode', () => {
     it('renders login form by default', () => {
       renderSignInPage();
-      expect(screen.getByText('Sign In')).toBeInTheDocument();
+      // Use getByRole for heading to avoid multiple matches with button text
+      expect(screen.getByRole('heading', { name: 'Sign In' })).toBeInTheDocument();
       expect(screen.getByLabelText('Username')).toBeInTheDocument();
       expect(screen.getByLabelText('Password')).toBeInTheDocument();
       expect(screen.queryByLabelText('Email')).not.toBeInTheDocument();
@@ -218,7 +219,9 @@ describe('SignInPage', () => {
 
       await user.click(screen.getByRole('button', { name: 'Sign up' }));
 
-      expect(screen.getByText('Create Account')).toBeInTheDocument();
+      // Use getAllByText since "Create Account" may appear in multiple places
+      const createAccountElements = screen.getAllByText('Create Account');
+      expect(createAccountElements.length).toBeGreaterThan(0);
       expect(screen.getByLabelText('Email')).toBeInTheDocument();
       expect(
         screen.getByText('Create a new account to get started'),
@@ -344,9 +347,15 @@ describe('SignInPage', () => {
       renderSignInPage();
 
       await user.click(screen.getByRole('button', { name: 'Sign up' }));
-      expect(screen.getByText('Create Account')).toBeInTheDocument();
+      // Use getAllByText since "Create Account" may appear in multiple places
+      const createAccountElements = screen.getAllByText('Create Account');
+      expect(createAccountElements.length).toBeGreaterThan(0);
 
-      await user.click(screen.getByRole('button', { name: 'Sign in' }));
+      // "Sign in" appears in multiple places - get the switch button specifically
+      const signInButtons = screen.getAllByRole('button', { name: /Sign in/i });
+      // The switch button should be the one that's not the main submit button
+      const switchButton = signInButtons.find(btn => btn.type === 'button');
+      await user.click(switchButton || signInButtons[0]);
       expect(screen.getByText('Sign In')).toBeInTheDocument();
     });
   });

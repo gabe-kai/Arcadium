@@ -474,4 +474,35 @@ describe('Page Edit Flow Integration', () => {
       status: 'draft',
     });
   });
+
+  it('uses HTML-to-markdown pipeline when saving after preview toggle', async () => {
+    renderEditPage('new');
+    
+    // Wait for metadata form and editor to be ready
+    await waitFor(() => {
+      expect(screen.getByTestId('metadata-form')).toBeInTheDocument();
+      expect(screen.getByTestId('editor')).toBeInTheDocument();
+    });
+    
+    // Enter a basic title so save is allowed
+    const titleInput = screen.getByTestId('metadata-title');
+    fireEvent.change(titleInput, { target: { value: 'Preview Pipeline Page' } });
+    
+    // Toggle preview on and off to exercise that path
+    const previewToggle = screen.getByLabelText(/Show preview/i);
+    fireEvent.click(previewToggle);
+    
+    const editToggle = screen.getByLabelText(/Show editor/i);
+    fireEvent.click(editToggle);
+    
+    // Save page
+    const saveButton = screen.getByText('Create Page');
+    fireEvent.click(saveButton);
+    
+    // Ensure HTML-to-markdown conversion was invoked as part of save
+    await waitFor(() => {
+      expect(markdownUtils.htmlToMarkdown).toHaveBeenCalled();
+      expect(pagesApi.createPage).toHaveBeenCalled();
+    }, { timeout: 2000 });
+  });
 });

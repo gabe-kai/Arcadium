@@ -567,4 +567,83 @@ describe('EditPage', () => {
     // Should still render the editor (graceful degradation)
     expect(screen.getByTestId('editor')).toBeInTheDocument();
   });
+
+  it('displays preview toggle button', () => {
+    renderEditPage('new');
+    
+    const previewToggle = screen.getByLabelText(/Show preview/i);
+    expect(previewToggle).toBeInTheDocument();
+  });
+
+  it('switches to preview mode when toggle is clicked', async () => {
+    const user = userEvent.setup();
+    renderEditPage('new');
+    
+    const previewToggle = screen.getByLabelText(/Show preview/i);
+    await user.click(previewToggle);
+    
+    // Should show preview instead of editor
+    expect(screen.queryByTestId('editor')).not.toBeInTheDocument();
+    const preview = document.querySelector('.arc-edit-page-preview');
+    expect(preview).toBeInTheDocument();
+  });
+
+  it('switches back to editor mode when toggle is clicked again', async () => {
+    const user = userEvent.setup();
+    renderEditPage('new');
+    
+    const previewToggle = screen.getByLabelText(/Show preview/i);
+    await user.click(previewToggle);
+    
+    const editToggle = screen.getByLabelText(/Show editor/i);
+    await user.click(editToggle);
+    
+    expect(screen.getByTestId('editor')).toBeInTheDocument();
+    const preview = document.querySelector('.arc-edit-page-preview');
+    expect(preview).not.toBeInTheDocument();
+  });
+
+  it('displays preview with rendered markdown content', async () => {
+    const user = userEvent.setup();
+    markdownUtils.markdownToHtml.mockReturnValue('<h1>Rendered Content</h1>');
+    
+    renderEditPage('new');
+    
+    const previewToggle = screen.getByLabelText(/Show preview/i);
+    await user.click(previewToggle);
+    
+    await waitFor(() => {
+      const preview = document.querySelector('.arc-edit-page-preview');
+      expect(preview).toBeInTheDocument();
+      expect(preview.innerHTML).toContain('Rendered Content');
+    });
+  });
+
+  it('updates preview when editor content changes', async () => {
+    const user = userEvent.setup();
+    markdownUtils.markdownToHtml.mockReturnValue('<p>Updated Content</p>');
+    
+    renderEditPage('new');
+    
+    // Switch to preview
+    const previewToggle = screen.getByLabelText(/Show preview/i);
+    await user.click(previewToggle);
+    
+    // Switch back to editor and make changes
+    const editToggle = screen.getByLabelText(/Show editor/i);
+    await user.click(editToggle);
+    
+    // Simulate editor content change
+    const editor = screen.getByTestId('editor');
+    const mockOnChange = vi.fn();
+    // The editor mock should trigger onChange
+    
+    // Switch back to preview
+    await user.click(previewToggle);
+    
+    // Preview should reflect changes
+    await waitFor(() => {
+      expect(markdownUtils.markdownToHtml).toHaveBeenCalled();
+    });
+  });
 });

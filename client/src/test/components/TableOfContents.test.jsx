@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { TableOfContents } from '../../components/navigation/TableOfContents';
 
 describe('TableOfContents', () => {
@@ -213,18 +214,41 @@ describe('TableOfContents', () => {
     }).not.toThrow();
   });
 
-  it('handles scroll event cleanup', () => {
+  it('handles scroll event cleanup', async () => {
+    const addEventListenerSpy = vi.spyOn(window, 'addEventListener');
     const removeEventListenerSpy = vi.spyOn(window, 'removeEventListener');
     const toc = [
       { anchor: 'section-1', text: 'Section 1', level: 2 },
     ];
 
+    // Create a mock element so the scroll handler is set up
+    const mockElement = document.createElement('h2');
+    mockElement.id = 'section-1';
+    container.appendChild(mockElement);
+
     const { unmount } = render(<TableOfContents toc={toc} contentRef={contentRef} />);
+    
+    // Wait for scroll listener to be added
+    await waitFor(() => {
+      expect(addEventListenerSpy).toHaveBeenCalledWith('scroll', expect.any(Function), { passive: true });
+    });
+    
+    // Get the handler function that was added
+    const scrollHandler = addEventListenerSpy.mock.calls.find(
+      call => call[0] === 'scroll'
+    )?.[1];
     
     unmount();
     
-    expect(removeEventListenerSpy).toHaveBeenCalledWith('scroll', expect.any(Function));
+    // Cleanup should be called with the same handler function
+    if (scrollHandler) {
+      expect(removeEventListenerSpy).toHaveBeenCalledWith('scroll', scrollHandler);
+    } else {
+      // If we can't find the exact handler, at least verify cleanup was attempted
+      expect(removeEventListenerSpy).toHaveBeenCalled();
+    }
     
+    addEventListenerSpy.mockRestore();
     removeEventListenerSpy.mockRestore();
   });
 
@@ -239,6 +263,67 @@ describe('TableOfContents', () => {
     rerender(<TableOfContents toc={toc} contentRef={{ current: null }} />);
     
     // Should not crash
+    expect(screen.getByText('Section 1')).toBeInTheDocument();
+  });
+
+  it('shows collapse button for short pages (< 5 items)', () => {
+    const shortToc = [
+      { anchor: 'section-1', text: 'Section 1', level: 2 },
+      { anchor: 'section-2', text: 'Section 2', level: 2 },
+    ];
+
+    render(<TableOfContents toc={shortToc} contentRef={contentRef} />);
+    
+    const toggleButton = screen.getByLabelText(/Collapse table of contents/i);
+    expect(toggleButton).toBeInTheDocument();
+  });
+
+  it('does not show collapse button for long pages (>= 5 items)', () => {
+    const longToc = [
+      { anchor: 'section-1', text: 'Section 1', level: 2 },
+      { anchor: 'section-2', text: 'Section 2', level: 2 },
+      { anchor: 'section-3', text: 'Section 3', level: 2 },
+      { anchor: 'section-4', text: 'Section 4', level: 2 },
+      { anchor: 'section-5', text: 'Section 5', level: 2 },
+    ];
+
+    render(<TableOfContents toc={longToc} contentRef={contentRef} />);
+    
+    const toggleButton = screen.queryByLabelText(/Collapse table of contents/i);
+    expect(toggleButton).not.toBeInTheDocument();
+  });
+
+  it('collapses TOC when toggle button is clicked', async () => {
+    const user = userEvent.setup();
+    const shortToc = [
+      { anchor: 'section-1', text: 'Section 1', level: 2 },
+    ];
+
+    render(<TableOfContents toc={shortToc} contentRef={contentRef} />);
+    
+    const toggleButton = screen.getByLabelText(/Collapse table of contents/i);
+    expect(screen.getByText('Section 1')).toBeInTheDocument();
+    
+    await user.click(toggleButton);
+    
+    expect(screen.queryByText('Section 1')).not.toBeInTheDocument();
+    expect(screen.getByLabelText(/Expand table of contents/i)).toBeInTheDocument();
+  });
+
+  it('expands TOC when toggle button is clicked again', async () => {
+    const user = userEvent.setup();
+    const shortToc = [
+      { anchor: 'section-1', text: 'Section 1', level: 2 },
+    ];
+
+    render(<TableOfContents toc={shortToc} contentRef={contentRef} />);
+    
+    const toggleButton = screen.getByLabelText(/Collapse table of contents/i);
+    await user.click(toggleButton);
+    
+    const expandButton = screen.getByLabelText(/Expand table of contents/i);
+    await user.click(expandButton);
+    
     expect(screen.getByText('Section 1')).toBeInTheDocument();
   });
 });

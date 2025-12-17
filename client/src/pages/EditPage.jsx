@@ -8,6 +8,8 @@ import { EditorToolbar } from '../components/editor/EditorToolbar';
 import { MetadataForm } from '../components/editor/MetadataForm';
 import { usePage, createPage, updatePage } from '../services/api/pages';
 import { htmlToMarkdown, markdownToHtml } from '../utils/markdown';
+import { highlightCodeBlocks } from '../utils/syntaxHighlight';
+import { processLinks } from '../utils/linkHandler';
 
 /**
  * EditPage component - WYSIWYG editor for creating/editing pages
@@ -30,7 +32,9 @@ export function EditPage() {
   });
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [editor, setEditor] = useState(null);
+  const [showPreview, setShowPreview] = useState(false);
   const editorRef = useRef(null);
+  const previewRef = useRef(null);
   const autoSaveTimerRef = useRef(null);
 
   // Load page if editing existing page
@@ -247,20 +251,45 @@ export function EditPage() {
         </div>
 
         <div className="arc-edit-page-toolbar-wrapper">
-          {editor && <EditorToolbar editor={editor} />}
+          <div className="arc-edit-page-toolbar-header">
+            {editor && <EditorToolbar editor={editor} pageId={pageId} />}
+            <button
+              type="button"
+              className="arc-edit-page-preview-toggle"
+              onClick={() => setShowPreview(!showPreview)}
+              aria-label={showPreview ? 'Show editor' : 'Show preview'}
+            >
+              {showPreview ? '✏️ Edit' : '👁️ Preview'}
+            </button>
+          </div>
         </div>
 
         <div className="arc-edit-page-editor-wrapper">
-          <Editor
-            ref={editorRef}
-            content={page?.content || ''}
-            onEditorReady={handleEditorReady}
-            onChange={(html) => {
-              setContent(html);
-              setHasUnsavedChanges(true);
-            }}
-          />
+          {showPreview ? (
+            <div
+              ref={previewRef}
+              className="arc-edit-page-preview arc-reading-body"
+              dangerouslySetInnerHTML={{
+                __html: markdownToHtml(htmlToMarkdown(content || editorRef.current?.getHTML() || '')),
+              }}
+            />
+          ) : (
+            <Editor
+              ref={editorRef}
+              content={page?.content || ''}
+              onEditorReady={handleEditorReady}
+              onChange={(html) => {
+                setContent(html);
+                setHasUnsavedChanges(true);
+              }}
+            />
+          )}
         </div>
+        
+        {/* Process preview content after render */}
+        {showPreview && (
+          <PreviewProcessor contentRef={previewRef} />
+        )}
 
         <div className="arc-edit-page-actions">
           <button
@@ -283,4 +312,18 @@ export function EditPage() {
       </div>
     </Layout>
   );
+}
+
+/**
+ * PreviewProcessor component - Handles syntax highlighting and link processing for preview
+ */
+function PreviewProcessor({ contentRef }) {
+  useEffect(() => {
+    if (contentRef.current) {
+      highlightCodeBlocks(contentRef.current);
+      processLinks(contentRef.current);
+    }
+  }, [contentRef]);
+
+  return null;
 }
