@@ -1,12 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Layout } from '../components/layout/Layout';
 import { Sidebar } from '../components/layout/Sidebar';
 import { Editor } from '../components/editor/Editor';
 import { EditorToolbar } from '../components/editor/EditorToolbar';
 import { MetadataForm } from '../components/editor/MetadataForm';
-import { usePage, createPage, updatePage } from '../services/api/pages';
+import { usePage, createPage, updatePage, useVersionHistory } from '../services/api/pages';
 import { htmlToMarkdown, markdownToHtml } from '../utils/markdown';
 import { highlightCodeBlocks } from '../utils/syntaxHighlight';
 import { processLinks } from '../utils/linkHandler';
@@ -39,6 +39,9 @@ export function EditPage() {
 
   // Load page if editing existing page
   const { data: page, isLoading: isLoadingPage } = usePage(isNewPage ? null : pageId);
+  
+  // Get current version from page data (API includes version field)
+  const currentVersion = page?.version;
 
   // Handle editor ready
   const handleEditorReady = (editorInstance) => {
@@ -232,11 +235,29 @@ export function EditPage() {
     <Layout sidebar={<Sidebar />}>
       <div className="arc-edit-page">
         <div className="arc-edit-page-header">
-          <h2 className="arc-edit-page-header-title">
-            {isNewPage ? 'Create New Page' : 'Edit Page'}
-          </h2>
+          <div className="arc-edit-page-header-top">
+            <h2 className="arc-edit-page-header-title">
+              {isNewPage ? 'Create New Page' : 'Edit Page'}
+            </h2>
+            {!isNewPage && currentVersion && (
+              <div className="arc-edit-page-version-info">
+                <span className="arc-edit-page-version-label">Version:</span>
+                <span className="arc-edit-page-version-number">{currentVersion}</span>
+                <Link
+                  to={`/pages/${pageId}/history`}
+                  className="arc-edit-page-history-link"
+                  title="View version history"
+                >
+                  View History
+                </Link>
+              </div>
+            )}
+          </div>
           {hasUnsavedChanges && (
-            <span className="arc-edit-page-unsaved">Unsaved changes</span>
+            <div className="arc-edit-page-unsaved-warning">
+              <span className="arc-edit-page-unsaved-icon">⚠️</span>
+              <span className="arc-edit-page-unsaved">You have unsaved changes</span>
+            </div>
           )}
         </div>
 
@@ -292,22 +313,35 @@ export function EditPage() {
         )}
 
         <div className="arc-edit-page-actions">
-          <button
-            type="button"
-            onClick={handleCancel}
-            className="arc-edit-page-button arc-edit-page-button-cancel"
-            disabled={isSaving}
-          >
-            Cancel
-          </button>
-          <button
-            type="button"
-            onClick={handleSave}
-            className="arc-edit-page-button arc-edit-page-button-save"
-            disabled={isSaving || !metadata.title?.trim() || !metadata.slug?.trim()}
-          >
-            {isSaving ? 'Saving...' : isNewPage ? 'Create Page' : 'Save Changes'}
-          </button>
+          <div className="arc-edit-page-actions-left">
+            {!isNewPage && (
+              <Link
+                to={`/pages/${pageId}/history`}
+                className="arc-edit-page-button arc-edit-page-button-history"
+                title="View version history"
+              >
+                📜 History
+              </Link>
+            )}
+          </div>
+          <div className="arc-edit-page-actions-right">
+            <button
+              type="button"
+              onClick={handleCancel}
+              className="arc-edit-page-button arc-edit-page-button-cancel"
+              disabled={isSaving}
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={handleSave}
+              className="arc-edit-page-button arc-edit-page-button-save"
+              disabled={isSaving || !metadata.title?.trim() || !metadata.slug?.trim()}
+            >
+              {isSaving ? 'Saving...' : isNewPage ? 'Create Page' : 'Save Changes'}
+            </button>
+          </div>
         </div>
       </div>
     </Layout>

@@ -408,4 +408,141 @@ describe('Pages API Service', () => {
       expect(result).toEqual({ valid: true });
     });
   });
+
+  describe('fetchVersionHistory', () => {
+    it('returns null when pageId is null', async () => {
+      const { fetchVersionHistory } = await import('../../services/api/pages');
+      const result = await fetchVersionHistory(null);
+      expect(result).toBeNull();
+      expect(apiClient.get).not.toHaveBeenCalled();
+    });
+
+    it('fetches version history successfully', async () => {
+      const mockVersions = [
+        {
+          version: 5,
+          created_at: '2024-01-15T10:30:00Z',
+          changed_by: { id: 'user-1', username: 'writer1' },
+        },
+      ];
+
+      apiClient.get.mockResolvedValue({ data: { versions: mockVersions } });
+
+      const { fetchVersionHistory } = await import('../../services/api/pages');
+      const result = await fetchVersionHistory('page-1');
+
+      expect(apiClient.get).toHaveBeenCalledWith('/pages/page-1/versions');
+      expect(result).toEqual(mockVersions);
+    });
+
+    it('returns empty array when no versions exist', async () => {
+      apiClient.get.mockResolvedValue({ data: { versions: [] } });
+
+      const { fetchVersionHistory } = await import('../../services/api/pages');
+      const result = await fetchVersionHistory('page-1');
+
+      expect(result).toEqual([]);
+    });
+
+    it('handles API errors', async () => {
+      apiClient.get.mockRejectedValue(new Error('Network error'));
+
+      const { fetchVersionHistory } = await import('../../services/api/pages');
+      await expect(fetchVersionHistory('page-1')).rejects.toThrow('Network error');
+    });
+  });
+
+  describe('fetchVersion', () => {
+    it('returns null when pageId is null', async () => {
+      const { fetchVersion } = await import('../../services/api/pages');
+      const result = await fetchVersion(null, 5);
+      expect(result).toBeNull();
+      expect(apiClient.get).not.toHaveBeenCalled();
+    });
+
+    it('returns null when version is null', async () => {
+      const { fetchVersion } = await import('../../services/api/pages');
+      const result = await fetchVersion('page-1', null);
+      expect(result).toBeNull();
+      expect(apiClient.get).not.toHaveBeenCalled();
+    });
+
+    it('fetches specific version successfully', async () => {
+      const mockVersion = {
+        version: 5,
+        content: '# Content',
+        created_at: '2024-01-15T10:30:00Z',
+      };
+
+      apiClient.get.mockResolvedValue({ data: mockVersion });
+
+      const { fetchVersion } = await import('../../services/api/pages');
+      const result = await fetchVersion('page-1', 5);
+
+      expect(apiClient.get).toHaveBeenCalledWith('/pages/page-1/versions/5');
+      expect(result).toEqual(mockVersion);
+    });
+  });
+
+  describe('compareVersions', () => {
+    it('returns null when pageId is null', async () => {
+      const { compareVersions } = await import('../../services/api/pages');
+      const result = await compareVersions(null, 1, 2);
+      expect(result).toBeNull();
+      expect(apiClient.get).not.toHaveBeenCalled();
+    });
+
+    it('compares two versions successfully', async () => {
+      const mockComparison = {
+        from_version: 3,
+        to_version: 5,
+        diff: {
+          additions: 10,
+          deletions: 5,
+        },
+      };
+
+      apiClient.get.mockResolvedValue({ data: mockComparison });
+
+      const { compareVersions } = await import('../../services/api/pages');
+      const result = await compareVersions('page-1', 3, 5);
+
+      expect(apiClient.get).toHaveBeenCalledWith('/pages/page-1/versions/compare', {
+        params: { from: 3, to: 5 },
+      });
+      expect(result).toEqual(mockComparison);
+    });
+  });
+
+  describe('restoreVersion', () => {
+    it('returns null when pageId is null', async () => {
+      const { restoreVersion } = await import('../../services/api/pages');
+      const result = await restoreVersion(null, 5);
+      expect(result).toBeNull();
+      expect(apiClient.post).not.toHaveBeenCalled();
+    });
+
+    it('returns null when version is null', async () => {
+      const { restoreVersion } = await import('../../services/api/pages');
+      const result = await restoreVersion('page-1', null);
+      expect(result).toBeNull();
+      expect(apiClient.post).not.toHaveBeenCalled();
+    });
+
+    it('restores version successfully', async () => {
+      const mockResponse = {
+        message: 'Version restored successfully',
+        new_version: 6,
+        page: { id: 'page-1', version: 6 },
+      };
+
+      apiClient.post.mockResolvedValue({ data: mockResponse });
+
+      const { restoreVersion } = await import('../../services/api/pages');
+      const result = await restoreVersion('page-1', 5);
+
+      expect(apiClient.post).toHaveBeenCalledWith('/pages/page-1/versions/5/restore');
+      expect(result).toEqual(mockResponse);
+    });
+  });
 });

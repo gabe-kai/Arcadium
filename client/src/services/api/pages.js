@@ -107,3 +107,44 @@ export function validateSlug(slug, excludePageId = null) {
     })
     .catch(() => ({ valid: true })); // Assume valid on error (optimistic)
 }
+
+// Version history API functions
+export function fetchVersionHistory(pageId) {
+  if (!pageId) return null;
+  return apiClient.get(`/pages/${pageId}/versions`).then((res) => res.data.versions || []);
+}
+
+export function useVersionHistory(pageId) {
+  return useQuery({
+    queryKey: ['versionHistory', pageId],
+    queryFn: () => fetchVersionHistory(pageId),
+    enabled: Boolean(pageId),
+  });
+}
+
+export function fetchVersion(pageId, version) {
+  if (!pageId || !version) return null;
+  return apiClient.get(`/pages/${pageId}/versions/${version}`).then((res) => res.data);
+}
+
+export function useVersion(pageId, version) {
+  return useQuery({
+    queryKey: ['version', pageId, version],
+    queryFn: () => fetchVersion(pageId, version),
+    enabled: Boolean(pageId && version),
+  });
+}
+
+export function compareVersions(pageId, version1, version2) {
+  if (!pageId || !version1 || !version2) return null;
+  return apiClient
+    .get(`/pages/${pageId}/versions/compare`, {
+      params: { from: version1, to: version2 },
+    })
+    .then((res) => res.data);
+}
+
+export function restoreVersion(pageId, version) {
+  if (!pageId || !version) return null;
+  return apiClient.post(`/pages/${pageId}/versions/${version}/restore`).then((res) => res.data);
+}

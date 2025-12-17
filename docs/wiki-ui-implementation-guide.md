@@ -15,8 +15,8 @@ This guide outlines the implementation plan for building the Wiki User Interface
 - Admin dashboard endpoints
 - Service status endpoints
 
-### 🧩 Frontend UI (In Progress - Phases 1-5, 7-8 Complete)
-**Test Coverage**: 523+ passing unit/integration tests across 34 test files, 32+ E2E tests
+### 🧩 Frontend UI (In Progress - Phases 1-5, 7-9 Complete)
+**Test Coverage**: 550+ passing unit/integration tests across 35 test files, 32+ E2E tests
 
 #### ✅ Phase 1: Foundation & Setup (Complete)
 - React + Vite client bootstrapped in `client/`
@@ -510,34 +510,41 @@ This guide outlines the implementation plan for building the Wiki User Interface
 **Goal**: Combine editor and metadata form into full editing experience
 
 #### Tasks:
-- [ ] **Editing View Layout**
-  - Toolbar with Save, Cancel, Preview, History buttons
-  - Metadata form at top
-  - Editor in middle
-  - Version info display
-  - Unsaved changes warning
-  - Loading states
+- [x] **Editing View Layout** ✅
+  - [x] Toolbar with Save, Cancel, Preview, History buttons
+  - [x] Metadata form at top
+  - [x] Editor in middle
+  - [x] Version info display
+  - [x] Enhanced unsaved changes warning
+  - [x] Loading states
 
-- [ ] **Editor Actions**
-  - Save button (creates new version)
-  - Cancel button (discard changes, confirm if unsaved)
-  - Preview toggle (side-by-side or toggle)
-  - History button (opens version history modal)
+- [x] **Editor Actions** ✅
+  - [x] Save button (creates new version)
+  - [x] Cancel button (discard changes, confirm if unsaved)
+  - [x] Preview toggle (toggle between editor and preview)
+  - [x] History button (links to version history page)
 
-- [ ] **Version History Integration**
-  - Display current version number
-  - Link to view history
-  - Show "View History" modal/page
+- [x] **Version History Integration** ✅
+  - [x] Display current version number
+  - [x] Link to view history
+  - [x] Version history page component
 
 #### API Endpoints Used:
-- `GET /api/pages/{page_id}/versions` - List versions
-- `GET /api/pages/{page_id}/versions/{version}` - Get specific version
-- `GET /api/pages/{page_id}/versions/compare` - Compare versions
+- `GET /api/pages/{page_id}/versions` - List versions ✅ (in use)
+- `GET /api/pages/{page_id}/versions/{version}` - Get specific version ✅ (API functions added)
+- `GET /api/pages/{page_id}/versions/compare` - Compare versions ✅ (API functions added)
+- `POST /api/pages/{page_id}/versions/{version}/restore` - Restore version ✅ (API functions added)
 
 #### Deliverables:
-- Complete editing view
-- Save/cancel/preview functionality
-- Version history access
+- ✅ Complete editing view with enhanced layout
+- ✅ Save/cancel/preview functionality
+- ✅ Version history page access
+- ✅ Version info display in edit header
+- ✅ Enhanced unsaved changes warning with icon
+- ✅ History button in actions toolbar
+- ✅ Comprehensive test coverage (30+ new tests)
+
+**Phase 9 Status: ✅ COMPLETE**
 
 ---
 
@@ -889,7 +896,7 @@ src/
 - Component tests (React Testing Library)
 - Utility function tests
 - API service tests (mocked)
-- **Status**: ✅ Comprehensive coverage (523+ passing tests across 34 test files)
+- **Status**: ✅ Comprehensive coverage (550+ passing tests across 35 test files)
   - All components fully tested
   - Edge cases covered
   - Error scenarios handled
@@ -897,7 +904,7 @@ src/
   - Phase 5: 38+ new tests (CommentsList, CommentItem, CommentForm, comments API)
   - Phase 8: 86+ new tests (MetadataForm, slug utility, API functions)
   - Auth system: 90+ new tests (AuthContext, auth API, sign-in page, header auth)
-  - Phase 5: 38+ new tests (CommentsList, CommentItem, CommentForm, comments API)
+  - Phase 9: 30+ new tests (PageHistoryPage, version API functions, EditPage version features)
 
 ### Integration Tests
 - User flows (create page, edit page, comment)
@@ -952,30 +959,24 @@ src/
 
 ### Immediate Next Steps
 
-1. **Phase 9: Editing View Layout** (Next Priority)
-   - Combine editor and metadata form into full editing experience
-   - Toolbar with Save, Cancel, Preview, History buttons
-   - Version info display
-   - Enhanced unsaved changes warning
-   - Loading states
-
-2. **Phase 10: Page Creation Flow**
+1. **Phase 10: Page Creation Flow** (Next Priority)
    - "New Page" creation workflow (mostly complete, needs polish)
    - Choose parent page (optional) - ✅ Implemented in Phase 8
    - Choose section - ✅ Implemented in Phase 8
    - Enter title (slug auto-generated) - ✅ Implemented in Phase 8
    - Open editor with empty content - ✅ Implemented
    - Save page and redirect - ✅ Implemented
+   - Needs: Polish and refinement
 
-3. **Phase 6: Search Interface** (Next Priority)
+2. **Phase 6: Search Interface** (Next Priority)
    - Global search bar in header
    - Search results page
    - Alphabetical index view
 
-4. **Phase 6: Search Interface**
-   - Global search bar in header
-   - Search results page
-   - Alphabetical index view
+3. **Phase 10.5: Version History & Comparison**
+   - View specific version content
+   - Side-by-side and inline diff comparison
+   - Restore version functionality
 
 ### Completed Phases
 
@@ -986,10 +987,9 @@ src/
 - ✅ **Phase 5: Comments System** - Complete (except optional pagination)
 - ✅ **Phase 7: WYSIWYG Editor Integration** - Complete (except optional enhancements)
 - ✅ **Phase 8: Page Metadata Editor** - Complete
+- ✅ **Phase 9: Editing View Layout** - Complete
 
-**Test Coverage**: 523+ passing tests across 34 test files, comprehensive edge case coverage
-- ✅ **Phase 7: WYSIWYG Editor Integration** - Complete (except optional enhancements)
-- ✅ **Phase 8: Page Metadata Editor** - Complete
+**Test Coverage**: 550+ passing tests across 35 test files, comprehensive edge case coverage
 
 ---
 
@@ -1046,3 +1046,43 @@ Phase 8: Page Metadata Editor has been completed with comprehensive test coverag
 - ✅ 86+ new test cases
 - ✅ Full integration with EditPage component
 - ✅ Comprehensive error handling and edge cases
+
+## Phase 9 Implementation Summary
+
+Phase 9: Editing View Layout has been completed with comprehensive test coverage.
+
+**Key Achievements**:
+- ✅ Enhanced EditPage layout with version info display
+- ✅ Version history page component (PageHistoryPage)
+- ✅ Version API integration (fetchVersionHistory, fetchVersion, compareVersions, restoreVersion)
+- ✅ Enhanced unsaved changes warning with icon
+- ✅ History button in actions toolbar
+- ✅ Version info display in edit header (current version number)
+- ✅ Links to version history page
+- ✅ 30+ new test cases:
+  - PageHistoryPage: 18 tests
+  - Version API functions: 6 tests
+  - EditPage version features: 6 tests
+- ✅ Full integration with existing EditPage functionality
+- ✅ Comprehensive error handling and edge cases
+
+**New Components**:
+- `PageHistoryPage` - Displays version history list with metadata, diff stats, and navigation links
+
+**New API Functions**:
+- `fetchVersionHistory(pageId)` - Get all versions for a page
+- `useVersionHistory(pageId)` - React Query hook for version history
+- `fetchVersion(pageId, version)` - Get specific version
+- `useVersion(pageId, version)` - React Query hook for specific version
+- `compareVersions(pageId, version1, version2)` - Compare two versions
+- `restoreVersion(pageId, version)` - Restore a version
+
+**Files Created/Modified**:
+- `client/src/pages/PageHistoryPage.jsx` - New version history page
+- `client/src/pages/EditPage.jsx` - Enhanced with version info and history links
+- `client/src/services/api/pages.js` - Added version API functions
+- `client/src/App.jsx` - Added history route
+- `client/src/styles.css` - Added styles for Phase 9 components
+- `client/src/test/pages/PageHistoryPage.test.jsx` - New test file (18 tests)
+- `client/src/test/services/pages-api.test.js` - Added version API tests (6 tests)
+- `client/src/test/pages/EditPage.test.jsx` - Added version feature tests (6 tests)

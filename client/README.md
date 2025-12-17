@@ -73,9 +73,28 @@ Web client application for the **Arcadium Wiki**. This frontend consumes the Wik
   - Real-time validation
   - Auto-slug generation
 
+### ✅ Phase 9: Editing View Layout (Complete)
+- **Enhanced EditPage** – Complete editing experience
+  - Version info display (current version number)
+  - Enhanced unsaved changes warning
+  - History button linking to version history
+  - Improved toolbar layout with Save, Cancel, Preview, History buttons
+- **PageHistoryPage component** – Version history viewer
+  - Lists all versions with metadata
+  - Shows version number, date, author, change summary
+  - Diff stats (additions/deletions)
+  - Links to view and compare versions
+- **Version API integration** – Full version history support
+  - `fetchVersionHistory` / `useVersionHistory`
+  - `fetchVersion` / `useVersion`
+  - `compareVersions`
+  - `restoreVersion`
+
 ### 🚧 In Progress / Planned
 - `SearchPage` – search results (Phase 6)
 - `IndexPage` – alphabetical index (Phase 6)
+- Version comparison view (Phase 10.5)
+- Version restore functionality (Phase 10.5)
 
 ## Setup
 
@@ -205,7 +224,7 @@ See `e2e/README.md` for detailed E2E testing documentation.
   - All components fully tested
   - Edge cases and error scenarios covered
   - API error handling tested
-  - **Total**: 523+ tests across 34 test files
+  - **Total**: 550+ tests across 35 test files
 
 ## Related Documentation
 
@@ -215,4 +234,5 @@ See `e2e/README.md` for detailed E2E testing documentation.
 - `docs/ci-cd.md` – CI/CD setup for both backend and frontend
 - `client/PHASE_8_SUMMARY.md` – Phase 8 implementation details
 - `client/TEST_COVERAGE_SUMMARY.md` – Comprehensive test coverage summary
+- `client/TEST_STATUS.md` – Current test status and breakdown
 

@@ -1161,9 +1161,16 @@ body {
 .arc-edit-page-header {
   margin-bottom: 1.5rem;
   display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.arc-edit-page-header-top {
+  display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
+  flex-wrap: wrap;
 }
 
 .arc-edit-page-header-title {
@@ -1171,6 +1178,58 @@ body {
   font-size: 1.5rem;
   font-weight: 600;
   color: var(--arc-text);
+}
+
+.arc-edit-page-version-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--arc-text-subtle);
+}
+
+.arc-edit-page-version-label {
+  font-weight: 500;
+}
+
+.arc-edit-page-version-number {
+  font-weight: 600;
+  color: var(--arc-accent);
+  font-family: monospace;
+}
+
+.arc-edit-page-history-link {
+  margin-left: 0.5rem;
+  padding: 0.25rem 0.75rem;
+  background: var(--arc-surface);
+  border: 1px solid var(--arc-border);
+  border-radius: var(--arc-radius-sm);
+  color: var(--arc-text);
+  text-decoration: none;
+  font-size: 0.8125rem;
+  transition: all 0.2s;
+}
+
+.arc-edit-page-history-link:hover {
+  background: var(--arc-accent-soft);
+  border-color: var(--arc-accent);
+  color: var(--arc-accent);
+}
+
+.arc-edit-page-unsaved-warning {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: var(--arc-error-bg);
+  border: 1px solid var(--arc-error-border);
+  border-radius: var(--arc-radius-sm);
+  color: var(--arc-error-text);
+  font-size: 0.875rem;
+}
+
+.arc-edit-page-unsaved-icon {
+  font-size: 1rem;
 }
 
 .arc-edit-page-metadata {
@@ -1251,10 +1310,241 @@ body {
 
 .arc-edit-page-actions {
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
+  align-items: center;
   gap: 1rem;
   padding-top: 1.5rem;
   border-top: 1px solid var(--arc-border);
+}
+
+.arc-edit-page-actions-left {
+  display: flex;
+  gap: 1rem;
+}
+
+.arc-edit-page-actions-right {
+  display: flex;
+  gap: 1rem;
+}
+
+.arc-edit-page-button-history {
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 1px solid var(--arc-border);
+  background: var(--arc-surface);
+  color: var(--arc-text);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.arc-edit-page-button-history:hover {
+  background: var(--arc-accent-soft);
+  border-color: var(--arc-accent);
+  color: var(--arc-accent);
+}
+
+/* Page History Styles */
+.arc-page-history {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.arc-page-history-header {
+  margin-bottom: 2rem;
+}
+
+.arc-page-history-header-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.arc-page-history-title {
+  margin: 0;
+  font-size: 2rem;
+  font-weight: 600;
+  color: var(--arc-text);
+}
+
+.arc-page-history-back-link {
+  padding: 0.5rem 1rem;
+  background: var(--arc-surface);
+  border: 1px solid var(--arc-border);
+  border-radius: var(--arc-radius-md);
+  color: var(--arc-text);
+  text-decoration: none;
+  font-size: 0.875rem;
+  transition: all 0.2s;
+}
+
+.arc-page-history-back-link:hover {
+  background: var(--arc-accent-soft);
+  border-color: var(--arc-accent);
+  color: var(--arc-accent);
+}
+
+.arc-page-history-page-info {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: var(--arc-surface);
+  border: 1px solid var(--arc-border);
+  border-radius: var(--arc-radius-md);
+}
+
+.arc-page-history-page-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--arc-accent);
+  text-decoration: none;
+}
+
+.arc-page-history-page-title:hover {
+  text-decoration: underline;
+}
+
+.arc-page-history-page-meta {
+  font-size: 0.875rem;
+  color: var(--arc-text-subtle);
+  margin-left: auto;
+}
+
+.arc-page-history-empty {
+  padding: 3rem;
+  text-align: center;
+  color: var(--arc-text-subtle);
+}
+
+.arc-page-history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.arc-page-history-item {
+  padding: 1.5rem;
+  background: var(--arc-surface);
+  border: 1px solid var(--arc-border);
+  border-radius: var(--arc-radius-md);
+  transition: all 0.2s;
+}
+
+.arc-page-history-item:hover {
+  border-color: var(--arc-accent);
+  box-shadow: 0 0 0 1px var(--arc-accent-soft);
+}
+
+.arc-page-history-item-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+
+.arc-page-history-item-left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.arc-page-history-version-number {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--arc-text);
+  font-family: monospace;
+}
+
+.arc-page-history-current-badge {
+  padding: 0.25rem 0.5rem;
+  background: var(--arc-success-bg);
+  border: 1px solid var(--arc-success-border);
+  border-radius: var(--arc-radius-sm);
+  color: var(--arc-success-text);
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.arc-page-history-item-right {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.arc-page-history-date {
+  font-size: 0.875rem;
+  color: var(--arc-text-subtle);
+}
+
+.arc-page-history-author {
+  font-size: 0.875rem;
+  color: var(--arc-text-subtle);
+  margin-bottom: 0.5rem;
+}
+
+.arc-page-history-summary {
+  font-size: 0.875rem;
+  color: var(--arc-text);
+  margin-bottom: 0.75rem;
+  font-style: italic;
+}
+
+.arc-page-history-stats {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.arc-page-history-stat {
+  font-size: 0.8125rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--arc-radius-sm);
+  font-weight: 500;
+}
+
+.arc-page-history-stat-additions {
+  background: var(--arc-success-bg);
+  color: var(--arc-success-text);
+  border: 1px solid var(--arc-success-border);
+}
+
+.arc-page-history-stat-deletions {
+  background: var(--arc-error-bg);
+  color: var(--arc-error-text);
+  border: 1px solid var(--arc-error-border);
+}
+
+.arc-page-history-actions {
+  display: flex;
+  gap: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--arc-border);
+}
+
+.arc-page-history-action-link {
+  padding: 0.5rem 1rem;
+  background: var(--arc-surface);
+  border: 1px solid var(--arc-border);
+  border-radius: var(--arc-radius-sm);
+  color: var(--arc-text);
+  text-decoration: none;
+  font-size: 0.875rem;
+  transition: all 0.2s;
+}
+
+.arc-page-history-action-link:hover {
+  background: var(--arc-accent-soft);
+  border-color: var(--arc-accent);
+  color: var(--arc-accent);
 }
 
 .arc-edit-page-button {
