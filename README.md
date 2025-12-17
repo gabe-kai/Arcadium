@@ -33,12 +33,20 @@ venv\Scripts\activate
 # On Linux/Mac:
 source venv/bin/activate
 
-# Install dependencies
+# Install shared dependencies (from project root)
 pip install -r requirements.txt
+
+# Install service-specific dependencies
+# For Auth Service:
+pip install -r services/auth/requirements.txt
+# For Wiki Service:
+pip install -r services/wiki/requirements.txt
 
 # Note: If psycopg2-binary installation fails (especially on Python 3.14+), try:
 pip install psycopg2-binary --only-binary :all:
 ```
+
+**See [Requirements Structure](docs/requirements-structure.md) for details on the hierarchical requirements system.**
 
 ### Database Setup
 
@@ -114,7 +122,13 @@ The web client is a React-based SPA located in `client/`. See [Client README](cl
 **Current Status:**
 - ✅ Phase 1: Foundation & Setup (Complete)
 - ✅ Phase 2: Reading View - Core Components (Complete)
-- 🚧 Phase 3+: Navigation Tree, TOC, Comments, Search, Editor (In Progress)
+- ✅ Phase 3: Navigation Tree (Complete)
+- ✅ Phase 4: Table of Contents & Backlinks (Complete)
+- ✅ Phase 7: WYSIWYG Editor Integration (Complete)
+- ✅ Phase 8: Page Metadata Editor (Complete)
+- ✅ Authentication System (Sign In/Register UI Complete)
+- 🚧 Phase 5: Comments System (Planned)
+- 🚧 Phase 6: Search Interface (Planned)
 
 ## Documentation
 

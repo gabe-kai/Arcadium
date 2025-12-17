@@ -5,15 +5,20 @@ const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const [token, setTokenState] = useState(() => getToken());
-  const [user, setUser] = useState(null); // Placeholder until real auth integration
+  const [user, setUser] = useState(null);
 
   useEffect(() => {
-    setToken(token);
+    if (token) {
+      setToken(token);
+    } else {
+      clearToken();
+    }
   }, [token]);
 
   const signIn = async (nextToken, userInfo = null) => {
     setTokenState(nextToken);
     setUser(userInfo);
+    setToken(nextToken);
   };
 
   const signOut = () => {

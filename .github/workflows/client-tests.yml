@@ -69,8 +69,9 @@ jobs:
       - name: Run E2E tests
         run: npm run test:e2e
         env:
-          # Set API base URL if needed (defaults to localhost:5000/api)
+          # Set API base URLs if needed (defaults provided)
           VITE_WIKI_API_BASE_URL: ${{ secrets.VITE_WIKI_API_BASE_URL || 'http://localhost:5000/api' }}
+          VITE_AUTH_API_BASE_URL: ${{ secrets.VITE_AUTH_API_BASE_URL || 'http://localhost:8000/api' }}
 
       - name: Upload Playwright report
         uses: actions/upload-artifact@v4
@@ -107,3 +108,4 @@ jobs:
         run: npm run build
         env:
           VITE_WIKI_API_BASE_URL: ${{ secrets.VITE_WIKI_API_BASE_URL || 'http://localhost:5000/api' }}
+          VITE_AUTH_API_BASE_URL: ${{ secrets.VITE_AUTH_API_BASE_URL || 'http://localhost:8000/api' }}

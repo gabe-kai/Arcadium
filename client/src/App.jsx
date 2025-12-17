@@ -5,6 +5,7 @@ import { PageView } from './pages/PageView';
 import { EditPage } from './pages/EditPage';
 import { SearchPage } from './pages/SearchPage';
 import { IndexPage } from './pages/IndexPage';
+import { SignInPage } from './pages/SignInPage';
 
 export function App() {
   return (
@@ -20,6 +21,7 @@ export function App() {
         <Route path="/pages/:pageId/edit" element={<EditPage />} />
         <Route path="/search" element={<SearchPage />} />
         <Route path="/index" element={<IndexPage />} />
+        <Route path="/signin" element={<SignInPage />} />
         {/* Fallback */}
         <Route path="*" element={<HomePage />} />
       </Routes>

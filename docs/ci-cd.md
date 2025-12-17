@@ -88,7 +88,9 @@ The workflow runs three jobs in parallel:
    - Sets up Node.js 20
    - Installs dependencies with `npm ci`
    - Runs Vitest test suite (`npm test -- --run`)
+   - Automatically discovers and runs all test files (including new auth tests)
    - Attempts to generate coverage report (optional)
+   - All tests are mocked and don't require external services
 
 2. **E2E Tests:**
    - Sets up Node.js 20
@@ -105,18 +107,21 @@ The workflow runs three jobs in parallel:
 
 #### Test Coverage
 
-**Unit & Integration Tests (269+ passing tests):**
-- ✅ All React components (Editor, EditorToolbar, Navigation, Layout, etc.)
-- ✅ Page components (PageView, EditPage)
-- ✅ Utility functions (markdown conversion, link handling)
-- ✅ API service functions
+**Unit & Integration Tests (485+ passing tests):**
+- ✅ All React components (Editor, EditorToolbar, Navigation, Layout, Footer, Sidebar, etc.)
+- ✅ Page components (PageView, EditPage, SignInPage, HomePage, SearchPage, IndexPage)
+- ✅ Utility functions (markdown conversion, link handling, slug generation, syntax highlighting)
+- ✅ API service functions (Wiki API, Auth API)
+- ✅ API client interceptors (request/response handling, token management)
+- ✅ Authentication system (AuthContext, auth API, sign-in page, header auth)
 - ✅ Routing and navigation
 - ✅ Edge cases and error scenarios
 
-**E2E Tests:**
+**E2E Tests (32+ tests):**
 - ✅ Page viewing and content rendering
 - ✅ Navigation (breadcrumbs, page navigation, navigation tree)
 - ✅ Table of Contents and Backlinks
+- ✅ Authentication flow (login, register, sign out)
 - ✅ Full user workflows
 
 #### Running Wiki UI Tests Locally

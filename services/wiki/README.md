@@ -14,10 +14,18 @@ source ../venv/bin/activate
 
 2. Install dependencies (if not already installed):
 ```bash
-# From project root:
+# From project root (installs shared dependencies)
 pip install -r requirements.txt
 
-# Note: If psycopg2-binary installation fails (especially on Python 3.14+), try:
+# From services/wiki (installs wiki-specific dependencies)
+cd services/wiki
+pip install -r requirements.txt
+```
+
+**Note:** The root `requirements.txt` contains shared dependencies (Flask, SQLAlchemy, psycopg2-binary, etc.). The service-specific `requirements.txt` only contains wiki-specific packages (Flask-CORS, PyYAML, watchdog, etc.).
+
+**If psycopg2-binary installation fails (especially on Python 3.14+):**
+```bash
 pip install psycopg2-binary --only-binary :all:
 ```
 

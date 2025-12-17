@@ -27,7 +27,7 @@ class Config:
             _database_url = f'postgresql://{db_user}:{db_pass}@{db_host}:{db_port}/{db_name}'
     
     if _database_url and '?' in _database_url:
-        # Remove query parameters (e.g., ?schema=public) as they're not valid for psycopg2
+        # Remove query parameters (e.g., ?schema=public) as they're not valid for PostgreSQL connection strings
         _database_url = _database_url.split('?')[0]
     
     if not _database_url and os.environ.get('FLASK_ENV') != 'testing':

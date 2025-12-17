@@ -6,8 +6,15 @@ Authentication and user management service for Arcadium.
 
 1. **Install dependencies:**
 ```bash
+# From project root (installs shared dependencies)
+pip install -r requirements.txt
+
+# From services/auth (installs auth-specific dependencies)
+cd services/auth
 pip install -r requirements.txt
 ```
+
+**Note:** The root `requirements.txt` contains shared dependencies (Flask, SQLAlchemy, psycopg2-binary, etc.). The service-specific `requirements.txt` only contains auth-specific packages (PyJWT, bcrypt, Flask-Limiter, etc.).
 
 2. **Set up environment variables:**
 ```bash

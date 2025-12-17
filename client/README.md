@@ -150,22 +150,26 @@ See `e2e/README.md` for detailed E2E testing documentation.
 
 ### Test Coverage
 
-- **Component tests**: 400+ test cases covering all components
+- **Component tests**: 430+ test cases covering all components
   - PageView, Breadcrumb, PageNavigation, NavigationTree
-  - TableOfContents, Backlinks, Layout
+  - TableOfContents, Backlinks, Layout, Footer, Sidebar
   - Editor, EditorToolbar, MetadataForm
-  - EditPage and all utility functions
-- **Integration tests**: 11+ test cases
+  - EditPage, HomePage, SearchPage, IndexPage, SignInPage
+  - All utility functions
+- **Integration tests**: 25+ test cases
   - Page creation/editing flows
   - Metadata integration
   - Navigation flows
-- **E2E tests**: 20+ Playwright tests
+  - Authentication flows
+- **E2E tests**: 32+ Playwright tests
   - Full user journeys
   - Browser-based testing
+  - Authentication flow testing
 - **Coverage**: Comprehensive with aggressive edge case coverage
   - All components fully tested
   - Edge cases and error scenarios covered
   - API error handling tested
+  - **Total**: 485+ tests across 30 test files
 
 ## Related Documentation
 

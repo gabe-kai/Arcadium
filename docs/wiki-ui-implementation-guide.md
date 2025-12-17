@@ -16,7 +16,7 @@ This guide outlines the implementation plan for building the Wiki User Interface
 - Service status endpoints
 
 ### 🧩 Frontend UI (In Progress - Phases 1-4, 7-8 Complete)
-**Test Coverage**: 269+ passing unit/integration tests across 20 test files, 20+ E2E tests
+**Test Coverage**: 485+ passing unit/integration tests across 30 test files, 32+ E2E tests
 
 #### ✅ Phase 1: Foundation & Setup (Complete)
 - React + Vite client bootstrapped in `client/`
@@ -895,12 +895,13 @@ src/
 - Component tests (React Testing Library)
 - Utility function tests
 - API service tests (mocked)
-- **Status**: ✅ Comprehensive coverage (269+ passing tests across 20 test files)
+- **Status**: ✅ Comprehensive coverage (485+ passing tests across 30 test files)
   - All components fully tested
   - Edge cases covered
   - Error scenarios handled
   - Integration flows tested
   - Phase 8: 86+ new tests (MetadataForm, slug utility, API functions)
+  - Auth system: 90+ new tests (AuthContext, auth API, sign-in page, header auth)
 
 ### Integration Tests
 - User flows (create page, edit page, comment)
@@ -985,7 +986,7 @@ src/
 - ✅ **Phase 7: WYSIWYG Editor Integration** - Complete (except optional enhancements)
 - ✅ **Phase 8: Page Metadata Editor** - Complete
 
-**Test Coverage**: 269+ passing tests across 20 test files, comprehensive edge case coverage
+**Test Coverage**: 485+ passing tests across 30 test files, comprehensive edge case coverage
 - ✅ **Phase 7: WYSIWYG Editor Integration** - Complete (except optional enhancements)
 - ✅ **Phase 8: Page Metadata Editor** - Complete
 
