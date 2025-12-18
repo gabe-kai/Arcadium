@@ -73,6 +73,58 @@ def test_get_page(client, test_page):
     assert 'backlinks' in data
 
 
+def test_get_page_with_code_blocks(client, test_writer_id):
+    """Test that code blocks are properly converted to HTML in page response"""
+    with mock_auth(test_writer_id, 'writer'):
+        # Create a page with code blocks
+        content = """# Test Page
+
+Here is some text.
+
+```python
+def hello():
+    print("Hello")
+    return True
+```
+
+More text here.
+"""
+        response = client.post(
+            '/api/pages',
+            json={
+                'title': 'Code Block Test',
+                'slug': 'code-block-test',
+                'content': content,
+                'status': 'published'
+            },
+            headers=auth_headers(test_writer_id, 'writer')
+        )
+        assert response.status_code == 201
+        page_data = response.get_json()
+        page_id = page_data['id']
+        
+        # Get the page and check HTML content
+        response = client.get(f'/api/pages/{page_id}')
+        assert response.status_code == 200
+        data = response.get_json()
+        
+        # Check that HTML contains code block
+        html_content = data['html_content']
+        assert '<pre><code' in html_content
+        assert 'class="language-python"' in html_content
+        assert 'def hello():' in html_content
+        assert 'print("Hello")' in html_content
+        assert 'return True' in html_content
+        
+        # Check that code block is not wrapped in paragraph
+        # The code block should be standalone, not inside <p> tags
+        pre_index = html_content.find('<pre>')
+        if pre_index > 0:
+            before_pre = html_content[:pre_index]
+            # Should end with </p> or be empty/newline, not have unclosed <p>
+            assert before_pre.endswith('</p>') or before_pre.strip() == '' or before_pre.endswith('\n')
+
+
 def test_get_page_not_found(client):
     """Test getting a non-existent page"""
     fake_id = str(uuid.uuid4())

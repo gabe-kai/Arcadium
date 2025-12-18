@@ -31,6 +31,12 @@ def create_app(config_name=None):
             "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
             "allow_headers": ["Content-Type", "Authorization"],
             "supports_credentials": True
+        },
+        r"/api/uploads/*": {
+            "origins": ["http://localhost:3000", "http://127.0.0.1:3000"],
+            "methods": ["GET", "OPTIONS"],
+            "allow_headers": ["Content-Type"],
+            "supports_credentials": False
         }
     })
     

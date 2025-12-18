@@ -186,16 +186,44 @@ def markdown_to_html(markdown: str) -> str:
     
     html = markdown
     
-    # Headers (H1-H6) - do this first before other processing
+    # Code blocks ```code``` or ```language\ncode``` - do FIRST before other processing to preserve content
+    # This regex handles:
+    # - Optional language specifier after opening ``` (e.g., ```python)
+    # - Multi-line code content
+    # - Preserves whitespace and newlines
+    code_blocks = []
+    def replace_code_block(match):
+        full_match = match.group(0)
+        # Pattern matches: ```language\ncode``` or ```\ncode``` or ```code```
+        # Group 1: optional language (word characters)
+        # Group 2: code content (everything until closing ```)
+        lang_match = re.match(r'```(\w+)?\s*\n?(.*?)```', full_match, re.DOTALL)
+        if lang_match:
+            lang = lang_match.group(1) or ''
+            code_content = lang_match.group(2) if lang_match.group(2) else ''
+            # Remove leading/trailing newlines from code content, but preserve internal whitespace
+            code_content = code_content.strip('\n')
+            # Preserve whitespace - HTML will render it with <pre>
+            # Escape HTML entities in code content
+            code_content = code_content.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
+            # Store with placeholder - use format that won't match other regex patterns
+            # Use angle brackets and numbers to avoid matching bold/italic/link patterns
+            placeholder = f'<CODEBLOCK{len(code_blocks)}CODEBLOCK>'
+            code_blocks.append((placeholder, lang, code_content))
+            return placeholder
+        return full_match
+    
+    # Find and replace all code blocks (non-greedy match to handle multiple blocks)
+    # Pattern: ``` followed by optional language, optional whitespace/newline, then code content, then ```
+    html = re.sub(r'```(\w+)?\s*\n?(.*?)```', replace_code_block, html, flags=re.DOTALL)
+    
+    # Headers (H1-H6) - do after code blocks to avoid conflicts
     html = re.sub(r'^# (.+)$', r'<h1>\1</h1>', html, flags=re.MULTILINE)
     html = re.sub(r'^## (.+)$', r'<h2>\1</h2>', html, flags=re.MULTILINE)
     html = re.sub(r'^### (.+)$', r'<h3>\1</h3>', html, flags=re.MULTILINE)
     html = re.sub(r'^#### (.+)$', r'<h4>\1</h4>', html, flags=re.MULTILINE)
     html = re.sub(r'^##### (.+)$', r'<h5>\1</h5>', html, flags=re.MULTILINE)
     html = re.sub(r'^###### (.+)$', r'<h6>\1</h6>', html, flags=re.MULTILINE)
-    
-    # Code blocks ```code``` - do before other processing to preserve content
-    html = re.sub(r'```([^`]+)```', r'<pre><code>\1</code></pre>', html, flags=re.DOTALL)
     
     # Parse lists (bullet and numbered) - handle nested lists
     # Do this BEFORE header conversion so we can parse markdown list syntax
@@ -222,7 +250,30 @@ def markdown_to_html(markdown: str) -> str:
     # Inline code `code` - do after other processing to avoid conflicts
     html = re.sub(r'`([^`]+)`', r'<code>\1</code>', html)
     
+    # Restore code blocks before paragraph processing
+    # Use a unique marker that won't be split across lines
+    for placeholder, lang, code_content in code_blocks:
+        lang_attr = f' class="language-{lang}"' if lang else ''
+        # Preserve newlines in code content - they'll be rendered by <pre>
+        code_html = f'<pre><code{lang_attr}>{code_content}</code></pre>'
+        html = html.replace(placeholder, code_html)
+    
     # Paragraphs (lines not starting with #, *, -, <ul, <ol, <li, <pre, etc.)
+    # Handle code blocks carefully - they may span multiple lines after restoration
+    # First, protect code blocks by replacing them with placeholders
+    code_block_pattern = re.compile(r'(<pre><code[^>]*>.*?</code></pre>)', re.DOTALL)
+    protected_blocks = []
+    def protect_code_block(match):
+        block = match.group(1)
+        # Use placeholder format that won't match bold/italic/link patterns
+        # Use a format that looks like an HTML tag so it's skipped by paragraph logic
+        placeholder = f'<PROTECTEDCODE{len(protected_blocks)}PROTECTEDCODE>'
+        protected_blocks.append((placeholder, block))
+        return placeholder
+    
+    html = code_block_pattern.sub(protect_code_block, html)
+    
+    # Now split by newlines for paragraph processing
     lines = html.split('\n')
     result = []
     in_paragraph = False
@@ -230,13 +281,23 @@ def markdown_to_html(markdown: str) -> str:
     
     for line in lines:
         stripped = line.strip()
+        
+        # Check if this line contains a protected code block - must check before other processing
+        if '<PROTECTEDCODE' in line:
+            if in_paragraph:
+                result.append(f'<p>{" ".join(current_paragraph)}</p>')
+                current_paragraph = []
+                in_paragraph = False
+            result.append(line)
+            continue
+        
         if not stripped:
             if in_paragraph:
                 result.append(f'<p>{" ".join(current_paragraph)}</p>')
                 current_paragraph = []
                 in_paragraph = False
             result.append('')
-        elif stripped.startswith(('<h', '<p', '<pre', '<ul', '<ol', '<li', '<blockquote', '</ul', '</ol')):
+        elif stripped.startswith(('<h', '<p', '<pre', '<ul', '<ol', '<li', '<blockquote', '</ul', '</ol', '<PROTECTEDCODE')):
             if in_paragraph:
                 result.append(f'<p>{" ".join(current_paragraph)}</p>')
                 current_paragraph = []
@@ -249,7 +310,13 @@ def markdown_to_html(markdown: str) -> str:
     if in_paragraph and current_paragraph:
         result.append(f'<p>{" ".join(current_paragraph)}</p>')
     
-    return '\n'.join(result)
+    html = '\n'.join(result)
+    
+    # Restore protected code blocks - must happen after all processing
+    for placeholder, block in protected_blocks:
+        html = html.replace(placeholder, block)
+    
+    return html
 
 
 def extract_internal_links(content: str) -> list:

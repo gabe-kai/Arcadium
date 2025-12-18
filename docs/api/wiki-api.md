@@ -117,6 +117,12 @@ GET /api/pages/{page_id}
 - Archived pages return 404 for viewers and writers without permission.
 - The response includes permission flags (`can_edit`, `can_delete`, `can_archive`) based on the authenticated user's role and relationship to the page.
 
+**Note on `html_content`**: The HTML content is generated from markdown and includes:
+- Properly formatted code blocks with language classes (e.g., `<pre><code class="language-python">`)
+- Preserved whitespace and indentation in code blocks
+- Syntax highlighting support (frontend uses Prism.js)
+- All markdown elements converted to semantic HTML
+
 **Permissions:** Public (viewer) for published pages, Creator/Admin for drafts, Admin/Writer (with permission) for archived pages
 
 ---

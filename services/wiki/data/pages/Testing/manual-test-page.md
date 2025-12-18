@@ -49,7 +49,7 @@ Numbered List:
 
 ### Image Formatting
 
-![](http://localhost:5000/api/uploads/images/d7ad1b64-387a-4f1a-bc42-e74578c90354.png)
+![](http://localhost:5000/api/uploads/images/93416a64-7b18-4a3b-9e9b-81280ca0a18a.png)
 
 ### Code Blocks
 

@@ -15,7 +15,7 @@ This guide outlines the implementation plan for building the Wiki User Interface
 - Admin dashboard endpoints
 - Service status endpoints
 
-### 🧩 Frontend UI (In Progress - Phases 1-6, 7-9, 10, 10.5 Complete)
+### 🧩 Frontend UI (In Progress - Phases 1-11 Complete)
 **Test Coverage**: 560+ passing unit/integration tests across 35 test files, 32+ E2E tests
 
 #### ✅ Phase 1: Foundation & Setup (Complete)
@@ -196,6 +196,7 @@ This guide outlines the implementation plan for building the Wiki User Interface
   - [x] Display page title and metadata (updated_at, word_count, size, status)
   - [x] Apply basic typography styles (via global CSS)
   - [x] Syntax highlighting for code blocks (Prism.js with multiple languages)
+  - [x] Code blocks with proper formatting (whitespace preservation, language specifiers, multi-line support)
   - [x] Responsive image handling (max-width 100%, rounded corners, shadows)
   - [x] Table styling (striped rows, hover effects, borders)
   - [x] Enhanced block quote styling (background, decorative quote mark)
@@ -582,6 +583,53 @@ This guide outlines the implementation plan for building the Wiki User Interface
 
 ---
 
+### Phase 10.5: Version History & Comparison
+**Goal**: Implement version history viewing and comparison
+
+#### Tasks:
+- [x] **Version History Modal/Page** ✅
+  - [x] Display list of all versions - ✅ Implemented in Phase 9
+  - [x] Show version number, date, author, change summary - ✅ Implemented in Phase 9
+  - [x] Show diff stats (added/removed lines, char diff) - ✅ Implemented in Phase 9
+  - [x] Click to view specific version - ✅ Implemented
+  - [x] "Compare" button to compare versions - ✅ Implemented
+
+- [x] **Version View** ✅
+  - [x] Display specific version content
+  - [x] Show version metadata
+  - [x] "Restore" button (for admins/writers)
+  - [x] Link back to current version
+
+- [x] **Version Comparison** ✅
+  - [x] Side-by-side comparison view
+  - [x] Inline diff view (unified diff)
+  - [x] Highlight additions (green) and deletions (red)
+  - [x] Show diff stats summary
+  - [x] Scroll synchronization
+  - [x] Toggle between side-by-side and inline views
+
+- [x] **Version Features** ✅
+  - [x] Access from "History" button in editor - ✅ Implemented in Phase 9
+  - [x] Access from page header (version number link) - ✅ Implemented in Phase 9
+  - [ ] Keyboard shortcuts for navigation - **Optional enhancement**
+  - [ ] Export version as markdown/HTML - **Optional enhancement**
+
+#### API Endpoints Used:
+- `GET /api/pages/{page_id}/versions` - List all versions ✅ (in use)
+- `GET /api/pages/{page_id}/versions/{version}` - Get specific version ✅ (in use)
+- `GET /api/pages/{page_id}/versions/compare?from={v1}&to={v2}` - Compare versions ✅ (in use)
+- `POST /api/pages/{page_id}/versions/{version}/restore` - Restore version ✅ (in use)
+
+#### Deliverables:
+- ✅ Version history list (Phase 9)
+- ✅ Version viewing (PageVersionView component)
+- ✅ Version comparison (PageVersionCompare component - side-by-side and inline)
+- ✅ Restore functionality
+
+**Phase 10.5 Status: ✅ COMPLETE** (except optional enhancements)
+
+---
+
 ### Phase 11: Page Delete and Archive Functionality
 **Goal**: Implement page deletion and archiving with role-based permissions
 
@@ -637,54 +685,7 @@ This guide outlines the implementation plan for building the Wiki User Interface
 
 ---
 
-### Phase 10.5: Version History & Comparison
-**Goal**: Implement version history viewing and comparison
-
-#### Tasks:
-- [x] **Version History Modal/Page** ✅
-  - [x] Display list of all versions - ✅ Implemented in Phase 9
-  - [x] Show version number, date, author, change summary - ✅ Implemented in Phase 9
-  - [x] Show diff stats (added/removed lines, char diff) - ✅ Implemented in Phase 9
-  - [x] Click to view specific version - ✅ Implemented
-  - [x] "Compare" button to compare versions - ✅ Implemented
-
-- [x] **Version View** ✅
-  - [x] Display specific version content
-  - [x] Show version metadata
-  - [x] "Restore" button (for admins/writers)
-  - [x] Link back to current version
-
-- [x] **Version Comparison** ✅
-  - [x] Side-by-side comparison view
-  - [x] Inline diff view (unified diff)
-  - [x] Highlight additions (green) and deletions (red)
-  - [x] Show diff stats summary
-  - [x] Scroll synchronization
-  - [x] Toggle between side-by-side and inline views
-
-- [x] **Version Features** ✅
-  - [x] Access from "History" button in editor - ✅ Implemented in Phase 9
-  - [x] Access from page header (version number link) - ✅ Implemented in Phase 9
-  - [ ] Keyboard shortcuts for navigation - **Optional enhancement**
-  - [ ] Export version as markdown/HTML - **Optional enhancement**
-
-#### API Endpoints Used:
-- `GET /api/pages/{page_id}/versions` - List all versions ✅ (in use)
-- `GET /api/pages/{page_id}/versions/{version}` - Get specific version ✅ (in use)
-- `GET /api/pages/{page_id}/versions/compare?from={v1}&to={v2}` - Compare versions ✅ (in use)
-- `POST /api/pages/{page_id}/versions/{version}/restore` - Restore version ✅ (in use)
-
-#### Deliverables:
-- ✅ Version history list (Phase 9)
-- ✅ Version viewing (PageVersionView component)
-- ✅ Version comparison (PageVersionCompare component - side-by-side and inline)
-- ✅ Restore functionality
-
-**Phase 10.5 Status: ✅ COMPLETE** (except optional enhancements)
-
----
-
-### Phase 11: Responsive Design
+### Phase 12: Responsive Design
 **Goal**: Make UI work on mobile, tablet, and desktop
 
 #### Tasks:
@@ -720,7 +721,7 @@ This guide outlines the implementation plan for building the Wiki User Interface
 
 ---
 
-### Phase 12: Accessibility
+### Phase 13: Accessibility
 **Goal**: Ensure UI is accessible to all users
 
 #### Tasks:
@@ -755,7 +756,7 @@ This guide outlines the implementation plan for building the Wiki User Interface
 
 ---
 
-### Phase 13: Performance Optimization
+### Phase 14: Performance Optimization
 **Goal**: Ensure fast, smooth user experience
 
 #### Tasks:
@@ -789,7 +790,7 @@ This guide outlines the implementation plan for building the Wiki User Interface
 
 ---
 
-### Phase 14: Polish & Enhancements
+### Phase 15: Polish & Enhancements
 **Goal**: Add polish and user experience enhancements
 
 #### Tasks:
@@ -1010,12 +1011,12 @@ src/
 
 ### Enhanced Features
 - Phase 6: Search Interface
-- Phase 11: Responsive Design
-- Phase 12: Accessibility
+- Phase 12: Responsive Design
+- Phase 13: Accessibility
 
 ### Polish
-- Phase 13: Performance Optimization
-- Phase 14: Polish & Enhancements
+- Phase 14: Performance Optimization
+- Phase 15: Polish & Enhancements
 
 ---
 
@@ -1023,23 +1024,23 @@ src/
 
 ### Immediate Next Steps
 
-1. **Phase 11: Responsive Design** (Next Priority)
+1. **Phase 12: Responsive Design** (Next Priority)
    - Mobile (< 768px) layout
    - Tablet (768px - 1024px) layout
    - Desktop (> 1024px) layout
    - Responsive components
 
-2. **Phase 12: Accessibility**
+2. **Phase 13: Accessibility**
    - Keyboard navigation
    - Screen reader support
    - Visual accessibility
 
-3. **Phase 13: Performance Optimization**
+3. **Phase 14: Performance Optimization**
    - Code splitting
    - Caching strategies
    - Optimization techniques
 
-4. **Phase 14: Polish & Enhancements**
+4. **Phase 15: Polish & Enhancements**
    - Animations & transitions
    - Error handling improvements
    - Theme support
@@ -1057,6 +1058,7 @@ src/
 - ✅ **Phase 9: Editing View Layout** - Complete
 - ✅ **Phase 10: Page Creation Flow** - Complete
 - ✅ **Phase 10.5: Version History & Comparison** - Complete (except optional enhancements)
+- ✅ **Phase 11: Page Delete and Archive Functionality** - Complete
 
 **Test Coverage**: 560+ passing tests across 35 test files, comprehensive edge case coverage
 
@@ -1304,3 +1306,39 @@ Phase 11: Page Delete and Archive Functionality has been completed.
 - `test_archived_page_hidden_from_list` - Archived pages excluded from list views
 
 **Phase 11 Status: ✅ COMPLETE**
+
+---
+
+## Code Block Implementation Summary
+
+Code block functionality has been fully implemented and tested across both backend and frontend.
+
+**Backend Implementation:**
+- ✅ Markdown code blocks (```language\ncode```) properly converted to HTML
+- ✅ Language specifiers supported (e.g., ```python, ```javascript)
+- ✅ Whitespace and indentation preservation
+- ✅ Multi-line code block support
+- ✅ HTML entity escaping in code content
+- ✅ Code blocks not wrapped in paragraph tags
+- ✅ 7 comprehensive backend tests covering all scenarios
+
+**Frontend Implementation:**
+- ✅ Code blocks render correctly in PageView
+- ✅ Syntax highlighting via Prism.js (multiple languages)
+- ✅ Language classes applied for highlighting
+- ✅ Whitespace preserved via CSS (`white-space: pre`)
+- ✅ 4 frontend tests for code block rendering
+- ✅ Integration test for full page creation/viewing flow
+
+**Key Features:**
+- Language specifiers: Code blocks can include language identifiers (e.g., ```python)
+- Whitespace preservation: Indentation and newlines are preserved
+- HTML conversion: Code blocks converted to `<pre><code class="language-{lang}">` HTML
+- Syntax highlighting: Frontend uses Prism.js for syntax highlighting
+- Multi-line support: Code blocks can span multiple lines with proper formatting
+- HTML entity escaping: Code content is properly escaped to prevent HTML injection
+
+**Test Coverage:**
+- Backend: 7 tests in `tests/test_utils/test_markdown_service.py`
+- Frontend: 4 tests in `client/src/test/pages/PageView.test.jsx`
+- Integration: 1 test in `tests/test_api/test_page_routes.py`

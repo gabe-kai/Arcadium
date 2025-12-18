@@ -69,15 +69,71 @@ export function processLinks(container) {
   
   // Process images - convert relative URLs to absolute
   const images = container.querySelectorAll('img');
+  // VITE_WIKI_API_BASE_URL is typically http://localhost:5000/api (with /api)
   const baseURL = import.meta.env.VITE_WIKI_API_BASE_URL || 'http://localhost:5000/api';
+  const baseWithoutApi = baseURL.endsWith('/api') ? baseURL.slice(0, -4) : baseURL.replace(/\/api$/, '');
+  
   images.forEach((img) => {
     const src = img.getAttribute('src');
-    if (src && src.startsWith('/uploads/')) {
-      // Convert relative upload URL to absolute
-      img.setAttribute('src', `${baseURL}${src}`);
-    } else if (src && src.startsWith('/') && !src.startsWith('//') && !src.startsWith('http://') && !src.startsWith('https://')) {
-      // Other relative URLs
-      img.setAttribute('src', `${baseURL}${src}`);
+    if (!src) return;
+    
+    // Skip if already processed (prevents duplicate processing on re-renders)
+    if (img.hasAttribute('data-processed')) {
+      return;
+    }
+    
+    // Skip if already absolute (http:// or https://) - no processing needed
+    if (src.startsWith('http://') || src.startsWith('https://')) {
+      img.setAttribute('data-processed', 'true');
+      return;
+    }
+    
+    // Calculate new src
+    let newSrc = src;
+    if (src.startsWith('/api/')) {
+      // Already has /api prefix (e.g., /api/uploads/images/...)
+      newSrc = `${baseWithoutApi}${src}`;
+    } else if (src.startsWith('/')) {
+      // Relative URL starting with / (e.g., /uploads/images/...)
+      // Add /api prefix
+      newSrc = `${baseWithoutApi}/api${src}`;
+    } else {
+      // Relative URL without leading / - shouldn't happen, but mark as processed
+      img.setAttribute('data-processed', 'true');
+      return;
+    }
+    
+    // Only update if src actually changed (prevents aborting in-flight requests)
+    if (newSrc !== src) {
+      // Mark as processed BEFORE changing src to prevent re-processing
+      img.setAttribute('data-processed', 'true');
+      img.setAttribute('src', newSrc);
+    } else {
+      // Mark as processed even if src didn't change
+      img.setAttribute('data-processed', 'true');
+    }
+    
+    // Add error handler to silently handle failed loads (prevents console noise)
+    // Only add if not already set
+    if (!img.hasAttribute('data-error-handler')) {
+      img.setAttribute('data-error-handler', 'true');
+      img.onerror = function() {
+        // Silently handle image load errors - don't log to console
+        // The broken image icon will still show, but we won't spam the console
+        // Optionally hide broken images after a delay
+        setTimeout(() => {
+          if (this.naturalWidth === 0 || this.naturalHeight === 0) {
+            // Image failed to load - could hide it or show placeholder
+            // For now, just leave it (broken image icon is fine)
+          }
+        }, 100);
+      };
+    }
+    
+    // Add loading="lazy" for better performance (browser will load when visible)
+    // This also helps prevent unnecessary requests during navigation
+    if (!img.hasAttribute('loading')) {
+      img.setAttribute('loading', 'lazy');
     }
   });
 }

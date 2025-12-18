@@ -40,16 +40,26 @@ export function EditorToolbar({ editor, pageId }) {
     if (url) {
       // Ensure URL is absolute - if it's relative, make it absolute
       let imageUrl = url;
-      if (url.startsWith('/uploads/')) {
-        // Relative URL from uploads - prepend API base URL
-        const baseURL = import.meta.env.VITE_WIKI_API_BASE_URL || 'http://localhost:5000/api';
-        imageUrl = `${baseURL}${url}`;
-      } else if (url.startsWith('/') && !url.startsWith('//')) {
-        // Other relative URLs - prepend API base URL
-        const baseURL = import.meta.env.VITE_WIKI_API_BASE_URL || 'http://localhost:5000/api';
-        imageUrl = `${baseURL}${url}`;
+      // VITE_WIKI_API_BASE_URL is typically http://localhost:5000/api (with /api)
+      const baseURL = import.meta.env.VITE_WIKI_API_BASE_URL || 'http://localhost:5000/api';
+      
+      if (url.startsWith('http://') || url.startsWith('https://')) {
+        // Already absolute, use as-is
+        imageUrl = url;
+      } else if (url.startsWith('/api/')) {
+        // URL already has /api prefix (e.g., /api/uploads/images/...)
+        // Remove /api from baseURL if present, then prepend
+        const baseWithoutApi = baseURL.endsWith('/api') ? baseURL.slice(0, -4) : baseURL.replace(/\/api$/, '');
+        imageUrl = `${baseWithoutApi}${url}`;
+      } else if (url.startsWith('/')) {
+        // Relative URL starting with / (e.g., /uploads/images/...)
+        // Add /api prefix and prepend base URL (without /api)
+        const baseWithoutApi = baseURL.endsWith('/api') ? baseURL.slice(0, -4) : baseURL.replace(/\/api$/, '');
+        imageUrl = `${baseWithoutApi}/api${url}`;
+      } else {
+        // Relative URL without leading / - prepend base URL
+        imageUrl = `${baseURL}/${url}`;
       }
-      // If already absolute (http:// or https://), use as-is
       editor.chain().focus().setImage({ src: imageUrl }).run();
     }
   };

@@ -98,6 +98,7 @@ Markdown content here...
 - **Frontmatter is hidden from editor** - The frontend editor only displays the markdown content (frontmatter is parsed and stripped for display)
 - **Metadata form** - Standard fields (title, slug, section, status, order) are managed through the Metadata Form UI
 - **Custom fields preserved** - Custom frontmatter fields (e.g., `tags`, `author`, `category`) are preserved when users edit pages
+- **Code blocks** - Code blocks (```language\ncode```) are properly converted to HTML with language classes, whitespace preservation, and syntax highlighting support
 - **AI system compatible** - AI content management systems can write files with custom frontmatter fields, and they will be preserved through the sync and edit workflow
 
 ## Frontend Integration
@@ -160,6 +161,31 @@ python -m app.sync watch --admin-user-id <uuid>
 - **Manual sync**: For batch operations, one-time syncs, or when you want control over when syncing happens
 
 For more details, see [Wiki AI Content Management](../../docs/wiki-ai-content-management.md).
+
+## Markdown Processing
+
+### Code Blocks
+
+The wiki service includes comprehensive support for code blocks in markdown:
+
+- **Language specifiers**: Code blocks can include language identifiers (e.g., ` ```python `)
+- **Whitespace preservation**: Indentation and newlines are preserved in code blocks
+- **HTML conversion**: Code blocks are converted to `<pre><code class="language-{lang}">` HTML
+- **Syntax highlighting**: Frontend uses Prism.js for syntax highlighting
+- **Multi-line support**: Code blocks can span multiple lines with proper formatting
+- **HTML entity escaping**: Code content is properly escaped to prevent HTML injection
+
+**Example:**
+```markdown
+```python
+def hello():
+    print("Hello")
+    return True
+```
+```
+
+**Backend Tests**: 7 comprehensive tests covering all code block scenarios
+**Frontend Tests**: 4 tests for code block rendering in PageView
 
 ## Testing
 

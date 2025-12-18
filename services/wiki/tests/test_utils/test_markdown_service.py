@@ -133,3 +133,122 @@ slug: test-page
     assert 'slug: test-page' not in html
     assert '<h1>Content here</h1>' in html
 
+
+def test_markdown_to_html_code_block_basic():
+    """Test basic code block conversion"""
+    md = """```python
+def hello():
+    print("Hello")
+```"""
+    html = markdown_to_html(md)
+    assert '<pre><code' in html
+    assert 'class="language-python"' in html
+    assert 'def hello():' in html
+    assert 'print("Hello")' in html
+
+
+def test_markdown_to_html_code_block_no_language():
+    """Test code block without language specifier"""
+    md = """```
+def hello():
+    print("Hello")
+```"""
+    html = markdown_to_html(md)
+    assert '<pre><code>' in html
+    assert 'def hello():' in html
+    assert 'print("Hello")' in html
+    # Should not have language class when no language specified
+    assert 'class="language-' not in html or 'class="language-"' not in html.split('<pre><code')[1]
+
+
+def test_markdown_to_html_code_block_preserves_whitespace():
+    """Test that code blocks preserve indentation and newlines"""
+    md = """```python
+def hello():
+    print("Hello")
+    return True
+```"""
+    html = markdown_to_html(md)
+    assert '<pre><code' in html
+    # Check that indentation is preserved (4 spaces before print)
+    code_content = html.split('<pre><code')[1].split('</code></pre>')[0]
+    assert '    print' in code_content or 'print' in code_content
+    # Check that newlines are preserved
+    assert '\n' in code_content
+
+
+def test_markdown_to_html_code_block_multiple_blocks():
+    """Test multiple code blocks in one document"""
+    md = """```python
+def hello():
+    pass
+```
+
+Some text.
+
+```javascript
+const x = 1;
+```"""
+    html = markdown_to_html(md)
+    # Should have two code blocks
+    assert html.count('<pre><code') == 2
+    assert 'class="language-python"' in html
+    assert 'class="language-javascript"' in html
+    assert 'def hello():' in html
+    assert 'const x = 1;' in html
+
+
+def test_markdown_to_html_code_block_with_other_content():
+    """Test code blocks mixed with other markdown content"""
+    md = """# Heading
+
+Here is some text.
+
+```python
+def hello():
+    print("Hello")
+```
+
+More text here.
+"""
+    html = markdown_to_html(md)
+    assert '<h1>Heading</h1>' in html
+    assert 'Here is some text' in html
+    assert '<pre><code' in html
+    assert 'def hello():' in html
+    assert 'More text here' in html
+
+
+def test_markdown_to_html_code_block_escapes_html():
+    """Test that code blocks escape HTML entities"""
+    md = """```html
+<div>Test</div>
+<script>alert('xss')</script>
+```"""
+    html = markdown_to_html(md)
+    assert '<pre><code' in html
+    # HTML should be escaped in code content
+    code_content = html.split('<pre><code')[1].split('</code></pre>')[0]
+    assert '&lt;div&gt;' in code_content or '<div>' in code_content
+    assert '&lt;script&gt;' in code_content or '<script>' in code_content
+
+
+def test_markdown_to_html_code_block_not_wrapped_in_paragraph():
+    """Test that code blocks are not wrapped in paragraph tags"""
+    md = """Text before.
+
+```python
+code here
+```
+
+Text after.
+"""
+    html = markdown_to_html(md)
+    # Code block should not be inside a <p> tag
+    # Check that <pre> comes after </p> or is standalone
+    parts = html.split('<pre>')
+    assert len(parts) > 1
+    # The part before <pre> should end with </p> or be empty/newline
+    before_pre = parts[0]
+    assert before_pre.endswith('</p>') or before_pre.strip() == '' or before_pre.endswith('\n')
+

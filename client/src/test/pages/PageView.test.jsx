@@ -510,6 +510,98 @@ describe('PageView', () => {
     }, { timeout: 2000 });
   });
 
+  it('renders code blocks with language specifier', async () => {
+    const mockPage = {
+      id: 'test-page-id',
+      title: 'Test Page',
+      html_content: '<pre><code class="language-python">def hello():\n    print("Hello")</code></pre>',
+    };
+
+    pagesApi.usePage.mockReturnValue({
+      data: mockPage,
+      isLoading: false,
+      isError: false,
+    });
+
+    renderPageView('test-page-id');
+    
+    // Check that code block is rendered
+    const codeBlock = screen.getByText(/def hello\(\):/);
+    expect(codeBlock).toBeInTheDocument();
+    expect(codeBlock.closest('pre')).toBeInTheDocument();
+    expect(codeBlock.closest('code')).toHaveClass('language-python');
+  });
+
+  it('renders multiple code blocks', async () => {
+    const mockPage = {
+      id: 'test-page-id',
+      title: 'Test Page',
+      html_content: '<p>Text before</p><pre><code class="language-python">def hello(): pass</code></pre><p>Text between</p><pre><code class="language-javascript">const x = 1;</code></pre><p>Text after</p>',
+    };
+
+    pagesApi.usePage.mockReturnValue({
+      data: mockPage,
+      isLoading: false,
+      isError: false,
+    });
+
+    renderPageView('test-page-id');
+    
+    // Check that both code blocks are rendered
+    const codeBlocks = screen.getAllByRole('code', { hidden: true });
+    expect(codeBlocks.length).toBeGreaterThanOrEqual(2);
+    
+    // Check content
+    expect(screen.getByText(/def hello\(\): pass/)).toBeInTheDocument();
+    expect(screen.getByText(/const x = 1;/)).toBeInTheDocument();
+  });
+
+  it('preserves whitespace in code blocks', async () => {
+    const mockPage = {
+      id: 'test-page-id',
+      title: 'Test Page',
+      html_content: '<pre><code>def hello():\n    print("Hello")\n    return True</code></pre>',
+    };
+
+    pagesApi.usePage.mockReturnValue({
+      data: mockPage,
+      isLoading: false,
+      isError: false,
+    });
+
+    renderPageView('test-page-id');
+    
+    // Check that code block content is present
+    const codeBlock = screen.getByText(/def hello\(\):/);
+    expect(codeBlock).toBeInTheDocument();
+    
+    // The whitespace should be preserved in the HTML (CSS handles rendering)
+    const preElement = codeBlock.closest('pre');
+    expect(preElement).toBeInTheDocument();
+  });
+
+  it('renders code blocks mixed with other content', async () => {
+    const mockPage = {
+      id: 'test-page-id',
+      title: 'Test Page',
+      html_content: '<h1>Heading</h1><p>Text before code block.</p><pre><code class="language-python">code here</code></pre><p>Text after code block.</p>',
+    };
+
+    pagesApi.usePage.mockReturnValue({
+      data: mockPage,
+      isLoading: false,
+      isError: false,
+    });
+
+    renderPageView('test-page-id');
+    
+    // Check that all content is rendered
+    expect(screen.getByText('Heading')).toBeInTheDocument();
+    expect(screen.getByText('Text before code block.')).toBeInTheDocument();
+    expect(screen.getByText('code here')).toBeInTheDocument();
+    expect(screen.getByText('Text after code block.')).toBeInTheDocument();
+  });
+
   it('calls processLinks after content renders', async () => {
     const { processLinks } = await import('../../utils/linkHandler');
     vi.mocked(processLinks).mockClear();
