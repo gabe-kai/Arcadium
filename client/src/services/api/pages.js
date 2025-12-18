@@ -171,3 +171,19 @@ export function restoreVersion(pageId, version) {
   if (!pageId || !version) return null;
   return apiClient.post(`/pages/${pageId}/versions/${version}/restore`).then((res) => res.data);
 }
+
+// Delete and archive page functions
+export function deletePage(pageId) {
+  if (!pageId) return Promise.reject(new Error('Page ID is required'));
+  return apiClient.delete(`/pages/${pageId}`).then((res) => res.data);
+}
+
+export function archivePage(pageId) {
+  if (!pageId) return Promise.reject(new Error('Page ID is required'));
+  return apiClient.post(`/pages/${pageId}/archive`).then((res) => res.data);
+}
+
+export function unarchivePage(pageId) {
+  if (!pageId) return Promise.reject(new Error('Page ID is required'));
+  return apiClient.delete(`/pages/${pageId}/archive`).then((res) => res.data);
+}

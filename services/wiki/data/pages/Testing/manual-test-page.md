@@ -1,8 +1,9 @@
 ---
-section: Testing
-status: published
 title: Manual Test Page
 slug: manual-test-page
+section: Testing
+status: published
+order: 0
 ---
 # Manual Test Page
 
@@ -47,6 +48,8 @@ Numbered List:
                 
 
 ### Image Formatting
+
+![](http://localhost:5000/api/uploads/images/d7ad1b64-387a-4f1a-bc42-e74578c90354.png)
 
 ### Code Blocks
 

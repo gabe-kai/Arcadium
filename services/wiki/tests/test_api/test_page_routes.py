@@ -406,6 +406,245 @@ def test_cors_headers_present(client, test_page):
     # CORS should allow localhost:3000 (React dev server)
     assert 'localhost:3000' in response.headers.get('Access-Control-Allow-Origin', '') or \
            '*' in response.headers.get('Access-Control-Allow-Origin', '')
+
+
+def test_archive_page_success(client, app, test_writer_id):
+    """Test successfully archiving a page"""
+    with app.app_context():
+        page = Page(
+            title="Page to Archive",
+            slug="page-to-archive",
+            content="# Content",
+            created_by=test_writer_id,
+            updated_by=test_writer_id,
+            status='published',
+            file_path="page-to-archive.md"
+        )
+        db.session.add(page)
+        db.session.commit()
+        page_id = str(page.id)
+    
+    with mock_auth(test_writer_id, 'writer'):
+        response = client.post(f'/api/pages/{page_id}/archive',
+            headers=auth_headers(test_writer_id, 'writer')
+        )
+        assert response.status_code == 200
+        data = response.get_json()
+        assert 'message' in data
+        assert 'Page archived successfully' in data['message']
+        assert data['page']['status'] == 'archived'
+        
+        # Verify page is archived in database
+        with app.app_context():
+            archived_page = db.session.get(Page, page_id)
+            assert archived_page.status == 'archived'
+
+
+def test_archive_page_requires_auth(client, app, test_page):
+    """Test that archiving requires authentication"""
+    page_id = str(test_page.id)
+    response = client.post(f'/api/pages/{page_id}/archive')
+    assert response.status_code == 401
+
+
+def test_archive_page_insufficient_permissions(client, app, test_writer_id, test_user_id):
+    """Test that writers cannot archive pages they didn't create"""
+    with app.app_context():
+        # Create page by another user
+        page = Page(
+            title="Other User's Page",
+            slug="other-user-page",
+            content="# Content",
+            created_by=test_user_id,
+            updated_by=test_user_id,
+            status='published',
+            file_path="other-user-page.md"
+        )
+        db.session.add(page)
+        db.session.commit()
+        page_id = str(page.id)
+    
+    with mock_auth(test_writer_id, 'writer'):
+        response = client.post(f'/api/pages/{page_id}/archive',
+            headers=auth_headers(test_writer_id, 'writer')
+        )
+        assert response.status_code == 403
+        data = response.get_json()
+        assert 'Insufficient permissions' in data['error']
+
+
+def test_admin_can_archive_any_page(client, app, test_admin_id, test_writer_id):
+    """Test that admins can archive any page"""
+    with app.app_context():
+        page = Page(
+            title="Writer's Page",
+            slug="writers-page",
+            content="# Content",
+            created_by=test_writer_id,
+            updated_by=test_writer_id,
+            status='published',
+            file_path="writers-page.md"
+        )
+        db.session.add(page)
+        db.session.commit()
+        page_id = str(page.id)
+    
+    # Import here to avoid circular import issues
+    from tests.test_api.conftest import mock_auth, auth_headers
+    
+    with mock_auth(test_admin_id, 'admin'):
+        response = client.post(f'/api/pages/{page_id}/archive',
+            headers=auth_headers(test_admin_id, 'admin')
+        )
+        assert response.status_code == 200
+        data = response.get_json()
+        assert data['page']['status'] == 'archived'
+
+
+def test_unarchive_page_success(client, app, test_writer_id):
+    """Test successfully unarchiving a page"""
+    with app.app_context():
+        page = Page(
+            title="Archived Page",
+            slug="archived-page",
+            content="# Content",
+            created_by=test_writer_id,
+            updated_by=test_writer_id,
+            status='archived',
+            file_path="archived-page.md"
+        )
+        db.session.add(page)
+        db.session.commit()
+        page_id = str(page.id)
+    
+    with mock_auth(test_writer_id, 'writer'):
+        response = client.delete(f'/api/pages/{page_id}/archive',
+            headers=auth_headers(test_writer_id, 'writer')
+        )
+        assert response.status_code == 200
+        data = response.get_json()
+        assert 'message' in data
+        assert 'Page unarchived successfully' in data['message']
+        assert data['page']['status'] == 'published'
+        
+        # Verify page is unarchived in database
+        with app.app_context():
+            unarchived_page = db.session.get(Page, page_id)
+            assert unarchived_page.status == 'published'
+
+
+def test_archive_already_archived_page(client, app, test_writer_id):
+    """Test that archiving an already archived page returns error"""
+    with app.app_context():
+        page = Page(
+            title="Already Archived",
+            slug="already-archived",
+            content="# Content",
+            created_by=test_writer_id,
+            updated_by=test_writer_id,
+            status='archived',
+            file_path="already-archived.md"
+        )
+        db.session.add(page)
+        db.session.commit()
+        page_id = str(page.id)
+    
+    with mock_auth(test_writer_id, 'writer'):
+        response = client.post(f'/api/pages/{page_id}/archive',
+            headers=auth_headers(test_writer_id, 'writer')
+        )
+        assert response.status_code == 400
+        data = response.get_json()
+        assert 'already archived' in data['error'].lower()
+
+
+def test_unarchive_not_archived_page(client, app, test_writer_id):
+    """Test that unarchiving a non-archived page returns error"""
+    with app.app_context():
+        page = Page(
+            title="Published Page",
+            slug="published-page",
+            content="# Content",
+            created_by=test_writer_id,
+            updated_by=test_writer_id,
+            status='published',
+            file_path="published-page.md"
+        )
+        db.session.add(page)
+        db.session.commit()
+        page_id = str(page.id)
+    
+    with mock_auth(test_writer_id, 'writer'):
+        response = client.delete(f'/api/pages/{page_id}/archive',
+            headers=auth_headers(test_writer_id, 'writer')
+        )
+        assert response.status_code == 400
+        data = response.get_json()
+        assert 'not archived' in data['error'].lower()
+
+
+def test_get_page_includes_permission_flags(client, app, test_writer_id):
+    """Test that get_page includes can_delete and can_archive flags"""
+    with app.app_context():
+        page = Page(
+            title="Test Page",
+            slug="test-page",
+            content="# Content",
+            created_by=test_writer_id,
+            updated_by=test_writer_id,
+            status='published',
+            file_path="test-page.md"
+        )
+        db.session.add(page)
+        db.session.commit()
+        page_id = str(page.id)
+    
+    with mock_auth(test_writer_id, 'writer'):
+        response = client.get(f'/api/pages/{page_id}',
+            headers=auth_headers(test_writer_id, 'writer')
+        )
+        assert response.status_code == 200
+        data = response.get_json()
+        assert 'can_delete' in data
+        assert 'can_archive' in data
+        assert data['can_delete'] is True  # Writer can delete own page
+        assert data['can_archive'] is True  # Writer can archive own page
+
+
+def test_archived_page_hidden_from_list(client, app, test_writer_id):
+    """Test that archived pages are hidden from list_pages"""
+    with app.app_context():
+        # Create published and archived pages
+        published_page = Page(
+            title="Published Page",
+            slug="published-page",
+            content="# Content",
+            created_by=test_writer_id,
+            updated_by=test_writer_id,
+            status='published',
+            file_path="published-page.md"
+        )
+        archived_page = Page(
+            title="Archived Page",
+            slug="archived-page",
+            content="# Content",
+            created_by=test_writer_id,
+            updated_by=test_writer_id,
+            status='archived',
+            file_path="archived-page.md"
+        )
+        db.session.add(published_page)
+        db.session.add(archived_page)
+        db.session.commit()
+    
+    # List pages (unauthenticated)
+    response = client.get('/api/pages')
+    assert response.status_code == 200
+    data = response.get_json()
+    pages = data['pages']
+    slugs = [p['slug'] for p in pages]
+    assert 'published-page' in slugs
+    assert 'archived-page' not in slugs  # Archived should be hidden
     
     # Check for other CORS headers if present
     if 'Access-Control-Allow-Methods' in response.headers:

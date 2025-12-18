@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, useParams } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { PageView } from '../../pages/PageView';
@@ -19,6 +19,9 @@ vi.mock('../../services/api/pages', () => ({
   usePage: vi.fn(),
   useBreadcrumb: vi.fn(),
   usePageNavigation: vi.fn(),
+  deletePage: vi.fn(),
+  archivePage: vi.fn(),
+  unarchivePage: vi.fn(),
 }));
 
 // Mock Layout and Sidebar to simplify tests
@@ -53,16 +56,19 @@ vi.mock('../../components/navigation/Backlinks', () => ({
   Backlinks: ({ backlinks }) => backlinks ? <nav data-testid="backlinks">Backlinks</nav> : null,
 }));
 
-// Mock utility functions
-const mockHighlightCodeBlocks = vi.fn();
-const mockProcessLinks = vi.fn();
+// Mock DeleteArchiveDialog
+vi.mock('../../components/page/DeleteArchiveDialog', () => ({
+  DeleteArchiveDialog: ({ isOpen, pageTitle }) => 
+    isOpen ? <div data-testid="delete-archive-dialog">{pageTitle}</div> : null,
+}));
 
+// Mock utility functions
 vi.mock('../../utils/syntaxHighlight', () => ({
-  highlightCodeBlocks: mockHighlightCodeBlocks,
+  highlightCodeBlocks: vi.fn(),
 }));
 
 vi.mock('../../utils/linkHandler', () => ({
-  processLinks: mockProcessLinks,
+  processLinks: vi.fn(),
 }));
 
 describe('PageView', () => {
@@ -75,8 +81,6 @@ describe('PageView', () => {
       },
     });
     vi.clearAllMocks();
-    mockHighlightCodeBlocks.mockClear();
-    mockProcessLinks.mockClear();
     // Mock useParams - use vi.mocked to avoid redefinition errors
     vi.mocked(useParams).mockReturnValue({ pageId: 'test-page-id' });
     // Default mock returns for breadcrumb and navigation
@@ -483,7 +487,8 @@ describe('PageView', () => {
   });
 
   it('calls highlightCodeBlocks after content renders', async () => {
-    mockHighlightCodeBlocks.mockClear();
+    const { highlightCodeBlocks } = await import('../../utils/syntaxHighlight');
+    vi.mocked(highlightCodeBlocks).mockClear();
     
     const mockPage = {
       id: 'test-page-id',
@@ -501,12 +506,13 @@ describe('PageView', () => {
     
     // Wait a bit for useEffect to run
     await waitFor(() => {
-      expect(mockHighlightCodeBlocks).toHaveBeenCalled();
+      expect(highlightCodeBlocks).toHaveBeenCalled();
     }, { timeout: 2000 });
   });
 
   it('calls processLinks after content renders', async () => {
-    mockProcessLinks.mockClear();
+    const { processLinks } = await import('../../utils/linkHandler');
+    vi.mocked(processLinks).mockClear();
     
     const mockPage = {
       id: 'test-page-id',
@@ -524,7 +530,7 @@ describe('PageView', () => {
     
     // Wait a bit for useEffect to run
     await waitFor(() => {
-      expect(mockProcessLinks).toHaveBeenCalled();
+      expect(processLinks).toHaveBeenCalled();
     }, { timeout: 2000 });
   });
 
@@ -612,5 +618,99 @@ describe('PageView', () => {
     renderPageView('test-page-id');
     // Should not crash
     expect(screen.getByTestId('backlinks')).toBeInTheDocument();
+  });
+
+  it('displays delete button when can_delete is true', () => {
+    const mockPage = {
+      id: 'test-page-id',
+      title: 'Test Page',
+      html_content: '<p>Content</p>',
+      can_delete: true,
+    };
+
+    pagesApi.usePage.mockReturnValue({
+      data: mockPage,
+      isLoading: false,
+      isError: false,
+    });
+
+    renderPageView('test-page-id');
+    expect(screen.getByRole('button', { name: /Delete/i })).toBeInTheDocument();
+  });
+
+  it('displays archive button when can_archive is true and page is not archived', () => {
+    const mockPage = {
+      id: 'test-page-id',
+      title: 'Test Page',
+      html_content: '<p>Content</p>',
+      can_archive: true,
+      status: 'published',
+    };
+
+    pagesApi.usePage.mockReturnValue({
+      data: mockPage,
+      isLoading: false,
+      isError: false,
+    });
+
+    renderPageView('test-page-id');
+    expect(screen.getByRole('button', { name: /Archive/i })).toBeInTheDocument();
+  });
+
+  it('displays unarchive button when page is archived and can_archive is true', () => {
+    const mockPage = {
+      id: 'test-page-id',
+      title: 'Test Page',
+      html_content: '<p>Content</p>',
+      can_archive: true,
+      status: 'archived',
+    };
+
+    pagesApi.usePage.mockReturnValue({
+      data: mockPage,
+      isLoading: false,
+      isError: false,
+    });
+
+    renderPageView('test-page-id');
+    expect(screen.getByRole('button', { name: /Unarchive/i })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Archive/i })).not.toBeInTheDocument();
+  });
+
+  it('does not display delete button when can_delete is false', () => {
+    const mockPage = {
+      id: 'test-page-id',
+      title: 'Test Page',
+      html_content: '<p>Content</p>',
+      can_delete: false,
+    };
+
+    pagesApi.usePage.mockReturnValue({
+      data: mockPage,
+      isLoading: false,
+      isError: false,
+    });
+
+    renderPageView('test-page-id');
+    expect(screen.queryByRole('button', { name: /Delete/i })).not.toBeInTheDocument();
+  });
+
+  it('does not display archive button when can_archive is false', () => {
+    const mockPage = {
+      id: 'test-page-id',
+      title: 'Test Page',
+      html_content: '<p>Content</p>',
+      can_archive: false,
+      status: 'published',
+    };
+
+    pagesApi.usePage.mockReturnValue({
+      data: mockPage,
+      isLoading: false,
+      isError: false,
+    });
+
+    renderPageView('test-page-id');
+    expect(screen.queryByRole('button', { name: /Archive/i })).not.toBeInTheDocument();
   });
 });

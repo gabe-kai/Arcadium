@@ -34,6 +34,7 @@ This guide outlines the implementation plan for building the Wiki User Interface
 #### ✅ Phase 2: Reading View - Core Components (Complete)
 - **PageView component** - Full reading experience with content rendering, metadata display
 - **Edit button** - Edit button in page header (shown for writers/admins with edit permissions)
+- **Delete/Archive buttons** - Delete and archive buttons in page header (shown based on permissions)
 - **Breadcrumb Navigation** - Component implemented with API integration, tests included
 - **Previous/Next Navigation** - Component implemented with API integration, tests included
 - **Enhanced Content Styling**:
@@ -365,9 +366,9 @@ This guide outlines the implementation plan for building the Wiki User Interface
 - [x] **Search Bar Component** ✅
   - [x] Search input in header
   - [x] Keyboard shortcuts (Ctrl+K / Cmd+K)
-  - [ ] Dropdown with recent searches (localStorage) - **Optional enhancement**
-  - [ ] Search suggestions as you type (debounced) - **Optional enhancement**
-  - [ ] Clear button - **Optional enhancement**
+  - [x] Dropdown with recent searches (localStorage) - ✅ **Optional enhancement complete**
+  - [x] Search suggestions as you type (debounced) - ✅ **Optional enhancement complete**
+  - [x] Clear button - ✅ **Optional enhancement complete**
 
 - [x] **Search Results Page** ✅
   - [x] Display search results
@@ -375,14 +376,14 @@ This guide outlines the implementation plan for building the Wiki User Interface
   - [x] Highlight search terms
   - [x] Click to navigate to page
   - [x] "No results" state
-  - [ ] Pagination - **Optional enhancement**
+  - [x] Pagination - ✅ **Optional enhancement complete**
 
 - [x] **Index View** ✅
   - [x] Alphabetical listing of all pages
   - [x] Filter by section
   - [x] Click letter to jump to section
   - [x] Search within index
-  - [ ] Show page count per letter - **Optional enhancement**
+  - [x] Show page count per letter - ✅ **Optional enhancement complete**
 
 #### API Endpoints Used:
 - `GET /api/search?q={query}` - Full-text search ✅ (in use)
@@ -395,7 +396,7 @@ This guide outlines the implementation plan for building the Wiki User Interface
 - ✅ Search API integration
 - ✅ Comprehensive test coverage
 
-**Phase 6 Status: ✅ COMPLETE** (except optional enhancements)
+**Phase 6 Status: ✅ COMPLETE** (including all optional enhancements)
 
 ---
 
@@ -578,6 +579,61 @@ This guide outlines the implementation plan for building the Wiki User Interface
 - ✅ "New Page" button in header (for writers/admins)
 
 **Phase 10 Status: ✅ COMPLETE**
+
+---
+
+### Phase 11: Page Delete and Archive Functionality
+**Goal**: Implement page deletion and archiving with role-based permissions
+
+#### Tasks:
+- [x] **Backend Permission Checks** ✅
+  - [x] Add `can_archive()` method to PageService - ✅ Implemented
+  - [x] Verify `can_delete()` method works correctly - ✅ Verified
+  - [x] Update `get_page` endpoint to include permission flags - ✅ Implemented
+
+- [x] **Backend Archive Endpoints** ✅
+  - [x] `POST /api/pages/<page_id>/archive` - Archive a page - ✅ Implemented
+  - [x] `DELETE /api/pages/<page_id>/archive` - Unarchive a page - ✅ Implemented
+  - [x] Update status validation to accept 'archived' - ✅ Implemented
+  - [x] Exclude archived pages from list/search/index - ✅ Implemented
+
+- [x] **Frontend API Functions** ✅
+  - [x] `deletePage(pageId)` - Delete a page - ✅ Implemented
+  - [x] `archivePage(pageId)` - Archive a page - ✅ Implemented
+  - [x] `unarchivePage(pageId)` - Unarchive a page - ✅ Implemented
+
+- [x] **Frontend UI Components** ✅
+  - [x] Delete button in PageView header - ✅ Implemented
+  - [x] Archive button in PageView header - ✅ Implemented
+  - [x] Unarchive button in PageView header - ✅ Implemented
+  - [x] Confirmation dialog component - ✅ Implemented
+  - [x] Loading states during operations - ✅ Implemented
+
+- [x] **Permission-Based Visibility** ✅
+  - [x] Show delete button only when `can_delete` is true - ✅ Implemented
+  - [x] Show archive button only when `can_archive` is true and page not archived - ✅ Implemented
+  - [x] Show unarchive button only when `can_archive` is true and page is archived - ✅ Implemented
+
+- [x] **Archive Behavior** ✅
+  - [x] Archived pages hidden from list views - ✅ Implemented
+  - [x] Archived pages hidden from search results - ✅ Implemented
+  - [x] Archived pages hidden from index - ✅ Implemented
+  - [x] Only admins/writers with permission can view archived pages - ✅ Implemented
+
+#### API Endpoints Used:
+- `DELETE /api/pages/<page_id>` - Delete page ✅ (existing, verified)
+- `POST /api/pages/<page_id>/archive` - Archive page ✅ (new)
+- `DELETE /api/pages/<page_id>/archive` - Unarchive page ✅ (new)
+- `GET /api/pages/<page_id>` - Get page (now includes `can_delete` and `can_archive` flags) ✅
+
+#### Deliverables:
+- ✅ Delete page functionality with confirmation
+- ✅ Archive/unarchive page functionality with confirmation
+- ✅ Permission-based button visibility
+- ✅ Archived pages properly hidden from normal views
+- ✅ Comprehensive test coverage (12 backend tests)
+
+**Phase 11 Status: ✅ COMPLETE**
 
 ---
 
@@ -1102,7 +1158,7 @@ Phase 9: Editing View Layout has been completed with comprehensive test coverage
 
 ## Phase 6 Implementation Summary
 
-Phase 6: Search Interface has been completed.
+Phase 6: Search Interface has been completed with all optional enhancements.
 
 **Key Achievements**:
 - ✅ Global search bar in header with keyboard shortcut (Ctrl+K / Cmd+K)
@@ -1110,26 +1166,32 @@ Phase 6: Search Interface has been completed.
 - ✅ Alphabetical index view with letter navigation and section filtering
 - ✅ Search API integration (`/api/search` and `/api/index` endpoints)
 - ✅ Search term highlighting in results
+- ✅ **Recent searches dropdown** (localStorage, max 10 items)
+- ✅ **Search suggestions as you type** (debounced, 300ms)
+- ✅ **Clear button** for search input
+- ✅ **Pagination** for search results (20 results per page)
+- ✅ **Page count per letter** in index view
 - ✅ Comprehensive test coverage
 
 **New Components**:
-- `SearchPage` - Full search results page with query handling
-- `IndexPage` - Alphabetical index with filters and search
+- `SearchPage` - Full search results page with query handling, suggestions, and pagination
+- `IndexPage` - Alphabetical index with filters, search, and page counts
 
 **New API Functions**:
-- `searchPages(query, options)` - Search pages by query
+- `searchPages(query, options)` - Search pages by query (supports limit and offset)
 - `useSearch(query, options)` - React Query hook for search
 - `fetchIndex()` - Get master index
 - `useIndex()` - React Query hook for index
 
 **Files Created/Modified**:
-- `client/src/services/api/search.js` - New search API module
-- `client/src/pages/SearchPage.jsx` - Enhanced with full search functionality
-- `client/src/pages/IndexPage.jsx` - Enhanced with alphabetical listing
-- `client/src/components/layout/Header.jsx` - Added functional search bar
-- `client/src/styles.css` - Added search and index page styles
+- `client/src/services/api/search.js` - Search API module with pagination support
+- `client/src/pages/SearchPage.jsx` - Enhanced with suggestions, clear button, and pagination
+- `client/src/pages/IndexPage.jsx` - Enhanced with page counts per letter
+- `client/src/components/layout/Header.jsx` - Enhanced with recent searches dropdown and clear button
+- `client/src/styles.css` - Added styles for search enhancements
 - `client/src/test/pages/SearchPage.test.jsx` - Updated tests (7 tests)
 - `client/src/test/pages/IndexPage.test.jsx` - Updated tests (6 tests)
+- `services/wiki/app/routes/search_routes.py` - Added pagination support (offset parameter)
 
 ## Phase 10 Implementation Summary
 
@@ -1168,3 +1230,77 @@ Phase 10.5: Version History & Comparison has been completed.
 - `client/src/pages/PageVersionCompare.jsx` - New version comparison page
 - `client/src/App.jsx` - Added version view and compare routes
 - `client/src/styles.css` - Added version view and compare styles
+
+---
+
+## Phase 11 Implementation Summary
+
+Phase 11: Page Delete and Archive Functionality has been completed.
+
+**Key Achievements**:
+- ✅ Delete page functionality with role-based permissions
+- ✅ Archive/unarchive page functionality with role-based permissions
+- ✅ Confirmation dialogs for all destructive actions
+- ✅ Permission flags (`can_delete`, `can_archive`) in API responses
+- ✅ Archived pages hidden from normal views (list, search, index)
+- ✅ Comprehensive test coverage (12 backend tests, frontend tests)
+
+**Permission Model**:
+- **Admins**: Can delete or archive any page
+- **Writers**: Can delete or archive only their own pages
+- **Viewers/Players**: No delete or archive permissions
+
+**Archive Behavior**:
+- Archived pages are hidden from:
+  - List views (`/api/pages`)
+  - Search results (`/api/search`)
+  - Index views (`/api/index`)
+- Archived pages can be viewed by:
+  - Admins (any archived page)
+  - Writers (only their own archived pages)
+- Archived pages can be restored via unarchive action
+
+**New Components**:
+- `DeleteArchiveDialog` - Reusable confirmation dialog for delete/archive/unarchive actions
+  - Different messaging for each action type
+  - Warning for delete (mentions orphaned children)
+  - Loading states during operations
+
+**New API Endpoints**:
+- `DELETE /api/pages/<page_id>` - Delete a page (existing, verified)
+- `POST /api/pages/<page_id>/archive` - Archive a page
+- `DELETE /api/pages/<page_id>/archive` - Unarchive a page
+
+**API Response Updates**:
+- `GET /api/pages/<page_id>` now includes:
+  - `can_delete` (boolean) - Whether user can delete this page
+  - `can_archive` (boolean) - Whether user can archive this page
+
+**New API Functions**:
+- `deletePage(pageId)` - Delete a page
+- `archivePage(pageId)` - Archive a page
+- `unarchivePage(pageId)` - Unarchive a page
+
+**Files Created/Modified**:
+- `client/src/components/page/DeleteArchiveDialog.jsx` - New confirmation dialog component
+- `client/src/components/page/DeleteArchiveDialog.css` - Dialog styles
+- `client/src/pages/PageView.jsx` - Added delete/archive buttons and dialogs
+- `client/src/services/api/pages.js` - Added delete/archive API functions
+- `client/src/styles.css` - Added styles for action buttons
+- `services/wiki/app/routes/page_routes.py` - Added archive/unarchive endpoints
+- `services/wiki/app/services/page_service.py` - Added `can_archive()` method
+- `services/wiki/app/services/search_index_service.py` - Exclude archived pages from search
+- `services/wiki/tests/test_api/test_page_routes.py` - Added 9 new tests for archive functionality
+
+**Backend Tests Added**:
+- `test_archive_page_success` - Successfully archive a page
+- `test_archive_page_requires_auth` - Archive requires authentication
+- `test_archive_page_insufficient_permissions` - Writers cannot archive others' pages
+- `test_admin_can_archive_any_page` - Admins can archive any page
+- `test_unarchive_page_success` - Successfully unarchive a page
+- `test_archive_already_archived_page` - Error when archiving already archived page
+- `test_unarchive_not_archived_page` - Error when unarchiving non-archived page
+- `test_get_page_includes_permission_flags` - API includes can_delete and can_archive flags
+- `test_archived_page_hidden_from_list` - Archived pages excluded from list views
+
+**Phase 11 Status: ✅ COMPLETE**

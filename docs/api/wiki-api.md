@@ -30,6 +30,8 @@ GET /api/pages
 - `limit` (optional): Number of results (default: 50)
 - `offset` (optional): Pagination offset
 
+**Note:** Archived pages are automatically excluded from list results. They are hidden from normal views but can be accessed directly if the user has permission.
+
 **Response:**
 ```json
 {
@@ -102,20 +104,20 @@ GET /api/pages/{page_id}
   ],
   "created_at": "2024-01-01T00:00:00Z",
   "updated_at": "2024-01-01T00:00:00Z",
-  "created_by": {
-    "id": "user-id",
-    "username": "author"
-  },
-  "updated_by": {
-    "id": "user-id",
-    "username": "editor"
-  }
+  "created_by": "user-id",
+  "updated_by": "user-id",
+  "can_edit": true,
+  "can_delete": true,
+  "can_archive": true
 }
 ```
 
-**Note:** Draft pages return 404 for non-creators and non-admins.
+**Note:** 
+- Draft pages return 404 for non-creators and non-admins.
+- Archived pages return 404 for viewers and writers without permission.
+- The response includes permission flags (`can_edit`, `can_delete`, `can_archive`) based on the authenticated user's role and relationship to the page.
 
-**Permissions:** Public (viewer) for published pages, Creator/Admin for drafts
+**Permissions:** Public (viewer) for published pages, Creator/Admin for drafts, Admin/Writer (with permission) for archived pages
 
 ---
 

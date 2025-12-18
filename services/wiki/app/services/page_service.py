@@ -421,24 +421,28 @@ class PageService:
         # Filter by status
         if status:
             query = query.filter_by(status=status)
-        elif not include_drafts:
-            # Draft visibility based on role
-            if user_role in ['writer', 'admin']:
-                if user_id:
-                    # Show published + own drafts
-                    from sqlalchemy import or_, and_
-                    query = query.filter(
-                        or_(
-                            Page.status == 'published',
-                            and_(Page.status == 'draft', Page.created_by == user_id)
+        else:
+            # Exclude archived pages from normal views (they're hidden)
+            query = query.filter(Page.status != 'archived')
+            
+            if not include_drafts:
+                # Draft visibility based on role
+                if user_role in ['writer', 'admin']:
+                    if user_id:
+                        # Show published + own drafts
+                        from sqlalchemy import or_, and_
+                        query = query.filter(
+                            or_(
+                                Page.status == 'published',
+                                and_(Page.status == 'draft', Page.created_by == user_id)
+                            )
                         )
-                    )
+                    else:
+                        # No user ID, only published
+                        query = query.filter_by(status='published')
                 else:
-                    # No user ID, only published
+                    # Viewers/players only see published
                     query = query.filter_by(status='published')
-            else:
-                # Viewers/players only see published
-                query = query.filter_by(status='published')
         
         return query.order_by(Page.order_index, Page.title).all()
     
@@ -461,6 +465,18 @@ class PageService:
             return True
         if user_role == 'writer':
             # Writers can only delete pages they created
+            return user_id is not None and page.created_by == user_id
+        return False
+    
+    @staticmethod
+    def can_archive(page: Page, user_role: str, user_id: Optional[uuid.UUID]) -> bool:
+        """Check if user can archive a page"""
+        if page.is_system_page:
+            return False  # System pages cannot be archived
+        if user_role == 'admin':
+            return True
+        if user_role == 'writer':
+            # Writers can only archive pages they created
             return user_id is not None and page.created_by == user_id
         return False
     

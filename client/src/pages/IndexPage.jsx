@@ -161,16 +161,23 @@ export function IndexPage() {
               >
                 All
               </button>
-              {letters.map((letter) => (
-                <button
-                  key={letter}
-                  type="button"
-                  className={`arc-index-page-letter ${letterFilter === letter ? 'arc-index-page-letter-active' : ''}`}
-                  onClick={() => handleLetterClick(letter)}
-                >
-                  {letter}
-                </button>
-              ))}
+              {letters.map((letter) => {
+                // Count pages for this letter
+                const letterPages = indexData.index[letter] || [];
+                const count = letterPages.length;
+                return (
+                  <button
+                    key={letter}
+                    type="button"
+                    className={`arc-index-page-letter ${letterFilter === letter ? 'arc-index-page-letter-active' : ''}`}
+                    onClick={() => handleLetterClick(letter)}
+                    title={`${count} page${count !== 1 ? 's' : ''}`}
+                  >
+                    {letter}
+                    <span className="arc-index-page-letter-count">({count})</span>
+                  </button>
+                );
+              })}
             </div>
 
             <div className="arc-index-page-content">

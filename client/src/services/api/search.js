@@ -8,6 +8,7 @@ import { apiClient } from './client';
  * @param {string} options.section - Filter by section
  * @param {boolean} options.includeDrafts - Include draft pages
  * @param {number} options.limit - Number of results (default: 20)
+ * @param {number} options.offset - Pagination offset (default: 0)
  */
 export function searchPages(query, options = {}) {
   if (!query || query.trim().length === 0) {
@@ -18,6 +19,10 @@ export function searchPages(query, options = {}) {
     q: query.trim(),
     limit: options.limit || 20,
   };
+
+  if (options.offset !== undefined && options.offset > 0) {
+    params.offset = options.offset;
+  }
 
   if (options.section) {
     params.section = options.section;

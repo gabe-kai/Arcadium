@@ -19,6 +19,7 @@ def search_pages():
     - section (optional): Filter by section
     - include_drafts (optional, default: false): Include draft pages (only for creator or admin)
     - limit (optional): Number of results (default: 20)
+    - offset (optional): Pagination offset (default: 0)
     
     Permissions: Public (viewer) - but drafts filtered by permission
     """
@@ -52,24 +53,39 @@ def search_pages():
         except (ValueError, TypeError):
             limit = 20  # Use default for invalid values
         
+        # Validate offset parameter
+        try:
+            offset = int(request.args.get('offset', 0))
+            if offset < 0:
+                offset = 0  # Use default for negative values
+        except (ValueError, TypeError):
+            offset = 0  # Use default for invalid values
+        
         # Get user info from request (set by optional_auth middleware)
         user_role = getattr(request, 'user_role', 'viewer')
         user_id = getattr(request, 'user_id', None)
         
-        # Perform search
-        results = SearchIndexService.search(
+        # Perform search (get all results for total count, then paginate)
+        all_results = SearchIndexService.search(
             query=query,
-            limit=limit,
+            limit=10000,  # Get all for total count
             section=section,
             include_drafts=include_drafts,
             user_role=user_role,
             user_id=user_id
         )
         
+        total = len(all_results)
+        
+        # Apply pagination
+        paginated_results = all_results[offset:offset + limit]
+        
         return jsonify({
-            'results': results,
-            'total': len(results),
-            'query': query
+            'results': paginated_results,
+            'total': total,
+            'query': query,
+            'limit': limit,
+            'offset': offset
         }), 200
     
     except ValueError as e:

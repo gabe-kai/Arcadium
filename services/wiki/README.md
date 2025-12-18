@@ -208,8 +208,15 @@ See [CI/CD Documentation](../../docs/ci-cd.md) for details.
 
 ## API Endpoints
 
+### Page Endpoints
 - `GET /` - Wiki homepage
-- `GET /api/pages` - List all pages
-- `GET /api/pages/<page_id>` - Get a specific page
+- `GET /api/pages` - List all pages (excludes archived pages)
+- `GET /api/pages/<page_id>` - Get a specific page (includes `can_delete` and `can_archive` flags)
 - `POST /api/pages` - Create a new page
+- `PUT /api/pages/<page_id>` - Update a page
+- `DELETE /api/pages/<page_id>` - Delete a page (requires writer/admin role, writers can only delete own pages)
+- `POST /api/pages/<page_id>/archive` - Archive a page (requires writer/admin role, writers can only archive own pages)
+- `DELETE /api/pages/<page_id>/archive` - Unarchive a page (requires writer/admin role, writers can only unarchive own pages)
+
+**Note**: Archived pages are hidden from list views, search results, and index views. Only admins and writers (with permission) can view archived pages.
 

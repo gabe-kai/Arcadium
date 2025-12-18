@@ -324,7 +324,7 @@ class SearchIndexService:
             if section and page.section != section:
                 continue
             
-            # Filter drafts based on permissions
+            # Filter drafts and archived pages based on permissions
             if page.status == 'draft':
                 if not include_drafts:
                     continue
@@ -333,6 +333,10 @@ class SearchIndexService:
                     continue
                 if user_role == 'writer' and user_id and page.created_by != user_id:
                     continue
+            
+            # Exclude archived pages from search results (they're hidden)
+            if page.status == 'archived':
+                continue
             
             # Get snippet from first match context
             snippet = ""
@@ -520,15 +524,15 @@ class SearchIndexService:
     def get_master_index(letter: Optional[str] = None, section: Optional[str] = None) -> Dict[str, List[Dict]]:
         """
         Get master index organized by first letter of page titles.
-        
+
         Args:
             letter: Optional filter by starting letter (case-insensitive)
             section: Optional filter by section name
-            
+
         Returns:
             Dictionary with letters as keys and lists of page info as values
         """
-        # Build query for pages
+        # Build query for pages (exclude archived and drafts)
         query = Page.query.filter_by(status='published')
         
         # Filter by section if provided

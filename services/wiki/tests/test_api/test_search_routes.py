@@ -184,6 +184,106 @@ def test_search_include_drafts_admin(client, app, test_user_id, test_admin_id):
         assert draft_found
 
 
+def test_search_with_pagination(client, app, test_user_id):
+    """Test search with pagination (offset and limit)"""
+    with app.app_context():
+        from app import db
+        from app.models.page import Page
+        
+        # Create multiple pages for testing
+        pages = []
+        for i in range(5):
+            page = Page(
+                title=f'Test Page {i}',
+                slug=f'test-page-{i}',
+                content=f'Content for page {i} with test term',
+                status='published',
+                created_by=test_user_id,
+                updated_by=test_user_id,
+                file_path=f'test-page-{i}.md'
+            )
+            db.session.add(page)
+            pages.append(page)
+        db.session.commit()
+        
+        # Index pages
+        from app.services.search_index_service import SearchIndexService
+        for page in pages:
+            SearchIndexService.index_page(page.id, page.content, page.title)
+    
+    # Test pagination - first page
+    response = client.get('/api/search?q=test&limit=2&offset=0')
+    assert response.status_code == 200
+    data = response.get_json()
+    assert len(data['results']) <= 2
+    assert data['total'] >= 5
+    assert 'limit' in data
+    assert 'offset' in data
+    assert data['limit'] == 2
+    assert data['offset'] == 0
+    
+    # Test second page
+    response = client.get('/api/search?q=test&limit=2&offset=2')
+    assert response.status_code == 200
+    data = response.get_json()
+    assert len(data['results']) <= 2
+    assert 'offset' in data
+    assert data['offset'] == 2
+
+
+def test_search_pagination_edge_cases(client, app, test_user_id):
+    """Test pagination edge cases"""
+    with app.app_context():
+        from app import db
+        from app.models.page import Page
+        from app.services.search_index_service import SearchIndexService
+        
+        # Create a few pages
+        for i in range(3):
+            page = Page(
+                title=f'Test Page {i}',
+                slug=f'test-page-{i}',
+                content=f'Content for page {i} with test term',
+                status='published',
+                created_by=test_user_id,
+                updated_by=test_user_id,
+                file_path=f'test-page-{i}.md'
+            )
+            db.session.add(page)
+        db.session.commit()
+        
+        # Index pages
+        pages = Page.query.filter_by(status='published').all()
+        for page in pages:
+            SearchIndexService.index_page(page.id, page.content, page.title)
+    
+    # Test negative offset (should default to 0)
+    response = client.get('/api/search?q=test&limit=10&offset=-5')
+    assert response.status_code == 200
+    data = response.get_json()
+    assert data['offset'] == 0
+    
+    # Test offset beyond total results
+    response = client.get('/api/search?q=test&limit=10&offset=1000')
+    assert response.status_code == 200
+    data = response.get_json()
+    assert len(data['results']) == 0
+    assert data['offset'] == 1000
+    
+    # Test invalid offset (non-numeric)
+    response = client.get('/api/search?q=test&limit=10&offset=invalid')
+    assert response.status_code == 200
+    data = response.get_json()
+    assert data['offset'] == 0  # Should default to 0
+    
+    # Test zero offset
+    response = client.get('/api/search?q=test&limit=10&offset=0')
+    assert response.status_code == 200
+    data = response.get_json()
+    assert data['offset'] == 0
+    assert len(data['results']) >= 0
+
+
 def test_search_response_structure(client, app, test_page, test_user_id):
     """Test that search response matches API spec structure"""
     with app.app_context():

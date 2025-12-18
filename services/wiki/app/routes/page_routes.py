@@ -1,5 +1,6 @@
 """Page CRUD endpoints"""
 import uuid
+from datetime import datetime, timezone
 from flask import Blueprint, request, jsonify
 from app import db
 from app.models.page import Page
@@ -69,7 +70,7 @@ def list_pages():
                     'offset': 0
                 }), 200
             
-            # Check draft visibility
+            # Check draft and archived visibility
             if page.status == 'draft':
                 if not can_see_drafts or (user_role == 'writer' and page.created_by != user_id):
                     return jsonify({
@@ -78,6 +79,14 @@ def list_pages():
                         'limit': limit,
                         'offset': 0
                     }), 200
+            # Exclude archived pages from list (they're hidden)
+            if page.status == 'archived':
+                return jsonify({
+                    'pages': [],
+                    'total': 0,
+                    'limit': limit,
+                    'offset': 0
+                }), 200
             
             return jsonify({
                 'pages': [{
@@ -176,6 +185,8 @@ def list_pages():
         
         # Get total count (for pagination)
         total_query = Page.query
+        # Exclude archived pages from normal views
+        total_query = total_query.filter(Page.status != 'archived')
         if section:
             total_query = total_query.filter_by(section=section)
         if parent_id:
@@ -241,6 +252,19 @@ def get_page(page_id):
                     return '<html><body><h1>Page Not Found</h1><p>The requested page does not exist.</p></body></html>', 404
                 return jsonify({'error': 'Page not found'}), 404
             if user_role == 'writer' and page.created_by != user_id:
+                if format_type == 'html':
+                    return '<html><body><h1>Page Not Found</h1><p>The requested page does not exist.</p></body></html>', 404
+                return jsonify({'error': 'Page not found'}), 404
+        
+        # Check archived visibility (archived pages are hidden from normal views)
+        # Only admins and writers (who can archive) can view archived pages
+        if page.status == 'archived':
+            if user_role not in ['admin', 'writer']:
+                if format_type == 'html':
+                    return '<html><body><h1>Page Not Found</h1><p>The requested page does not exist.</p></body></html>', 404
+                return jsonify({'error': 'Page not found'}), 404
+            # Writers can only view archived pages they created or can archive
+            if user_role == 'writer' and not PageService.can_archive(page, user_role, user_id):
                 if format_type == 'html':
                     return '<html><body><h1>Page Not Found</h1><p>The requested page does not exist.</p></body></html>', 404
                 return jsonify({'error': 'Page not found'}), 404
@@ -511,8 +535,10 @@ def get_page(page_id):
             'slug': link.slug
         } for link in backlinks]
         
-        # Check if user can edit this page
+        # Check if user can edit/delete/archive this page
         can_edit = PageService.can_edit(page, user_role, user_id)
+        can_delete = PageService.can_delete(page, user_role, user_id)
+        can_archive = PageService.can_archive(page, user_role, user_id)
         
         # Build response
         # Parse frontmatter for HTML generation, but return full content (with frontmatter) for API
@@ -535,7 +561,9 @@ def get_page(page_id):
             'created_at': page.created_at.isoformat() if page.created_at else None,
             'updated_at': page.updated_at.isoformat() if page.updated_at else None,
             'version': page.version,
-            'can_edit': can_edit
+            'can_edit': can_edit,
+            'can_delete': can_delete,
+            'can_archive': can_archive
         }
         
         # Add user info if available (would come from Auth Service in production)
@@ -678,8 +706,8 @@ def update_page(page_id):
         status = data.get('status')
         
         # Validate status if provided
-        if status and status not in ['published', 'draft']:
-            return jsonify({'error': 'Status must be "published" or "draft"'}), 400
+        if status and status not in ['published', 'draft', 'archived']:
+            return jsonify({'error': 'Status must be "published", "draft", or "archived"'}), 400
         
         # Parse parent_id if provided
         parent_id = None
@@ -803,6 +831,132 @@ def delete_page(page_id):
         } for p in orphaned_pages_list]
         
         return jsonify(response_data), 200
+    
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@page_bp.route('/pages/<page_id>/archive', methods=['POST'])
+@require_auth
+@require_role(['writer', 'admin'])
+def archive_page(page_id):
+    """
+    Archive a page (set status to 'archived').
+    
+    Requires: Writer (own pages) or Admin (any page)
+    Archived pages are hidden from normal views but can be restored.
+    """
+    try:
+        page_id_uuid = uuid.UUID(page_id)
+    except ValueError:
+        return jsonify({'error': 'Invalid page ID format'}), 400
+    
+    try:
+        # Get user ID and role from request
+        user_id = request.user_id
+        user_role = request.user_role
+        
+        # Check if page exists
+        page = db.session.get(Page, page_id_uuid)
+        if not page:
+            return jsonify({'error': 'Page not found'}), 404
+        
+        # Check if user can archive this page
+        if not PageService.can_archive(page, user_role, user_id):
+            return jsonify({
+                'error': 'Insufficient permissions',
+                'required_role': 'writer'
+            }), 403
+        
+        # Check if already archived
+        if page.status == 'archived':
+            return jsonify({'error': 'Page is already archived'}), 400
+        
+        # Archive the page
+        page.status = 'archived'
+        page.updated_by = user_id
+        page.updated_at = datetime.now(timezone.utc)
+        db.session.commit()
+        
+        # Invalidate cache
+        _, markdown_content = parse_frontmatter(page.content)
+        CacheService.invalidate_cache(markdown_content)
+        
+        # Re-index for search (archived pages should be excluded from search)
+        SearchIndexService.index_page(page.id, page.content, page.title)
+        
+        return jsonify({
+            'message': 'Page archived successfully',
+            'page': {
+                'id': str(page.id),
+                'title': page.title,
+                'slug': page.slug,
+                'status': page.status
+            }
+        }), 200
+    
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@page_bp.route('/pages/<page_id>/archive', methods=['DELETE'])
+@require_auth
+@require_role(['writer', 'admin'])
+def unarchive_page(page_id):
+    """
+    Unarchive a page (restore from archived status).
+    
+    Requires: Writer (own pages) or Admin (any page)
+    Restores page to 'published' status.
+    """
+    try:
+        page_id_uuid = uuid.UUID(page_id)
+    except ValueError:
+        return jsonify({'error': 'Invalid page ID format'}), 400
+    
+    try:
+        # Get user ID and role from request
+        user_id = request.user_id
+        user_role = request.user_role
+        
+        # Check if page exists
+        page = db.session.get(Page, page_id_uuid)
+        if not page:
+            return jsonify({'error': 'Page not found'}), 404
+        
+        # Check if user can archive this page (same permission as archive)
+        if not PageService.can_archive(page, user_role, user_id):
+            return jsonify({
+                'error': 'Insufficient permissions',
+                'required_role': 'writer'
+            }), 403
+        
+        # Check if not archived
+        if page.status != 'archived':
+            return jsonify({'error': 'Page is not archived'}), 400
+        
+        # Unarchive the page (restore to published)
+        page.status = 'published'
+        page.updated_by = user_id
+        page.updated_at = datetime.now(timezone.utc)
+        db.session.commit()
+        
+        # Invalidate cache
+        _, markdown_content = parse_frontmatter(page.content)
+        CacheService.invalidate_cache(markdown_content)
+        
+        # Re-index for search
+        SearchIndexService.index_page(page.id, page.content, page.title)
+        
+        return jsonify({
+            'message': 'Page unarchived successfully',
+            'page': {
+                'id': str(page.id),
+                'title': page.title,
+                'slug': page.slug,
+                'status': page.status
+            }
+        }), 200
     
     except Exception as e:
         return jsonify({'error': str(e)}), 500

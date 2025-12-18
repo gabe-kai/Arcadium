@@ -1,0 +1,169 @@
+/* Delete/Archive Dialog Styles */
+
+.arc-delete-archive-dialog-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.arc-delete-archive-dialog {
+  background: var(--arc-bg-elevated);
+  border: 1px solid var(--arc-border);
+  border-radius: var(--arc-radius-md);
+  width: 90%;
+  max-width: 500px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: var(--arc-shadow-md);
+}
+
+.arc-delete-archive-dialog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid var(--arc-border);
+}
+
+.arc-delete-archive-dialog-header h3 {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--arc-text);
+}
+
+.arc-delete-archive-dialog-close {
+  background: none;
+  border: none;
+  color: var(--arc-text-subtle);
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.25rem;
+  transition: all 0.2s;
+}
+
+.arc-delete-archive-dialog-close:hover:not(:disabled) {
+  background: var(--arc-surface);
+  color: var(--arc-text);
+}
+
+.arc-delete-archive-dialog-close:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.arc-delete-archive-dialog-content {
+  padding: 1.5rem;
+}
+
+.arc-delete-archive-dialog-content p {
+  margin: 0 0 1rem 0;
+  color: var(--arc-text);
+  line-height: 1.6;
+}
+
+.arc-delete-archive-dialog-warning {
+  padding: 0.75rem 1rem;
+  background: var(--arc-warning-bg, rgba(255, 193, 7, 0.1));
+  border: 1px solid var(--arc-warning-border, rgba(255, 193, 7, 0.3));
+  border-radius: var(--arc-radius-sm);
+  color: var(--arc-warning-text, #856404);
+  font-size: 0.875rem;
+  margin-top: 1rem;
+}
+
+.arc-delete-archive-dialog-warning strong {
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
+.arc-delete-archive-dialog-actions {
+  display: flex;
+  gap: 0.75rem;
+  padding: 1rem 1.5rem;
+  border-top: 1px solid var(--arc-border);
+  justify-content: flex-end;
+}
+
+.arc-delete-archive-dialog-button {
+  padding: 0.5rem 1rem;
+  border-radius: var(--arc-radius-md);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 1px solid var(--arc-border);
+}
+
+.arc-delete-archive-dialog-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.arc-delete-archive-dialog-button-cancel {
+  background: var(--arc-surface);
+  color: var(--arc-text);
+}
+
+.arc-delete-archive-dialog-button-cancel:hover:not(:disabled) {
+  background: var(--arc-surface);
+  border-color: var(--arc-text-subtle);
+}
+
+.arc-delete-archive-dialog-button-delete {
+  background: var(--arc-error-bg, rgba(220, 53, 69, 0.1));
+  color: var(--arc-error-text, #dc3545);
+  border-color: var(--arc-error-border, rgba(220, 53, 69, 0.3));
+}
+
+.arc-delete-archive-dialog-button-delete:hover:not(:disabled) {
+  background: var(--arc-error-bg, rgba(220, 53, 69, 0.2));
+  border-color: var(--arc-error-border, #dc3545);
+}
+
+.arc-delete-archive-dialog-button-archive {
+  background: var(--arc-warning-bg, rgba(255, 193, 7, 0.1));
+  color: var(--arc-warning-text, #856404);
+  border-color: var(--arc-warning-border, rgba(255, 193, 7, 0.3));
+}
+
+.arc-delete-archive-dialog-button-archive:hover:not(:disabled) {
+  background: var(--arc-warning-bg, rgba(255, 193, 7, 0.2));
+  border-color: var(--arc-warning-border, #ffc107);
+}
+
+.arc-delete-archive-dialog-button-unarchive {
+  background: var(--arc-accent-soft);
+  color: var(--arc-accent);
+  border-color: var(--arc-accent);
+}
+
+.arc-delete-archive-dialog-button-unarchive:hover:not(:disabled) {
+  background: var(--arc-accent);
+  color: #000;
+}
+
+.arc-delete-archive-dialog-button-confirm {
+  background: var(--arc-accent);
+  color: #000;
+  border-color: var(--arc-accent);
+}
+
+.arc-delete-archive-dialog-button-confirm:hover:not(:disabled) {
+  background: #06b6d4;
+  border-color: #06b6d4;
+}
