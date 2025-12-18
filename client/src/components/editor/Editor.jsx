@@ -25,6 +25,8 @@ export const Editor = forwardRef(({ content, onChange, placeholder = 'Start writ
       StarterKit.configure({
         // Disable default code block, use our configured one
         codeBlock: false,
+        // Disable default link extension, use our configured one
+        link: false,
       }),
       CodeBlock.configure({
         HTMLAttributes: {

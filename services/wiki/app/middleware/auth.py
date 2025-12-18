@@ -13,9 +13,22 @@ def get_auth_token() -> Optional[str]:
     Returns:
         Token string if found, None otherwise
     """
+    import logging
+    logger = logging.getLogger(__name__)
+    
     auth_header = request.headers.get('Authorization', '')
+    logger.debug(f"Authorization header: {auth_header[:50]}..." if len(auth_header) > 50 else f"Authorization header: {auth_header}")
+    
     if auth_header.startswith('Bearer '):
-        return auth_header[7:]  # Remove 'Bearer ' prefix
+        token = auth_header[7:]  # Remove 'Bearer ' prefix
+        logger.debug(f"Extracted token (first 20 chars): {token[:20]}...")
+        return token
+    elif auth_header.startswith('bearer '):  # Case-insensitive
+        token = auth_header[7:]
+        logger.debug(f"Extracted token (first 20 chars, lowercase Bearer): {token[:20]}...")
+        return token
+    
+    logger.warning(f"No Bearer token found in Authorization header. Header value: {auth_header[:50] if auth_header else 'None'}")
     return None
 
 
@@ -44,14 +57,21 @@ def require_auth(f: Callable) -> Callable:
     """
     @wraps(f)
     def decorated_function(*args, **kwargs):
+        import logging
+        logger = logging.getLogger(__name__)
+        
         token = get_auth_token()
         if not token:
+            logger.warning(f"Authentication required but no token found. Endpoint: {request.path}, Method: {request.method}")
             return jsonify({'error': 'Authentication required'}), 401
         
+        logger.debug(f"Verifying token for endpoint: {request.path}, Method: {request.method}, Token prefix: {token[:20]}...")
         user = get_user_from_token(token)
         if not user:
+            logger.warning(f"Token verification failed for endpoint: {request.path}, Method: {request.method}, Token prefix: {token[:20]}...")
             return jsonify({'error': 'Invalid or expired token'}), 401
         
+        logger.debug(f"Token verified successfully. User: {user.get('username')}, Role: {user.get('role')}")
         # Attach user info to request object
         request.user_id = uuid.UUID(user['user_id'])
         request.user_role = user['role']

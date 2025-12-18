@@ -228,3 +228,11 @@ class CacheService:
             WikiConfig.key.like(f"{CacheService.CACHE_PREFIX}%")
         ).delete(synchronize_session=False)
         db.session.commit()
+    
+    @staticmethod
+    def clear_html_caches():
+        """Clear all HTML caches (useful after markdown parser updates)"""
+        db.session.query(WikiConfig).filter(
+            WikiConfig.key.like(f"{CacheService.CACHE_PREFIX}html_%")
+        ).delete(synchronize_session=False)
+        db.session.commit()

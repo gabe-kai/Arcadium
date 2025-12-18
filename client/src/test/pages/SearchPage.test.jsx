@@ -1,22 +1,35 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { SearchPage } from '../../pages/SearchPage';
+import * as searchApi from '../../services/api/search';
 
-// Mock NavigationTree
-vi.mock('../../components/navigation/NavigationTree', () => ({
-  NavigationTree: () => <div data-testid="navigation-tree">Navigation Tree</div>,
+// Mock useSearchParams
+const mockSearchParams = new URLSearchParams();
+const mockSetSearchParams = vi.fn();
+
+vi.mock('react-router-dom', async () => {
+  const actual = await vi.importActual('react-router-dom');
+  return {
+    ...actual,
+    useSearchParams: () => [mockSearchParams, mockSetSearchParams],
+  };
+});
+
+// Mock search API
+vi.mock('../../services/api/search', () => ({
+  useSearch: vi.fn(),
+  useIndex: vi.fn(),
 }));
 
-// Mock Layout
+// Mock Layout and Sidebar
 vi.mock('../../components/layout/Layout', () => ({
-  Layout: ({ children, sidebar }) => (
-    <div data-testid="layout">
-      {sidebar && <div data-testid="sidebar">{sidebar}</div>}
-      <main>{children}</main>
-    </div>
-  ),
+  Layout: ({ children }) => <div data-testid="layout">{children}</div>,
+}));
+
+vi.mock('../../components/layout/Sidebar', () => ({
+  Sidebar: () => <div data-testid="sidebar" />,
 }));
 
 describe('SearchPage', () => {
@@ -26,7 +39,16 @@ describe('SearchPage', () => {
     queryClient = new QueryClient({
       defaultOptions: {
         queries: { retry: false },
+        mutations: { retry: false },
       },
+    });
+
+    vi.clearAllMocks();
+    mockSearchParams.delete('q');
+    searchApi.useSearch.mockReturnValue({
+      data: null,
+      isLoading: false,
+      isError: false,
     });
   });
 
@@ -42,28 +64,83 @@ describe('SearchPage', () => {
 
   it('renders search heading', () => {
     renderSearchPage();
-    expect(screen.getByText('Search')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Search' })).toBeInTheDocument();
   });
 
-  it('renders placeholder text', () => {
+  it('renders search input', () => {
     renderSearchPage();
-    expect(
-      screen.getByText(/Global search results will appear here/i),
-    ).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(/Search the wiki/i)).toBeInTheDocument();
   });
 
-  it('renders navigation tree in sidebar', () => {
+  it('displays empty state when no query', () => {
     renderSearchPage();
-    expect(screen.getByTestId('navigation-tree')).toBeInTheDocument();
+    expect(screen.getByText(/Enter a search query/i)).toBeInTheDocument();
+  });
+
+  it('displays loading state when searching', () => {
+    mockSearchParams.set('q', 'test');
+    searchApi.useSearch.mockReturnValue({
+      data: null,
+      isLoading: true,
+      isError: false,
+    });
+
+    renderSearchPage();
+    expect(screen.getByText(/Searching/i)).toBeInTheDocument();
+  });
+
+  it('displays search results', async () => {
+    mockSearchParams.set('q', 'test');
+    const mockResults = {
+      results: [
+        {
+          page_id: 'page-1',
+          title: 'Test Page',
+          section: 'Test Section',
+          snippet: 'This is a test snippet',
+          relevance_score: 0.85,
+        },
+      ],
+      total: 1,
+      query: 'test',
+    };
+
+    searchApi.useSearch.mockReturnValue({
+      data: mockResults,
+      isLoading: false,
+      isError: false,
+    });
+
+    renderSearchPage();
+    
+    await waitFor(() => {
+      expect(screen.getByText('Test Page')).toBeInTheDocument();
+    });
+    expect(screen.getByText('Test Section')).toBeInTheDocument();
+  });
+
+  it('displays no results message', () => {
+    mockSearchParams.set('q', 'nonexistent');
+    const mockResults = {
+      results: [],
+      total: 0,
+      query: 'nonexistent',
+    };
+
+    searchApi.useSearch.mockReturnValue({
+      data: mockResults,
+      isLoading: false,
+      isError: false,
+    });
+
+    renderSearchPage();
+    expect(screen.getByText(/No results found/i)).toBeInTheDocument();
   });
 
   it('renders layout with sidebar', () => {
     renderSearchPage();
+    // Verify the page renders (layout and sidebar are mocked)
     expect(screen.getByTestId('layout')).toBeInTheDocument();
     expect(screen.getByTestId('sidebar')).toBeInTheDocument();
-  });
-
-  it('renders without crashing', () => {
-    expect(() => renderSearchPage()).not.toThrow();
   });
 });

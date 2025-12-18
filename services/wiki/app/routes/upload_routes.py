@@ -2,7 +2,7 @@
 import os
 import uuid
 
-from flask import Blueprint, request, jsonify, current_app
+from flask import Blueprint, request, jsonify, current_app, send_from_directory
 
 from app import db
 from app.models.page import Page
@@ -134,6 +134,21 @@ def upload_image():
         )
     except Exception as e:  # pragma: no cover - defensive
         db.session.rollback()
+        return jsonify({"error": str(e)}), 500
+
+
+@upload_bp.route("/uploads/images/<filename>", methods=["GET"])
+def serve_image(filename):
+    """Serve uploaded image files.
+    
+    Public endpoint - no authentication required for viewing images.
+    """
+    try:
+        uploads_dir = current_app.config.get("WIKI_UPLOADS_DIR", "data/uploads/images")
+        return send_from_directory(uploads_dir, filename)
+    except FileNotFoundError:
+        return jsonify({"error": "Image not found"}), 404
+    except Exception as e:
         return jsonify({"error": str(e)}), 500
 
 

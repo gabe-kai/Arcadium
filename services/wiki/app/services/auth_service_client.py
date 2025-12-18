@@ -57,41 +57,49 @@ class AuthServiceClient:
         }
         
         try:
+            logger.debug(f"Verifying token with Auth Service at {url}")
             response = requests.post(url, json=payload, headers=headers, timeout=self.timeout)
+            
+            logger.debug(f"Auth Service response: status={response.status_code}, url={url}")
             
             if response.status_code == 200:
                 data = response.json()
+                logger.debug(f"Auth Service response data: {data}")
                 if data.get('valid'):
                     # Normalize response format
                     user_data = data.get('user', {})
-                    return {
+                    result = {
                         'user_id': user_data.get('id') or user_data.get('user_id'),
                         'username': user_data.get('username', ''),
                         'role': user_data.get('role', 'viewer'),
                         'email': user_data.get('email', '')
                     }
+                    logger.debug(f"Token verified successfully. User: {result.get('username')}, Role: {result.get('role')}")
+                    return result
                 else:
                     # Token is invalid
-                    logger.debug("Token verification returned valid=false")
+                    logger.warning(f"Token verification returned valid=false. Response: {data}")
                     return None
             elif response.status_code == 401:
                 # Token is invalid or expired
-                logger.debug(f"Token verification failed: {response.status_code}")
+                logger.warning(f"Token verification failed with 401. Response: {response.text}")
                 return None
             else:
                 logger.warning(
-                    f"Unexpected status code from Auth Service: {response.status_code}"
+                    f"Unexpected status code from Auth Service: {response.status_code}. "
+                    f"URL: {url}, Response: {response.text}"
                 )
                 return None
                 
         except requests.exceptions.Timeout:
-            logger.error("Auth Service timeout during token verification")
+            logger.error(f"Auth Service timeout during token verification. URL: {url}, Timeout: {self.timeout}s")
             return None
-        except requests.exceptions.ConnectionError:
-            logger.error("Failed to connect to Auth Service")
+        except requests.exceptions.ConnectionError as e:
+            logger.error(f"Failed to connect to Auth Service at {url}. Error: {str(e)}")
+            logger.error(f"Please ensure the Auth Service is running at {self.base_url}")
             return None
         except Exception as e:
-            logger.error(f"Error verifying token: {str(e)}")
+            logger.error(f"Error verifying token: {str(e)}", exc_info=True)
             return None
     
     def get_user_profile(self, user_id: str) -> Optional[Dict]:

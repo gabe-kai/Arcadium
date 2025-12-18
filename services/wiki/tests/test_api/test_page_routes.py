@@ -125,6 +125,85 @@ def test_create_page_success(client, app, test_writer_id):
         assert 'slug' in data
 
 
+def test_create_page_with_frontmatter(client, app, test_writer_id):
+    """Test creating a page with frontmatter (preserved for AI system)"""
+    with mock_auth(test_writer_id, 'writer'):
+        content_with_frontmatter = """---
+title: Test Page
+slug: test-page
+tags: [ai, content]
+author: AI Assistant
+---
+# Content here
+"""
+        response = client.post('/api/pages',
+            json={
+                'title': 'Test Page',
+                'content': content_with_frontmatter,
+                'status': 'published'
+            },
+            headers=auth_headers(test_writer_id, 'writer')
+        )
+        assert response.status_code == 201
+        data = response.get_json()
+        # Content should be returned with frontmatter preserved
+        assert '---' in data['content']
+        assert 'tags: [ai, content]' in data['content'] or 'tags:' in data['content']
+        assert 'author: AI Assistant' in data['content'] or 'author:' in data['content']
+
+
+def test_update_page_preserves_custom_frontmatter(client, app, test_writer_id):
+    """Test that updating a page preserves custom frontmatter fields"""
+    from app.utils.markdown_service import parse_frontmatter
+    
+    # Create a page owned by the test writer
+    original_content = """---
+title: Test Page
+slug: test-page-frontmatter
+tags: [ai, content]
+author: AI Assistant
+---
+# Original content
+"""
+    page = Page(
+        title='Test Page',
+        slug='test-page-frontmatter',
+        content=original_content,
+        status='published',
+        created_by=test_writer_id,
+        updated_by=test_writer_id,
+        file_path='test-page-frontmatter.md'
+    )
+    from app import db
+    db.session.add(page)
+    db.session.commit()
+    page_id = str(page.id)
+    
+    with mock_auth(test_writer_id, 'writer'):
+        # Update page content (frontend would strip frontmatter, then add it back)
+        updated_content = """---
+title: Updated Title
+slug: test-page-frontmatter
+tags: [ai, content]
+author: AI Assistant
+status: published
+---
+# Updated content
+"""
+        response = client.put(f'/api/pages/{page_id}',
+            json={
+                'title': 'Updated Title',
+                'content': updated_content
+            },
+            headers=auth_headers(test_writer_id, 'writer')
+        )
+        assert response.status_code == 200
+        data = response.get_json()
+        # Custom fields should be preserved
+        assert 'tags:' in data['content'] or 'tags: [ai, content]' in data['content']
+        assert 'author: AI Assistant' in data['content'] or 'author:' in data['content']
+
+
 def test_create_page_missing_title(client, test_writer_id):
     """Test creating page without title"""
     with mock_auth(test_writer_id, 'writer'):

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { searchPages } from '../../services/api/pages';
+import { searchPages } from '../../services/api/search';
 import './LinkDialog.css';
 
 /**
@@ -52,8 +52,9 @@ export function LinkDialog({ isOpen, onClose, onInsert, initialUrl = '' }) {
     setIsSearching(true);
     searchTimerRef.current = setTimeout(async () => {
       try {
-        const results = await searchPages(searchQuery.trim());
-        setSearchResults(results || []);
+        const searchData = await searchPages(searchQuery.trim(), { limit: 20 });
+        // Search API returns { results: [...], total: ..., query: ... }
+        setSearchResults(searchData?.results || []);
       } catch (error) {
         console.error('Error searching pages:', error);
         setSearchResults([]);
@@ -69,16 +70,34 @@ export function LinkDialog({ isOpen, onClose, onInsert, initialUrl = '' }) {
     };
   }, [searchQuery, linkType]);
 
+  // Normalize URL - add protocol if missing for external URLs
+  const normalizeUrl = (urlString) => {
+    const trimmed = urlString.trim();
+    if (linkType === 'external') {
+      // If it doesn't start with http:// or https://, add https://
+      if (trimmed && !trimmed.match(/^https?:\/\//i)) {
+        // Check if it looks like a domain (has dots and no spaces)
+        if (trimmed.includes('.') && !trimmed.includes(' ')) {
+          return `https://${trimmed}`;
+        }
+      }
+    }
+    return trimmed;
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (url.trim()) {
-      onInsert(url.trim());
+    const normalizedUrl = normalizeUrl(url);
+    if (normalizedUrl) {
+      onInsert(normalizedUrl);
       onClose();
     }
   };
 
   const handleSelectPage = (page) => {
-    setUrl(`/pages/${page.id}`);
+    // Search API returns page_id, pages API returns id
+    const pageId = page.page_id || page.id;
+    setUrl(`/pages/${pageId}`);
     setSearchQuery('');
     setSearchResults([]);
   };
@@ -142,7 +161,7 @@ export function LinkDialog({ isOpen, onClose, onInsert, initialUrl = '' }) {
               {!isSearching && searchResults.length > 0 && (
                 <ul className="arc-link-dialog-results">
                   {searchResults.map((page) => (
-                    <li key={page.id}>
+                    <li key={page.page_id || page.id}>
                       <button
                         type="button"
                         className="arc-link-dialog-result-item"
@@ -177,13 +196,16 @@ export function LinkDialog({ isOpen, onClose, onInsert, initialUrl = '' }) {
               <label htmlFor="link-url">URL:</label>
               <input
                 id="link-url"
-                type="url"
+                type="text"
                 className="arc-link-dialog-input"
-                placeholder="https://example.com"
+                placeholder="https://example.com or www.example.com"
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
                 autoFocus
               />
+              <small className="arc-link-dialog-help">
+                Protocol (https://) will be added automatically if missing
+              </small>
             </div>
           )}
 

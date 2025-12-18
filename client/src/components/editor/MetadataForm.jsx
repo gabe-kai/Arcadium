@@ -36,18 +36,8 @@ export function MetadataForm({
   const slugValidationTimerRef = useRef(null);
   const parentSearchTimerRef = useRef(null);
   const parentDropdownRef = useRef(null);
-
-  // Auto-generate slug from title
-  useEffect(() => {
-    if (isNewPage && title && !slug) {
-      const generated = generateSlug(title);
-      setSlug(generated);
-    } else if (title && !slug) {
-      // For existing pages, only auto-generate if slug is empty
-      const generated = generateSlug(title);
-      setSlug(generated);
-    }
-  }, [title, isNewPage, slug]);
+  const slugManuallyEditedRef = useRef(false);
+  const isInitialMountRef = useRef(true);
 
   // Validate slug when it changes
   useEffect(() => {
@@ -114,44 +104,95 @@ export function MetadataForm({
     };
   }, []);
 
-  // Notify parent of changes
+  // Notify parent of changes (debounced to prevent excessive updates)
   useEffect(() => {
+    // Skip on initial mount to prevent unnecessary onChange calls
+    if (isInitialMountRef.current) {
+      isInitialMountRef.current = false;
+      return;
+    }
+
     if (onChange) {
-      onChange({
-        title: title.trim(),
-        slug: slug.trim(),
-        parent_id: parentId || null,
-        section: section.trim() || null,
-        order: order !== '' ? parseInt(order, 10) : null,
-        status,
-      });
+      // Use a small timeout to debounce rapid changes
+      const timeoutId = setTimeout(() => {
+        const newData = {
+          title: title.trim(),
+          slug: slug.trim(),
+          parent_id: parentId || null,
+          section: section.trim() || null,
+          order: order !== '' ? parseInt(order, 10) : null,
+          status,
+        };
+        
+        // Store what we're sending to prevent feedback loops
+        lastSyncedDataRef.current = newData;
+        
+        onChange(newData);
+      }, 150); // Slightly longer debounce to reduce flicker
+
+      return () => clearTimeout(timeoutId);
     }
   }, [title, slug, parentId, section, order, status, onChange]);
 
-  // Update form when initialData changes
+  // Update form when initialData changes (only on mount or when external changes occur)
+  // Use a ref to track the last synced values to prevent feedback loops
+  const lastSyncedDataRef = useRef(null);
+  
   useEffect(() => {
     const safeData = initialData || {};
-    if (safeData.title !== undefined) setTitle(safeData.title || '');
-    if (safeData.slug !== undefined) setSlug(safeData.slug || '');
-    if (safeData.parent_id !== undefined) setParentId(safeData.parent_id || '');
-    if (safeData.section !== undefined) setSection(safeData.section || '');
-    if (safeData.order !== undefined) setOrder(safeData.order !== null ? safeData.order : '');
-    if (safeData.status !== undefined) setStatus(safeData.status || 'draft');
+    
+    // Skip if this is the same data we just sent (prevent feedback loop)
+    if (lastSyncedDataRef.current && 
+        JSON.stringify(safeData) === JSON.stringify(lastSyncedDataRef.current)) {
+      return;
+    }
+    
+    // Only update if values are actually different and not currently being edited
+    if (safeData.title !== undefined && safeData.title !== title && safeData.title !== '') {
+      setTitle(safeData.title || '');
+    }
+    if (safeData.slug !== undefined && safeData.slug !== slug && !slugManuallyEditedRef.current) {
+      setSlug(safeData.slug || '');
+    }
+    if (safeData.parent_id !== undefined && safeData.parent_id !== parentId) {
+      setParentId(safeData.parent_id || '');
+    }
+    if (safeData.section !== undefined && safeData.section !== section) {
+      setSection(safeData.section || '');
+    }
+    if (safeData.order !== undefined && safeData.order !== order) {
+      setOrder(safeData.order !== null ? safeData.order : '');
+    }
+    if (safeData.status !== undefined && safeData.status !== status) {
+      setStatus(safeData.status || 'draft');
+    }
+    
+    // Store what we synced to prevent loops
+    lastSyncedDataRef.current = safeData;
   }, [initialData]);
 
   const handleTitleChange = (e) => {
     const newTitle = e.target.value;
     setTitle(newTitle);
     
-    // Auto-generate slug if it hasn't been manually edited
-    if (isNewPage || !slug || slug === generateSlug(title)) {
+    // Auto-generate slug only if it hasn't been manually edited
+    if (!slugManuallyEditedRef.current) {
       const generated = generateSlug(newTitle);
       setSlug(generated);
     }
   };
 
   const handleSlugChange = (e) => {
-    setSlug(e.target.value);
+    const newSlug = e.target.value;
+    setSlug(newSlug);
+    // Mark slug as manually edited if user types anything
+    if (newSlug && !slugManuallyEditedRef.current) {
+      slugManuallyEditedRef.current = true;
+    }
+    // Reset flag if slug is cleared
+    if (!newSlug) {
+      slugManuallyEditedRef.current = false;
+    }
   };
 
   const handleParentSelect = (page) => {
@@ -289,7 +330,7 @@ export function MetadataForm({
           id="metadata-section"
           type="text"
           className="arc-metadata-form-input"
-          value={section}
+          value={section || ''}
           onChange={(e) => setSection(e.target.value)}
           placeholder="e.g., Game Rules, Lore, Mechanics"
         />
@@ -308,7 +349,7 @@ export function MetadataForm({
           type="number"
           min="0"
           className={`arc-metadata-form-input ${errors.order ? 'arc-metadata-form-input-error' : ''}`}
-          value={order}
+          value={order || ''}
           onChange={(e) => {
             const value = e.target.value;
             if (value === '' || (!isNaN(value) && parseInt(value, 10) >= 0)) {

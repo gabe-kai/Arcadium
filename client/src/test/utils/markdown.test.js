@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { htmlToMarkdown, markdownToHtml } from '../../utils/markdown';
+import { htmlToMarkdown, markdownToHtml, parseFrontmatter, addFrontmatter } from '../../utils/markdown';
 
 describe('markdown utilities', () => {
   describe('htmlToMarkdown', () => {
@@ -204,6 +204,198 @@ describe('markdown utilities', () => {
       const convertedHtml = markdownToHtml(markdown);
       expect(convertedHtml).toContain('Main Title');
       expect(convertedHtml).toContain('Subtitle');
+    });
+  });
+
+  describe('parseFrontmatter', () => {
+    it('parses content with frontmatter', () => {
+      const content = `---
+title: Test Page
+slug: test-page
+section: Testing
+status: published
+---
+# Content here`;
+      const result = parseFrontmatter(content);
+      expect(result.frontmatter).toEqual({
+        title: 'Test Page',
+        slug: 'test-page',
+        section: 'Testing',
+        status: 'published'
+      });
+      expect(result.markdown.trim()).toBe('# Content here');
+    });
+
+    it('handles content without frontmatter', () => {
+      const content = '# Just markdown content';
+      const result = parseFrontmatter(content);
+      expect(result.frontmatter).toEqual({});
+      expect(result.markdown).toBe(content);
+    });
+
+    it('handles empty content', () => {
+      const result = parseFrontmatter('');
+      expect(result.frontmatter).toEqual({});
+      expect(result.markdown).toBe('');
+    });
+
+    it('handles null/undefined content', () => {
+      expect(parseFrontmatter(null).frontmatter).toEqual({});
+      expect(parseFrontmatter(undefined).frontmatter).toEqual({});
+    });
+
+    it('handles malformed frontmatter', () => {
+      const content = `---
+invalid yaml
+---
+# Content`;
+      const result = parseFrontmatter(content);
+      // Should still extract markdown even if frontmatter parsing fails
+      expect(result.markdown).toContain('# Content');
+    });
+
+    it('handles frontmatter with quoted values', () => {
+      const content = `---
+title: "Test Page"
+slug: 'test-page'
+---
+# Content`;
+      const result = parseFrontmatter(content);
+      expect(result.frontmatter.title).toBe('Test Page');
+      expect(result.frontmatter.slug).toBe('test-page');
+    });
+
+    it('handles custom frontmatter fields', () => {
+      const content = `---
+title: Test Page
+tags: ai,content
+author: AI Assistant
+category: documentation
+---
+# Content`;
+      const result = parseFrontmatter(content);
+      expect(result.frontmatter.title).toBe('Test Page');
+      expect(result.frontmatter.tags).toBe('ai,content');
+      expect(result.frontmatter.author).toBe('AI Assistant');
+      expect(result.frontmatter.category).toBe('documentation');
+    });
+  });
+
+  describe('addFrontmatter', () => {
+    it('adds frontmatter to markdown', () => {
+      const metadata = {
+        title: 'Test Page',
+        slug: 'test-page',
+        section: 'Testing',
+        status: 'published'
+      };
+      const markdown = '# Content here';
+      const result = addFrontmatter(metadata, markdown);
+      
+      expect(result).toContain('---');
+      expect(result).toContain('title: Test Page');
+      expect(result).toContain('slug: test-page');
+      expect(result).toContain('section: Testing');
+      expect(result).toContain('status: published');
+      expect(result).toContain('# Content here');
+    });
+
+    it('preserves existing custom frontmatter fields', () => {
+      const metadata = {
+        title: 'Updated Title',
+        slug: 'test-page',
+        status: 'published'
+      };
+      const markdown = '# Content';
+      const originalContent = `---
+title: Old Title
+slug: test-page
+tags: ai,content
+author: AI Assistant
+category: documentation
+---
+# Content`;
+      
+      const result = addFrontmatter(metadata, markdown, originalContent);
+      
+      // Should update standard fields
+      expect(result).toContain('title: Updated Title');
+      expect(result).toContain('status: published');
+      // Should preserve custom fields
+      expect(result).toContain('tags: ai,content');
+      expect(result).toContain('author: AI Assistant');
+      expect(result).toContain('category: documentation');
+    });
+
+    it('handles metadata without optional fields', () => {
+      const metadata = {
+        title: 'Test Page',
+        slug: 'test-page',
+        status: 'draft'
+      };
+      const markdown = '# Content';
+      const result = addFrontmatter(metadata, markdown);
+      
+      expect(result).toContain('title: Test Page');
+      expect(result).toContain('slug: test-page');
+      expect(result).toContain('status: draft');
+      expect(result).not.toContain('section:');
+    });
+
+    it('removes fields when cleared', () => {
+      const metadata = {
+        title: 'Test Page',
+        slug: 'test-page',
+        section: '',  // Cleared
+        status: 'published'
+      };
+      const markdown = '# Content';
+      const originalContent = `---
+title: Test Page
+slug: test-page
+section: Old Section
+status: published
+---
+# Content`;
+      
+      const result = addFrontmatter(metadata, markdown, originalContent);
+      
+      // Section should be removed
+      expect(result).not.toContain('section:');
+    });
+
+    it('handles order field', () => {
+      const metadata = {
+        title: 'Test Page',
+        slug: 'test-page',
+        order: 5,
+        status: 'published'
+      };
+      const markdown = '# Content';
+      const result = addFrontmatter(metadata, markdown);
+      
+      expect(result).toContain('order: 5');
+    });
+
+    it('returns markdown only if no frontmatter fields', () => {
+      const metadata = {};
+      const markdown = '# Content';
+      const result = addFrontmatter(metadata, markdown);
+      
+      expect(result).toBe('# Content');
+      expect(result).not.toContain('---');
+    });
+
+    it('handles null originalContent', () => {
+      const metadata = {
+        title: 'Test Page',
+        slug: 'test-page'
+      };
+      const markdown = '# Content';
+      const result = addFrontmatter(metadata, markdown, null);
+      
+      expect(result).toContain('title: Test Page');
+      expect(result).toContain('# Content');
     });
   });
 });

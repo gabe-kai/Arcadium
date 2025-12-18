@@ -60,18 +60,19 @@ class PageService:
             if Page.query.filter_by(slug=slug).first():
                 raise ValueError(f"Slug already exists: {slug}")
         
-        # Parse frontmatter if present
+        # Parse frontmatter if present (for metrics calculation)
         frontmatter, markdown_content = parse_frontmatter(content)
         
-        # Calculate metrics
+        # Calculate metrics (use markdown without frontmatter)
         word_count = calculate_word_count(markdown_content)
         content_size_kb = calculate_content_size_kb(markdown_content)
         
-        # Create page
+        # Create page - store content WITH frontmatter (needed for AI content management)
+        # Frontend strips frontmatter for editor display, but we keep it in database
         page = Page(
             title=title,
             slug=slug,
-            content=content,
+            content=content,  # Store content with frontmatter for AI system
             parent_id=parent_id,
             section=section,
             status=status,
@@ -116,14 +117,21 @@ class PageService:
         
         # Write file to disk
         # Use values we already have to avoid SQLAlchemy lazy loading issues
+        # Parse frontmatter from content (which may have frontmatter from frontend)
+        file_frontmatter, file_markdown = parse_frontmatter(content)
+        # Merge with page metadata (page metadata takes precedence)
+        if section:
+            file_frontmatter['section'] = section
+        if status:
+            file_frontmatter['status'] = status
         file_content = PageService._build_file_content_from_values(
             title=title,
             slug=slug,
             parent_id=parent_id,
             section=section,
             status=status,
-            frontmatter=frontmatter,
-            markdown_content=markdown_content
+            frontmatter=file_frontmatter,
+            markdown_content=file_markdown
         )
         FileService.write_page_file(page, file_content, file_path=stored_file_path)
         
@@ -184,6 +192,8 @@ class PageService:
             page.title = title
         
         if content is not None:
+            # Store content WITH frontmatter (needed for AI content management)
+            # Frontend strips frontmatter for editor display, but we keep it in database
             page.content = content
         
         if slug is not None:
@@ -226,6 +236,7 @@ class PageService:
         
         # Recalculate metrics if content changed
         if content is not None:
+            # Parse frontmatter for metrics calculation (use markdown without frontmatter)
             frontmatter, markdown_content = parse_frontmatter(content)
             page.word_count = calculate_word_count(markdown_content)
             page.content_size_kb = calculate_content_size_kb(markdown_content)
@@ -240,7 +251,13 @@ class PageService:
             FileService.move_page_file(page, old_file_path, new_file_path)
         else:
             # Update file content
+            # Parse frontmatter from page.content (which may have frontmatter from frontend)
             frontmatter, markdown_content = parse_frontmatter(page.content)
+            # Merge with page metadata (page metadata takes precedence)
+            if page.section:
+                frontmatter['section'] = page.section
+            if page.status:
+                frontmatter['status'] = page.status
             file_content = PageService._build_file_content_from_values(
                 title=page.title,
                 slug=page.slug,

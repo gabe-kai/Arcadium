@@ -36,6 +36,140 @@ def parse_frontmatter(content: str) -> Tuple[Dict, str]:
     return frontmatter, markdown_content
 
 
+def _parse_lists(lines: list) -> list:
+    """
+    Parse markdown list lines into HTML list structure.
+    Handles nested bullet and numbered lists.
+    
+    Args:
+        lines: List of markdown lines
+        
+    Returns:
+        List of HTML strings with lists converted
+    """
+    result = []
+    i = 0
+    
+    while i < len(lines):
+        line = lines[i]
+        original_line = line
+        stripped = line.strip()
+        
+        # Skip empty lines
+        if not stripped:
+            result.append('')
+            i += 1
+            continue
+        
+        # Check if this is a list item (bullet or numbered)
+        bullet_match = re.match(r'^(\s*)[-*+]\s+(.+)$', stripped)
+        numbered_match = re.match(r'^(\s*)(\d+)\.\s+(.+)$', stripped)
+        
+        if bullet_match or numbered_match:
+            # Start of a list - collect all list items at this level
+            list_items = []
+            list_type = 'ul' if bullet_match else 'ol'
+            base_indent = len(bullet_match.group(1)) if bullet_match else len(numbered_match.group(1))
+            
+            # Process list items at this level
+            while i < len(lines):
+                line = lines[i]
+                stripped = line.strip()
+                
+                if not stripped:
+                    # Empty line - check if list continues
+                    i += 1
+                    if i >= len(lines):
+                        break
+                    # Peek at next line
+                    next_stripped = lines[i].strip()
+                    if not next_stripped:
+                        continue
+                    # Check if next line is a list item at same or deeper level
+                    next_bullet = re.match(r'^(\s*)[-*+]\s+', next_stripped)
+                    next_numbered = re.match(r'^(\s*)(\d+)\.\s+', next_stripped)
+                    if next_bullet or next_numbered:
+                        next_indent = len(lines[i]) - len(lines[i].lstrip())
+                        if next_indent >= base_indent:
+                            # List continues
+                            continue
+                    # List ends
+                    break
+                
+                # Check if this is a list item
+                item_bullet = re.match(r'^(\s*)[-*+]\s+(.+)$', stripped)
+                item_numbered = re.match(r'^(\s*)(\d+)\.\s+(.+)$', stripped)
+                
+                if not item_bullet and not item_numbered:
+                    # Not a list item, end the list
+                    break
+                
+                # Get indent level
+                item_indent = len(item_bullet.group(1)) if item_bullet else len(item_numbered.group(1))
+                
+                if item_indent < base_indent:
+                    # Indent decreased, we're done with this list
+                    break
+                
+                if item_indent > base_indent:
+                    # Nested item - should be handled by recursive call
+                    break
+                
+                # Same level item
+                content = item_bullet.group(2) if item_bullet else item_numbered.group(3)
+                i += 1
+                
+                # Collect nested content (deeper indented lines)
+                nested_lines = []
+                while i < len(lines):
+                    next_line = lines[i]
+                    next_stripped = next_line.strip()
+                    
+                    if not next_stripped:
+                        # Empty line - check if list continues
+                        nested_lines.append('')
+                        i += 1
+                        if i < len(lines):
+                            peek_stripped = lines[i].strip()
+                            if peek_stripped:
+                                peek_indent = len(lines[i]) - len(lines[i].lstrip())
+                                if peek_indent <= base_indent:
+                                    # Next item is at same or higher level
+                                    break
+                        continue
+                    
+                    next_indent = len(next_line) - len(next_line.lstrip())
+                    
+                    if next_indent <= base_indent:
+                        # Next line is at same or higher level, done with nested content
+                        break
+                    
+                    # This line is nested
+                    nested_lines.append(next_line)
+                    i += 1
+                
+                # Process nested content if any
+                if nested_lines:
+                    nested_html = _parse_lists(nested_lines)
+                    nested_str = '\n'.join(nested_html).strip()
+                    if nested_str:
+                        list_items.append(f'<li>{content}\n{nested_str}</li>')
+                    else:
+                        list_items.append(f'<li>{content}</li>')
+                else:
+                    list_items.append(f'<li>{content}</li>')
+            
+            # Output the list
+            if list_items:
+                result.append(f'<{list_type}>\n' + '\n'.join(list_items) + f'\n</{list_type}>')
+        else:
+            # Not a list line, pass through
+            result.append(original_line)
+            i += 1
+    
+    return result
+
+
 def markdown_to_html(markdown: str) -> str:
     """
     Convert markdown to HTML.
@@ -52,13 +186,24 @@ def markdown_to_html(markdown: str) -> str:
     
     html = markdown
     
-    # Headers (H1-H6)
+    # Headers (H1-H6) - do this first before other processing
     html = re.sub(r'^# (.+)$', r'<h1>\1</h1>', html, flags=re.MULTILINE)
     html = re.sub(r'^## (.+)$', r'<h2>\1</h2>', html, flags=re.MULTILINE)
     html = re.sub(r'^### (.+)$', r'<h3>\1</h3>', html, flags=re.MULTILINE)
     html = re.sub(r'^#### (.+)$', r'<h4>\1</h4>', html, flags=re.MULTILINE)
     html = re.sub(r'^##### (.+)$', r'<h5>\1</h5>', html, flags=re.MULTILINE)
     html = re.sub(r'^###### (.+)$', r'<h6>\1</h6>', html, flags=re.MULTILINE)
+    
+    # Code blocks ```code``` - do before other processing to preserve content
+    html = re.sub(r'```([^`]+)```', r'<pre><code>\1</code></pre>', html, flags=re.DOTALL)
+    
+    # Parse lists (bullet and numbered) - handle nested lists
+    # Do this BEFORE header conversion so we can parse markdown list syntax
+    # But headers are already converted above, so we need to work with what we have
+    # The list parser will skip lines that already have HTML tags
+    lines = html.split('\n')
+    lines = _parse_lists(lines)
+    html = '\n'.join(lines)
     
     # Bold
     html = re.sub(r'\*\*(.+?)\*\*', r'<strong>\1</strong>', html)
@@ -74,13 +219,10 @@ def markdown_to_html(markdown: str) -> str:
     # Images ![alt](url)
     html = re.sub(r'!\[([^\]]*)\]\(([^\)]+)\)', r'<img src="\2" alt="\1">', html)
     
-    # Code blocks ```code```
-    html = re.sub(r'```([^`]+)```', r'<pre><code>\1</code></pre>', html, flags=re.DOTALL)
-    
-    # Inline code `code`
+    # Inline code `code` - do after other processing to avoid conflicts
     html = re.sub(r'`([^`]+)`', r'<code>\1</code>', html)
     
-    # Paragraphs (lines not starting with #, *, -, etc.)
+    # Paragraphs (lines not starting with #, *, -, <ul, <ol, <li, <pre, etc.)
     lines = html.split('\n')
     result = []
     in_paragraph = False
@@ -94,7 +236,7 @@ def markdown_to_html(markdown: str) -> str:
                 current_paragraph = []
                 in_paragraph = False
             result.append('')
-        elif stripped.startswith(('<h', '<p', '<pre', '<ul', '<ol', '<li')):
+        elif stripped.startswith(('<h', '<p', '<pre', '<ul', '<ol', '<li', '<blockquote', '</ul', '</ol')):
             if in_paragraph:
                 result.append(f'<p>{" ".join(current_paragraph)}</p>')
                 current_paragraph = []

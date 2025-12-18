@@ -131,6 +131,13 @@
   font-style: italic;
 }
 
+.arc-link-dialog-help {
+  font-size: 0.75rem;
+  color: var(--arc-text-subtle);
+  font-style: italic;
+  margin-top: -0.5rem;
+}
+
 .arc-link-dialog-results {
   list-style: none;
   padding: 0;

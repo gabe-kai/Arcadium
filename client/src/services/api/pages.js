@@ -88,15 +88,34 @@ export function validateSlug(slug, excludePageId = null) {
     });
   }
   
-  // Check uniqueness via API (would need a dedicated endpoint or use search)
-  // For now, we'll use a simple approach - check if a page with this slug exists
+  // Check uniqueness via API using slug filter
   return apiClient
     .get('/pages', { params: { slug: trimmedSlug } })
     .then((res) => {
       const pages = res.data.pages || [];
-      const conflictingPage = pages.find(p => p.id !== excludePageId);
       
-      if (conflictingPage) {
+      // If no pages found, slug is available
+      if (pages.length === 0) {
+        return { valid: true };
+      }
+      
+      // If excludePageId is provided, check if the found page is the one we're editing
+      if (excludePageId) {
+        const conflictingPage = pages.find(p => p.id !== excludePageId && p.id !== excludePageId?.toString());
+        
+        if (conflictingPage) {
+          return { 
+            valid: false, 
+            message: `Slug "${trimmedSlug}" is already in use by another page` 
+          };
+        }
+        
+        // The only page with this slug is the one we're editing, so it's valid
+        return { valid: true };
+      }
+      
+      // For new pages (no excludePageId), any existing page is a conflict
+      if (pages.length > 0) {
         return { 
           valid: false, 
           message: `Slug "${trimmedSlug}" is already in use by another page` 
@@ -105,7 +124,11 @@ export function validateSlug(slug, excludePageId = null) {
       
       return { valid: true };
     })
-    .catch(() => ({ valid: true })); // Assume valid on error (optimistic)
+    .catch((error) => {
+      // Log error for debugging but assume valid on error (optimistic)
+      console.warn('Slug validation error:', error);
+      return { valid: true };
+    });
 }
 
 // Version history API functions

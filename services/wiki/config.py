@@ -51,7 +51,7 @@ class Config:
     WIKI_UPLOADS_DIR = os.path.join(WIKI_DATA_DIR, 'uploads', 'images')
     
     # Auth service integration
-    AUTH_SERVICE_URL = os.environ.get('AUTH_SERVICE_URL') or 'http://localhost:5001'
+    AUTH_SERVICE_URL = os.environ.get('AUTH_SERVICE_URL') or 'http://localhost:8000'
     AUTH_SERVICE_TOKEN = os.environ.get('AUTH_SERVICE_TOKEN') or ''
     
     # Notification service integration

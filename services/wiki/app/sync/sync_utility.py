@@ -176,13 +176,14 @@ class SyncUtility:
         order = frontmatter.get('order')
         status = frontmatter.get('status', 'published')
         
-        # Combine frontmatter and content for full content
+        # Store content WITH frontmatter in database (needed for AI content management)
+        # Frontend will parse and strip frontmatter for editor display
         full_content = self._reconstruct_content(frontmatter, markdown_content)
         
         if page:
             # Update existing page
             page.title = title
-            page.content = full_content
+            page.content = full_content  # Store content with frontmatter for AI system
             page.parent_id = parent_id
             page.section = section
             page.status = status
@@ -203,9 +204,10 @@ class SyncUtility:
             was_created = False
         else:
             # Create new page
+            # Pass full_content with frontmatter (needed for AI content management)
             page = PageService.create_page(
                 title=title,
-                content=full_content,
+                content=full_content,  # Pass content with frontmatter for AI system
                 user_id=self.admin_user_id,
                 slug=slug,
                 parent_id=parent_id,
@@ -221,8 +223,8 @@ class SyncUtility:
             db.session.commit()
             was_created = True
         
-        # Update links
-        LinkService.update_page_links(page.id, full_content)
+        # Update links - use page.content (which includes frontmatter, but link extraction handles it)
+        LinkService.update_page_links(page.id, page.content)
         
         # Update search index
         SearchIndexService.index_page(page.id, markdown_content, title=title)

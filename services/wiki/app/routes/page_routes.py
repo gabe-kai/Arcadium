@@ -10,7 +10,7 @@ from app.services.search_index_service import SearchIndexService
 from app.services.version_service import VersionService
 from app.services.cache_service import CacheService
 from app.utils.toc_service import generate_toc
-from app.utils.markdown_service import markdown_to_html
+from app.utils.markdown_service import markdown_to_html, parse_frontmatter
 
 page_bp = Blueprint('pages', __name__)
 
@@ -24,6 +24,7 @@ def list_pages():
     Query Parameters:
     - section: Filter by section name
     - parent_id: Filter by parent page ID
+    - slug: Filter by exact slug match
     - search: Search term for title/content
     - status: Filter by status (published, draft) - defaults to published for non-creators
     - include_drafts: Include draft pages (only for creator or admin)
@@ -34,6 +35,7 @@ def list_pages():
         # Get query parameters
         section = request.args.get('section')
         parent_id_str = request.args.get('parent_id')
+        slug = request.args.get('slug')
         search = request.args.get('search')
         status = request.args.get('status')
         include_drafts = request.args.get('include_drafts', 'false').lower() == 'true'
@@ -55,6 +57,46 @@ def list_pages():
         
         # Determine if user can see drafts
         can_see_drafts = user_role in ['admin', 'writer'] and include_drafts
+        
+        # If slug is provided, do a direct lookup (for validation)
+        if slug:
+            page = Page.query.filter_by(slug=slug).first()
+            if not page:
+                return jsonify({
+                    'pages': [],
+                    'total': 0,
+                    'limit': limit,
+                    'offset': 0
+                }), 200
+            
+            # Check draft visibility
+            if page.status == 'draft':
+                if not can_see_drafts or (user_role == 'writer' and page.created_by != user_id):
+                    return jsonify({
+                        'pages': [],
+                        'total': 0,
+                        'limit': limit,
+                        'offset': 0
+                    }), 200
+            
+            return jsonify({
+                'pages': [{
+                    'id': str(page.id),
+                    'title': page.title,
+                    'slug': page.slug,
+                    'parent_id': str(page.parent_id) if page.parent_id else None,
+                    'section': page.section,
+                    'order': page.order_index,
+                    'status': page.status,
+                    'created_at': page.created_at.isoformat() if page.created_at else None,
+                    'updated_at': page.updated_at.isoformat() if page.updated_at else None,
+                    'created_by': str(page.created_by),
+                    'updated_by': str(page.updated_by)
+                }],
+                'total': 1,
+                'limit': limit,
+                'offset': 0
+            }), 200
         
         # If search is provided, use search service
         if search:
@@ -138,6 +180,8 @@ def list_pages():
             total_query = total_query.filter_by(section=section)
         if parent_id:
             total_query = total_query.filter_by(parent_id=parent_id)
+        if slug:
+            total_query = total_query.filter_by(slug=slug)
         if status and not can_see_drafts:
             total_query = total_query.filter_by(status=status)
         elif not can_see_drafts:
@@ -201,17 +245,21 @@ def get_page(page_id):
                     return '<html><body><h1>Page Not Found</h1><p>The requested page does not exist.</p></body></html>', 404
                 return jsonify({'error': 'Page not found'}), 404
         
-        # Get or generate TOC (with caching)
-        toc = CacheService.get_toc_cache(page.content)
-        if toc is None:
-            toc = generate_toc(page.content)
-            CacheService.set_toc_cache(page.content, toc, str(user_id) if user_id else None)
+        # Parse frontmatter to get markdown content (frontmatter should not be in HTML or API response)
+        # This handles both old pages (with frontmatter) and new pages (without frontmatter)
+        _, markdown_content = parse_frontmatter(page.content)
         
-        # Get or generate HTML (with caching)
-        html_content = CacheService.get_html_cache(page.content)
+        # Get or generate TOC (with caching) - use markdown content without frontmatter
+        toc = CacheService.get_toc_cache(markdown_content)
+        if toc is None:
+            toc = generate_toc(markdown_content)
+            CacheService.set_toc_cache(markdown_content, toc, str(user_id) if user_id else None)
+        
+        # Get or generate HTML (with caching) - use markdown content without frontmatter
+        html_content = CacheService.get_html_cache(markdown_content)
         if html_content is None:
-            html_content = markdown_to_html(page.content)
-            CacheService.set_html_cache(page.content, html_content, str(user_id) if user_id else None)
+            html_content = markdown_to_html(markdown_content)
+            CacheService.set_html_cache(markdown_content, html_content, str(user_id) if user_id else None)
         
         # If HTML format requested, return styled HTML page
         if format_type == 'html':
@@ -467,12 +515,14 @@ def get_page(page_id):
         can_edit = PageService.can_edit(page, user_role, user_id)
         
         # Build response
+        # Parse frontmatter for HTML generation, but return full content (with frontmatter) for API
+        # Frontend will parse and strip frontmatter for editor display
         response_data = {
             'id': str(page.id),
             'title': page.title,
             'slug': page.slug,
-            'content': page.content,
-            'html_content': html_content,
+            'content': page.content,  # Return full content with frontmatter (for AI system)
+            'html_content': html_content,  # HTML is generated from markdown without frontmatter
             'parent_id': str(page.parent_id) if page.parent_id else None,
             'section': page.section,
             'order': page.order_index,
@@ -570,7 +620,7 @@ def create_page():
                 'id': str(page.id),
                 'title': page.title,
                 'slug': page.slug,
-                'content': page.content,
+                'content': page.content,  # Return content with frontmatter (for AI system)
                 'created_at': page.created_at.isoformat() if page.created_at else None
             }), 201
         
@@ -664,17 +714,21 @@ def update_page(page_id):
             if content is not None:
                 # Get old content before update for cache invalidation
                 old_content = None
+                old_markdown = None
                 old_page = db.session.get(Page, page_id_uuid)
                 if old_page:
                     old_content = old_page.content
+                    # Parse frontmatter to get markdown for cache invalidation
+                    _, old_markdown = parse_frontmatter(old_content)
                 
                 LinkService.update_page_links(page.id, page.content)
                 # Re-index for search
                 SearchIndexService.index_page(page.id, page.content)
-                # Invalidate cache for both old and new content
-                if old_content:
-                    CacheService.invalidate_cache(old_content)
-                CacheService.invalidate_cache(page.content)
+                # Invalidate cache for both old and new content (using markdown without frontmatter)
+                if old_markdown:
+                    CacheService.invalidate_cache(old_markdown)
+                _, new_markdown = parse_frontmatter(page.content)
+                CacheService.invalidate_cache(new_markdown)
             
             # Handle slug change (update links in other pages)
             if slug and slug != old_slug:
@@ -683,7 +737,7 @@ def update_page(page_id):
             return jsonify({
                 'id': str(page.id),
                 'title': page.title,
-                'content': page.content,
+                'content': page.content,  # Return content with frontmatter (for AI system)
                 'updated_at': page.updated_at.isoformat() if page.updated_at else None,
                 'version': page.version
             }), 200

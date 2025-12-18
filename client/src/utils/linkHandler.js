@@ -66,4 +66,18 @@ export function processLinks(container) {
       link.setAttribute('rel', 'noopener noreferrer');
     }
   });
+  
+  // Process images - convert relative URLs to absolute
+  const images = container.querySelectorAll('img');
+  const baseURL = import.meta.env.VITE_WIKI_API_BASE_URL || 'http://localhost:5000/api';
+  images.forEach((img) => {
+    const src = img.getAttribute('src');
+    if (src && src.startsWith('/uploads/')) {
+      // Convert relative upload URL to absolute
+      img.setAttribute('src', `${baseURL}${src}`);
+    } else if (src && src.startsWith('/') && !src.startsWith('//') && !src.startsWith('http://') && !src.startsWith('https://')) {
+      // Other relative URLs
+      img.setAttribute('src', `${baseURL}${src}`);
+    }
+  });
 }

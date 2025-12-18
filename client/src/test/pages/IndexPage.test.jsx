@@ -1,22 +1,35 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { IndexPage } from '../../pages/IndexPage';
+import * as searchApi from '../../services/api/search';
 
-// Mock NavigationTree
-vi.mock('../../components/navigation/NavigationTree', () => ({
-  NavigationTree: () => <div data-testid="navigation-tree">Navigation Tree</div>,
+// Mock useSearchParams
+const mockSearchParams = new URLSearchParams();
+const mockSetSearchParams = vi.fn();
+
+vi.mock('react-router-dom', async () => {
+  const actual = await vi.importActual('react-router-dom');
+  return {
+    ...actual,
+    useSearchParams: () => [mockSearchParams, mockSetSearchParams],
+  };
+});
+
+// Mock search API
+vi.mock('../../services/api/search', () => ({
+  useSearch: vi.fn(),
+  useIndex: vi.fn(),
 }));
 
-// Mock Layout
+// Mock Layout and Sidebar
 vi.mock('../../components/layout/Layout', () => ({
-  Layout: ({ children, sidebar }) => (
-    <div data-testid="layout">
-      {sidebar && <div data-testid="sidebar">{sidebar}</div>}
-      <main>{children}</main>
-    </div>
-  ),
+  Layout: ({ children }) => <div data-testid="layout">{children}</div>,
+}));
+
+vi.mock('../../components/layout/Sidebar', () => ({
+  Sidebar: () => <div data-testid="sidebar" />,
 }));
 
 describe('IndexPage', () => {
@@ -26,7 +39,17 @@ describe('IndexPage', () => {
     queryClient = new QueryClient({
       defaultOptions: {
         queries: { retry: false },
+        mutations: { retry: false },
       },
+    });
+
+    vi.clearAllMocks();
+    mockSearchParams.delete('letter');
+    mockSearchParams.delete('section');
+    searchApi.useIndex.mockReturnValue({
+      data: { index: {} },
+      isLoading: false,
+      isError: false,
     });
   });
 
@@ -45,25 +68,63 @@ describe('IndexPage', () => {
     expect(screen.getByText('Index')).toBeInTheDocument();
   });
 
-  it('renders placeholder text', () => {
+  it('renders subtitle', () => {
     renderIndexPage();
-    expect(
-      screen.getByText(/An alphabetical index of pages will be implemented here/i),
-    ).toBeInTheDocument();
+    expect(screen.getByText(/Alphabetical listing of all pages/i)).toBeInTheDocument();
   });
 
-  it('renders navigation tree in sidebar', () => {
+  it('displays loading state when loading', () => {
+    searchApi.useIndex.mockReturnValue({
+      data: null,
+      isLoading: true,
+      isError: false,
+    });
+
     renderIndexPage();
-    expect(screen.getByTestId('navigation-tree')).toBeInTheDocument();
+    expect(screen.getByText('Loading index...')).toBeInTheDocument();
+  });
+
+  it('displays index entries', () => {
+    const mockIndex = {
+      A: [
+        { page_id: 'page-1', title: 'Alpha Page', slug: 'alpha', section: 'Section A' },
+      ],
+      B: [
+        { page_id: 'page-2', title: 'Beta Page', slug: 'beta', section: 'Section B' },
+      ],
+    };
+
+    searchApi.useIndex.mockReturnValue({
+      data: { index: mockIndex },
+      isLoading: false,
+      isError: false,
+    });
+
+    renderIndexPage();
+    expect(screen.getByText('Alpha Page')).toBeInTheDocument();
+    expect(screen.getByText('Beta Page')).toBeInTheDocument();
+  });
+
+  it('displays letter navigation buttons', () => {
+    const mockIndex = {
+      A: [{ page_id: 'page-1', title: 'Alpha', slug: 'alpha' }],
+      B: [{ page_id: 'page-2', title: 'Beta', slug: 'beta' }],
+    };
+
+    searchApi.useIndex.mockReturnValue({
+      data: { index: mockIndex },
+      isLoading: false,
+      isError: false,
+    });
+
+    renderIndexPage();
+    expect(screen.getByText('A')).toBeInTheDocument();
+    expect(screen.getByText('B')).toBeInTheDocument();
   });
 
   it('renders layout with sidebar', () => {
     renderIndexPage();
     expect(screen.getByTestId('layout')).toBeInTheDocument();
     expect(screen.getByTestId('sidebar')).toBeInTheDocument();
-  });
-
-  it('renders without crashing', () => {
-    expect(() => renderIndexPage()).not.toThrow();
   });
 });

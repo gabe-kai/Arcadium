@@ -7,7 +7,7 @@ import { Editor } from '../components/editor/Editor';
 import { EditorToolbar } from '../components/editor/EditorToolbar';
 import { MetadataForm } from '../components/editor/MetadataForm';
 import { usePage, createPage, updatePage, useVersionHistory } from '../services/api/pages';
-import { htmlToMarkdown, markdownToHtml } from '../utils/markdown';
+import { htmlToMarkdown, markdownToHtml, parseFrontmatter, addFrontmatter } from '../utils/markdown';
 import { highlightCodeBlocks } from '../utils/syntaxHighlight';
 import { processLinks } from '../utils/linkHandler';
 
@@ -36,6 +36,7 @@ export function EditPage() {
   const editorRef = useRef(null);
   const previewRef = useRef(null);
   const autoSaveTimerRef = useRef(null);
+  const metadataLoadedRef = useRef(false);
 
   // Load page if editing existing page
   const { data: page, isLoading: isLoadingPage } = usePage(isNewPage ? null : pageId);
@@ -50,24 +51,39 @@ export function EditPage() {
 
   // Load page content and metadata into editor
   useEffect(() => {
-    if (page && editor && !hasUnsavedChanges) {
-      setTitle(page.title || '');
-      setMetadata({
-        title: page.title || '',
-        slug: page.slug || '',
-        parent_id: page.parent_id || null,
-        section: page.section || null,
-        order: page.order !== undefined ? page.order : null,
-        status: page.status || 'draft',
-      });
-      if (page.content) {
-        // Convert markdown to HTML for editor
-        const html = markdownToHtml(page.content);
+    if (page && editor) {
+      // Always load metadata from page (it's separate from content)
+      // Only skip if we've already loaded it and user hasn't made changes
+      if (!metadataLoadedRef.current || !hasUnsavedChanges) {
+        setTitle(page.title || '');
+        setMetadata({
+          title: page.title || '',
+          slug: page.slug || '',
+          parent_id: page.parent_id || null,
+          section: page.section || null,
+          order: page.order !== undefined ? page.order : null,
+          status: page.status || 'draft',
+        });
+        metadataLoadedRef.current = true;
+      }
+      
+      // Load content only if we haven't loaded it yet or there are no unsaved changes
+      if (page.content && (!metadataLoadedRef.current || !hasUnsavedChanges)) {
+        // Parse frontmatter to get markdown content (frontmatter should not be in editor)
+        const { markdown: markdownContent } = parseFrontmatter(page.content);
+        
+        // Convert markdown to HTML for editor (without frontmatter)
+        const html = markdownToHtml(markdownContent);
         editor.commands.setContent(html);
         setContent(html);
       }
     }
-  }, [page, editor, hasUnsavedChanges]);
+  }, [page, editor]);
+  
+  // Reset metadata loaded flag when pageId changes
+  useEffect(() => {
+    metadataLoadedRef.current = false;
+  }, [pageId]);
 
   // Auto-save to localStorage
   useEffect(() => {
@@ -128,6 +144,15 @@ export function EditPage() {
       queryClient.invalidateQueries({ queryKey: ['navigationTree'] });
       navigate(`/pages/${data.id}`);
     },
+    onError: (error) => {
+      if (error.response?.status === 401) {
+        // Token expired or invalid - error handler in apiClient will redirect
+        console.error('Authentication failed. Please sign in again.');
+      } else {
+        console.error('Failed to create page:', error);
+        alert(`Failed to create page: ${error.response?.data?.error || error.message || 'Unknown error'}`);
+      }
+    },
   });
 
   // Update page mutation
@@ -138,6 +163,15 @@ export function EditPage() {
       queryClient.invalidateQueries({ queryKey: ['navigationTree'] });
       setHasUnsavedChanges(false);
       // Optionally show success message
+    },
+    onError: (error) => {
+      if (error.response?.status === 401) {
+        // Token expired or invalid - error handler in apiClient will redirect
+        console.error('Authentication failed. Please sign in again.');
+      } else {
+        console.error('Failed to update page:', error);
+        alert(`Failed to update page: ${error.response?.data?.error || error.message || 'Unknown error'}`);
+      }
     },
   });
 
@@ -156,6 +190,12 @@ export function EditPage() {
 
     const html = content || editorRef.current.getHTML();
     const markdown = htmlToMarkdown(html);
+    
+    // Reconstruct frontmatter from metadata and prepend to markdown
+    // Preserve any existing frontmatter fields (e.g., custom fields from AI system)
+    // Frontmatter is needed for AI content management system but hidden from editor
+    const originalContent = page?.content || null;
+    const contentWithFrontmatter = addFrontmatter(metadata, markdown, originalContent);
 
     // Clear draft from localStorage on successful save
     const clearDraft = () => {
@@ -170,7 +210,7 @@ export function EditPage() {
     const pageData = {
       title: metadata.title.trim(),
       slug: metadata.slug.trim(),
-      content: markdown,
+      content: contentWithFrontmatter,  // Include frontmatter for AI system
       status: metadata.status,
     };
 
@@ -203,9 +243,19 @@ export function EditPage() {
   };
 
   const handleMetadataChange = (newMetadata) => {
-    setMetadata(newMetadata);
-    setTitle(newMetadata.title || '');
-    setHasUnsavedChanges(true);
+    // Only update if metadata actually changed to prevent unnecessary re-renders
+    setMetadata((prevMetadata) => {
+      // Compare objects to avoid unnecessary updates
+      if (JSON.stringify(prevMetadata) === JSON.stringify(newMetadata)) {
+        return prevMetadata;
+      }
+      setHasUnsavedChanges(true);
+      return newMetadata;
+    });
+    // Update title state if it changed
+    if (newMetadata.title !== title) {
+      setTitle(newMetadata.title || '');
+    }
   };
 
   const handleCancel = () => {
@@ -268,6 +318,7 @@ export function EditPage() {
             onChange={handleMetadataChange}
             isNewPage={isNewPage}
             excludePageId={pageId}
+            key={pageId || 'new'} // Force re-render when page changes
           />
         </div>
 

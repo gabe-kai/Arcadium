@@ -38,7 +38,19 @@ export function EditorToolbar({ editor, pageId }) {
 
   const handleInsertImage = (url) => {
     if (url) {
-      editor.chain().focus().setImage({ src: url }).run();
+      // Ensure URL is absolute - if it's relative, make it absolute
+      let imageUrl = url;
+      if (url.startsWith('/uploads/')) {
+        // Relative URL from uploads - prepend API base URL
+        const baseURL = import.meta.env.VITE_WIKI_API_BASE_URL || 'http://localhost:5000/api';
+        imageUrl = `${baseURL}${url}`;
+      } else if (url.startsWith('/') && !url.startsWith('//')) {
+        // Other relative URLs - prepend API base URL
+        const baseURL = import.meta.env.VITE_WIKI_API_BASE_URL || 'http://localhost:5000/api';
+        imageUrl = `${baseURL}${url}`;
+      }
+      // If already absolute (http:// or https://), use as-is
+      editor.chain().focus().setImage({ src: imageUrl }).run();
     }
   };
 

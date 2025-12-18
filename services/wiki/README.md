@@ -2,6 +2,32 @@
 
 Documentation and planning wiki service built with Python/Flask.
 
+## Quick Start
+
+1. Flask Server
+```bash
+..\services\wiki
+flask run
+```
+
+2. Automatic Sync (File Watcher)
+```bash
+..\services\wiki\
+python -m app.sync watch
+```
+
+3. Auth Service
+```bash
+..\services\auth
+flask run --port 8000
+```
+
+4. Client
+```bash
+..\client
+
+```
+
 ## Setup
 
 1. Activate the project virtual environment (from project root):
@@ -46,6 +72,33 @@ flask run
 ```
 
 The service will be available at `http://localhost:5000` by default.
+
+## Content Format
+
+### Markdown with YAML Frontmatter
+
+Pages are stored as Markdown with YAML frontmatter for metadata:
+
+```yaml
+---
+title: Page Title
+slug: page-slug
+section: Section Name
+status: published
+tags: [ai, content, wiki]
+author: AI Assistant
+---
+# Page Content
+
+Markdown content here...
+```
+
+**Important Notes:**
+- **Frontmatter is preserved in database** - All frontmatter fields (including custom fields from AI systems) are stored in the `page.content` field
+- **Frontmatter is hidden from editor** - The frontend editor only displays the markdown content (frontmatter is parsed and stripped for display)
+- **Metadata form** - Standard fields (title, slug, section, status, order) are managed through the Metadata Form UI
+- **Custom fields preserved** - Custom frontmatter fields (e.g., `tags`, `author`, `category`) are preserved when users edit pages
+- **AI system compatible** - AI content management systems can write files with custom frontmatter fields, and they will be preserved through the sync and edit workflow
 
 ## Frontend Integration
 
