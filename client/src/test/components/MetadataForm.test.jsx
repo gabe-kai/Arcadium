@@ -44,16 +44,21 @@ describe('MetadataForm', () => {
     render(<MetadataForm />);
     
     // Check that required asterisks are present in the labels
+    // Title label should contain asterisk
     const titleLabel = screen.getByText(/Title/i);
-    expect(titleLabel).toHaveTextContent(/Title \*/);
+    expect(titleLabel.textContent).toMatch(/Title\s*\*/);
     
-    const slugLabel = screen.getByText(/Slug/i);
-    // Slug might appear in multiple places, get the label specifically
+    // Slug label - use getAllByText since Slug might appear multiple times
     const slugLabels = screen.getAllByText(/Slug/i);
-    const slugLabelElement = slugLabels.find(el => el.tagName === 'LABEL' || el.closest('label'));
-    expect(slugLabelElement).toBeTruthy();
-    if (slugLabelElement) {
-      expect(slugLabelElement.textContent).toMatch(/Slug \*/);
+    // Find the label element that contains the asterisk
+    const slugLabelWithAsterisk = slugLabels.find(el => {
+      const label = el.closest('label') || (el.tagName === 'LABEL' ? el : null);
+      return label && label.textContent.includes('*');
+    });
+    expect(slugLabelWithAsterisk).toBeTruthy();
+    if (slugLabelWithAsterisk) {
+      const label = slugLabelWithAsterisk.closest('label') || slugLabelWithAsterisk;
+      expect(label.textContent).toMatch(/Slug\s*\*/);
     }
   });
 
@@ -450,11 +455,11 @@ describe('MetadataForm', () => {
     const orderInput = screen.getByLabelText(/Order/i);
     fireEvent.change(orderInput, { target: { value: '10.5' } });
 
-    // The component accepts the input but parseInt converts it to integer
-    // The input value will be '10.5' as a string, but parseInt will be used for validation
-    // Since the component allows it (parseInt('10.5') = 10 >= 0), the value stays
-    // This test checks that decimals are handled (they're converted to int in processing)
-    expect(orderInput).toHaveValue('10.5');
+    // The component accepts the input as a string
+    // Number inputs can display decimal values, but the value is stored as string
+    // The test should accept either string or number representation
+    const value = orderInput.value;
+    expect(value === '10.5' || value === 10.5 || parseFloat(value) === 10.5).toBe(true);
   });
 
   it('handles very long section names', () => {
@@ -528,8 +533,10 @@ describe('MetadataForm', () => {
     render(<MetadataForm initialData={{ order: undefined }} />);
 
     const orderInput = screen.getByLabelText(/Order/i);
-    // When order is undefined, it defaults to empty string
-    expect(orderInput).toHaveValue('');
+    // Number inputs return null when empty, not empty string
+    // Check that the input has no numeric value (either null or empty string)
+    const value = orderInput.value;
+    expect(value === null || value === '' || value === undefined).toBe(true);
   });
 
   it('prevents negative order values', () => {

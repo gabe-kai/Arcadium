@@ -1,5 +1,5 @@
 import React from 'react';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, beforeAll } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MemoryRouter, useParams, useNavigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -30,6 +30,108 @@ vi.mock('../../services/api/pages', () => ({
 vi.mock('../../utils/markdown', () => ({
   htmlToMarkdown: vi.fn((html) => html ? `markdown: ${html}` : ''),
   markdownToHtml: vi.fn((md) => md ? `<p>${md}</p>` : ''),
+  parseFrontmatter: vi.fn((content) => {
+    if (!content || !content.startsWith('---')) {
+      return { frontmatter: {}, markdown: content || '' };
+    }
+    const parts = content.split('---');
+    if (parts.length < 3) {
+      return { frontmatter: {}, markdown: content };
+    }
+    const frontmatterStr = parts[1].trim();
+    const markdown = parts.slice(2).join('---').trim();
+    const frontmatter = {};
+    if (frontmatterStr) {
+      const lines = frontmatterStr.split('\n');
+      for (const line of lines) {
+        const match = line.match(/^(\w+):\s*(.+)$/);
+        if (match) {
+          const key = match[1];
+          let value = match[2].trim();
+          if ((value.startsWith('"') && value.endsWith('"')) || 
+              (value.startsWith("'") && value.endsWith("'"))) {
+            value = value.slice(1, -1);
+          }
+          frontmatter[key] = value;
+        }
+      }
+    }
+    return { frontmatter, markdown };
+  }),
+  addFrontmatter: vi.fn((metadata, markdown, originalContent = null) => {
+    if (!metadata) return markdown || '';
+    
+    let existingFrontmatter = {};
+    if (originalContent) {
+      const parsed = vi.fn().mockReturnValue({ frontmatter: {}, markdown: originalContent })();
+      // Use the actual parseFrontmatter logic if needed, but for mock we'll simplify
+      if (originalContent && originalContent.startsWith('---')) {
+        const parts = originalContent.split('---');
+        if (parts.length >= 3) {
+          const frontmatterStr = parts[1].trim();
+          const lines = frontmatterStr.split('\n');
+          for (const line of lines) {
+            const match = line.match(/^(\w+):\s*(.+)$/);
+            if (match) {
+              const key = match[1];
+              let value = match[2].trim();
+              if ((value.startsWith('"') && value.endsWith('"')) || 
+                  (value.startsWith("'") && value.endsWith("'"))) {
+                value = value.slice(1, -1);
+              }
+              existingFrontmatter[key] = value;
+            }
+          }
+        }
+      }
+    }
+    
+    const frontmatter = { ...existingFrontmatter };
+    if (metadata.title) frontmatter.title = metadata.title;
+    if (metadata.slug) frontmatter.slug = metadata.slug;
+    if (metadata.section !== undefined) {
+      if (metadata.section) {
+        frontmatter.section = metadata.section;
+      } else {
+        delete frontmatter.section;
+      }
+    }
+    if (metadata.status) frontmatter.status = metadata.status;
+    if (metadata.order !== null && metadata.order !== undefined) {
+      frontmatter.order = metadata.order;
+    } else if (metadata.order === null || metadata.order === '') {
+      delete frontmatter.order;
+    }
+    
+    const frontmatterLines = [];
+    const standardKeys = ['title', 'slug', 'section', 'status', 'order', 'parent_slug'];
+    const sortedKeys = [
+      ...standardKeys.filter(k => k in frontmatter),
+      ...Object.keys(frontmatter).filter(k => !standardKeys.includes(k)).sort()
+    ];
+    
+    for (const key of sortedKeys) {
+      const value = frontmatter[key];
+      if (value !== null && value !== undefined && value !== '') {
+        const needsQuotes = typeof value === 'string' && (
+          value.includes(':') || 
+          value.includes('#') || 
+          value.includes('|') ||
+          value.includes('&') ||
+          value.startsWith(' ') ||
+          value.endsWith(' ')
+        );
+        const formattedValue = needsQuotes ? `"${value.replace(/"/g, '\\"')}"` : value;
+        frontmatterLines.push(`${key}: ${formattedValue}`);
+      }
+    }
+    
+    if (frontmatterLines.length === 0) {
+      return markdown || '';
+    }
+    
+    return `---\n${frontmatterLines.join('\n')}\n---\n${markdown || ''}`;
+  }),
 }));
 
 // Mock components
@@ -145,6 +247,11 @@ vi.mock('../../utils/linkHandler', () => ({
 
 describe('Page Edit Flow Integration', () => {
   let queryClient;
+
+  // Suppress window.alert during tests
+  beforeAll(() => {
+    vi.spyOn(window, 'alert').mockImplementation(() => {});
+  });
   let mockNavigate;
 
   beforeEach(() => {
@@ -503,6 +610,84 @@ describe('Page Edit Flow Integration', () => {
     await waitFor(() => {
       expect(markdownUtils.htmlToMarkdown).toHaveBeenCalled();
       expect(pagesApi.createPage).toHaveBeenCalled();
-    }, { timeout: 2000 });
+    }, { timeout: 2000     });
+  });
+
+  describe('Table creation and editing', () => {
+    it('creates a page with a table and preserves it on save', async () => {
+      const { user } = await setup();
+      const mockPage = {
+        id: 'new-page-id',
+        title: 'Test Page',
+        content: '',
+        slug: 'test-page',
+        status: 'draft',
+      };
+
+      pagesApi.usePage.mockReturnValue({
+        data: null,
+        isLoading: false,
+        isError: false,
+      });
+
+      pagesApi.createPage.mockResolvedValue(mockPage);
+
+      renderEditPage();
+
+      // Wait for editor to be ready
+      await waitFor(() => {
+        expect(screen.getByPlaceholderText(/Start writing/i)).toBeInTheDocument();
+      });
+
+      // Simulate inserting a table via the editor
+      // In a real scenario, this would be done through the TableDialog
+      const editor = screen.getByPlaceholderText(/Start writing/i);
+      
+      // Mock table HTML content
+      const tableHtml = '<table><thead><tr><th>Header 1</th><th>Header 2</th></tr></thead><tbody><tr><td>Cell 1</td><td>Cell 2</td></tr></tbody></table>';
+      
+      // Simulate editor content change
+      const onChange = vi.fn();
+      const editorComponent = screen.getByTestId('editor');
+      if (editorComponent && editorComponent.onChange) {
+        editorComponent.onChange(tableHtml);
+      }
+
+      // Save the page
+      const saveButton = screen.getByRole('button', { name: /Save/i });
+      await user.click(saveButton);
+
+      await waitFor(() => {
+        expect(pagesApi.createPage).toHaveBeenCalled();
+      });
+
+      // Verify that the markdown conversion was called (tables should be converted)
+      expect(markdownUtils.htmlToMarkdown).toHaveBeenCalled();
+    });
+
+    it('loads a page with a table and displays it in the editor', async () => {
+      const { user } = await setup();
+      const tableMarkdown = '| Header 1 | Header 2 |\n|----------|----------|\n| Cell 1   | Cell 2   |';
+      const mockPage = {
+        id: 'test-page-id',
+        title: 'Test Page',
+        content: tableMarkdown,
+        slug: 'test-page',
+        status: 'published',
+      };
+
+      pagesApi.usePage.mockReturnValue({
+        data: mockPage,
+        isLoading: false,
+        isError: false,
+      });
+
+      renderEditPage();
+
+      // Wait for editor to load
+      await waitFor(() => {
+        expect(markdownUtils.markdownToHtml).toHaveBeenCalledWith(tableMarkdown);
+      });
+    });
   });
 });

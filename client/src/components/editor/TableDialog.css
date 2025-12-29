@@ -1,0 +1,137 @@
+.arc-table-dialog-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.arc-table-dialog {
+  background: var(--arc-surface, #ffffff);
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  min-width: 300px;
+  max-width: 400px;
+  padding: 0;
+}
+
+.arc-table-dialog-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid var(--arc-border, #e0e0e0);
+}
+
+.arc-table-dialog-header h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--arc-text, #333);
+}
+
+.arc-table-dialog-close {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: var(--arc-text-secondary, #666);
+  cursor: pointer;
+  padding: 0;
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.25rem;
+  transition: background-color 0.15s;
+}
+
+.arc-table-dialog-close:hover {
+  background: var(--arc-surface-hover, #f5f5f5);
+}
+
+.arc-table-dialog-content {
+  padding: 1.5rem;
+}
+
+.arc-table-dialog-field {
+  margin-bottom: 1rem;
+}
+
+.arc-table-dialog-field:last-of-type {
+  margin-bottom: 0;
+}
+
+.arc-table-dialog-field label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  color: var(--arc-text, #333);
+}
+
+.arc-table-dialog-field input[type="number"] {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid var(--arc-border, #e0e0e0);
+  border-radius: 0.25rem;
+  font-size: 1rem;
+}
+
+.arc-table-dialog-field input[type="checkbox"] {
+  margin-right: 0.5rem;
+}
+
+.arc-table-dialog-field label:has(input[type="checkbox"]) {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.arc-table-dialog-input {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid var(--arc-border, #e0e0e0);
+  border-radius: 0.25rem;
+  font-size: 1rem;
+}
+
+.arc-table-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  padding: 1rem 1.5rem;
+  border-top: 1px solid var(--arc-border, #e0e0e0);
+}
+
+.arc-table-dialog-button {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 0.25rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+
+.arc-table-dialog-button-cancel {
+  background: var(--arc-surface-hover, #f5f5f5);
+  color: var(--arc-text, #333);
+}
+
+.arc-table-dialog-button-cancel:hover {
+  background: var(--arc-border, #e0e0e0);
+}
+
+.arc-table-dialog-button-insert {
+  background: var(--arc-accent, #007bff);
+  color: white;
+}
+
+.arc-table-dialog-button-insert:hover {
+  background: var(--arc-accent-hover, #0056b3);
+}

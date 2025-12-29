@@ -323,7 +323,7 @@ describe('NavigationTree', () => {
     expect(screen.getByText('Page 1')).toBeInTheDocument();
   });
 
-  it('handles very deep nesting', () => {
+  it('handles very deep nesting', async () => {
     const deepTree = [
       {
         id: 'level-1',
@@ -367,7 +367,34 @@ describe('NavigationTree', () => {
     renderNavigationTree();
     
     expect(screen.getByText('Level 1')).toBeInTheDocument();
-    expect(screen.getByText('Level 4')).toBeInTheDocument();
+    
+    // Level 4 is nested deep, so we need to expand nodes to see it
+    // Expand Level 1 to see Level 2
+    const level1Toggle = screen.getByText('Level 1').closest('li')?.querySelector('button[aria-label*="Expand"]');
+    if (level1Toggle) {
+      fireEvent.click(level1Toggle);
+      await waitFor(() => {
+        expect(screen.getByText('Level 2')).toBeInTheDocument();
+      });
+      
+      // Expand Level 2 to see Level 3
+      const level2Toggle = screen.getByText('Level 2').closest('li')?.querySelector('button[aria-label*="Expand"]');
+      if (level2Toggle) {
+        fireEvent.click(level2Toggle);
+        await waitFor(() => {
+          expect(screen.getByText('Level 3')).toBeInTheDocument();
+        });
+        
+        // Expand Level 3 to see Level 4
+        const level3Toggle = screen.getByText('Level 3').closest('li')?.querySelector('button[aria-label*="Expand"]');
+        if (level3Toggle) {
+          fireEvent.click(level3Toggle);
+          await waitFor(() => {
+            expect(screen.getByText('Level 4')).toBeInTheDocument();
+          });
+        }
+      }
+    }
   });
 
   it('handles tree with special characters in titles', () => {

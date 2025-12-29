@@ -115,8 +115,10 @@ export function ImageUploadDialog({ isOpen, onClose, onInsert, pageId }) {
   const handleUrlInput = (e) => {
     const url = e.target.value;
     setUploadedUrl(url);
-    if (url) {
-      setPreview(url);
+    // Keep URL mode active; preview for URLs is shown in the URL tab below
+    // Avoid switching to upload mode when typing a URL
+    if (file) {
+      setPreview(null);
     }
   };
 
@@ -164,7 +166,10 @@ export function ImageUploadDialog({ isOpen, onClose, onInsert, pageId }) {
             </button>
           </div>
 
-          {file || preview ? (
+          {error && !file && !preview && (
+            <div className="arc-image-dialog-error">{error}</div>
+          )}
+          {file ? (
             <div className="arc-image-dialog-upload">
               <div className="arc-image-dialog-preview">
                 <img src={preview} alt="Preview" />
@@ -190,7 +195,7 @@ export function ImageUploadDialog({ isOpen, onClose, onInsert, pageId }) {
                   {isUploading ? 'Uploading...' : 'Upload Image'}
                 </button>
               )}
-              {uploadedUrl && (
+              {uploadedUrl && file && (
                 <div className="arc-image-dialog-success">
                   <p>Image uploaded successfully!</p>
                   <button

@@ -31,7 +31,8 @@ apiClient.interceptors.response.use(
   (error) => {
     // Ignore aborted/cancelled requests (common during component unmount or navigation)
     if (error.code === 'ECONNABORTED' || error.message === 'Request aborted' || error.name === 'CanceledError') {
-      // Silently ignore - this is expected behavior
+      // Log timeout/aborted errors for visibility in tests and debugging
+      console.error('API error:', error);
       return Promise.reject(error);
     }
     

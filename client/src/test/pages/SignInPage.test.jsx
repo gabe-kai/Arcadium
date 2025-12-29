@@ -1,3 +1,4 @@
+import React from 'react';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -10,6 +11,9 @@ import { authApi } from '../../services/api/auth';
 // Mock dependencies
 vi.mock('../../services/auth/AuthContext');
 vi.mock('../../services/api/auth');
+vi.mock('../../components/layout/Layout', () => ({
+  Layout: ({ children }) => <div>{children}</div>,
+}));
 
 const mockNavigate = vi.fn();
 const mockSignIn = vi.fn();
@@ -54,6 +58,11 @@ describe('SignInPage', () => {
     );
   };
 
+  const getLoginSubmitButton = () => {
+    const buttons = screen.getAllByRole('button', { name: /Sign In/i });
+    return buttons.find((btn) => btn.type === 'submit') || buttons[0];
+  };
+
   describe('Login Mode', () => {
     it('renders login form by default', () => {
       renderSignInPage();
@@ -95,7 +104,7 @@ describe('SignInPage', () => {
 
       await user.type(screen.getByLabelText('Username'), 'testuser');
       await user.type(screen.getByLabelText('Password'), 'password123');
-      await user.click(screen.getByRole('button', { name: 'Sign In' }));
+      await user.click(getLoginSubmitButton());
 
       await waitFor(() => {
         expect(authApi.login).toHaveBeenCalledWith('testuser', 'password123');
@@ -120,7 +129,7 @@ describe('SignInPage', () => {
 
       await user.type(screen.getByLabelText('Username'), 'wronguser');
       await user.type(screen.getByLabelText('Password'), 'wrongpass');
-      await user.click(screen.getByRole('button', { name: 'Sign In' }));
+      await user.click(getLoginSubmitButton());
 
       await waitFor(() => {
         expect(screen.getByText('Invalid username or password')).toBeInTheDocument();
@@ -133,7 +142,7 @@ describe('SignInPage', () => {
       renderSignInPage();
 
       await user.type(screen.getByLabelText('Password'), 'password123');
-      await user.click(screen.getByRole('button', { name: 'Sign In' }));
+      await user.click(getLoginSubmitButton());
 
       await waitFor(() => {
         expect(screen.getByText('Username and password are required')).toBeInTheDocument();
@@ -148,7 +157,7 @@ describe('SignInPage', () => {
       renderSignInPage();
 
       await user.type(screen.getByLabelText('Username'), 'testuser');
-      await user.click(screen.getByRole('button', { name: 'Sign In' }));
+      await user.click(getLoginSubmitButton());
 
       await waitFor(() => {
         expect(screen.getByText('Username and password are required')).toBeInTheDocument();
@@ -170,7 +179,7 @@ describe('SignInPage', () => {
 
       await user.type(screen.getByLabelText('Username'), 'testuser');
       await user.type(screen.getByLabelText('Password'), 'password123');
-      await user.click(screen.getByRole('button', { name: 'Sign In' }));
+      await user.click(getLoginSubmitButton());
 
       await waitFor(() => {
         expect(screen.getByText('Please wait...')).toBeInTheDocument();
@@ -197,7 +206,7 @@ describe('SignInPage', () => {
 
       await user.type(screen.getByLabelText('Username'), 'testuser');
       await user.type(screen.getByLabelText('Password'), 'password123');
-      await user.click(screen.getByRole('button', { name: 'Sign In' }));
+      await user.click(getLoginSubmitButton());
 
       await waitFor(() => {
         expect(screen.getByLabelText('Username')).toBeDisabled();
@@ -356,7 +365,7 @@ describe('SignInPage', () => {
       // The switch button should be the one that's not the main submit button
       const switchButton = signInButtons.find(btn => btn.type === 'button');
       await user.click(switchButton || signInButtons[0]);
-      expect(screen.getByText('Sign In')).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: /Sign in/i })).toBeInTheDocument();
     });
   });
 
@@ -371,7 +380,7 @@ describe('SignInPage', () => {
 
       await user.type(screen.getByLabelText('Username'), 'testuser');
       await user.type(screen.getByLabelText('Password'), 'password123');
-      await user.click(screen.getByRole('button', { name: 'Sign In' }));
+      await user.click(getLoginSubmitButton());
 
       await waitFor(() => {
         expect(screen.getByText('Network Error')).toBeInTheDocument();
@@ -388,7 +397,7 @@ describe('SignInPage', () => {
 
       await user.type(screen.getByLabelText('Username'), 'testuser');
       await user.type(screen.getByLabelText('Password'), 'password123');
-      await user.click(screen.getByRole('button', { name: 'Sign In' }));
+      await user.click(getLoginSubmitButton());
 
       await waitFor(() => {
         expect(screen.getByText('An error occurred')).toBeInTheDocument();
@@ -411,7 +420,7 @@ describe('SignInPage', () => {
 
       await user.type(screen.getByLabelText('Username'), 'testuser');
       await user.type(screen.getByLabelText('Password'), 'wrongpass');
-      await user.click(screen.getByRole('button', { name: 'Sign In' }));
+      await user.click(getLoginSubmitButton());
 
       await waitFor(() => {
         expect(screen.getByText('First error')).toBeInTheDocument();
@@ -419,7 +428,7 @@ describe('SignInPage', () => {
 
       await user.clear(screen.getByLabelText('Password'));
       await user.type(screen.getByLabelText('Password'), 'correctpass');
-      await user.click(screen.getByRole('button', { name: 'Sign In' }));
+      await user.click(getLoginSubmitButton());
 
       await waitFor(() => {
         expect(screen.queryByText('First error')).not.toBeInTheDocument();
@@ -466,7 +475,7 @@ describe('SignInPage', () => {
 
       await user.type(screen.getByLabelText('Username'), 'testuser');
       await user.type(screen.getByLabelText('Password'), 'password123');
-      await user.click(screen.getByRole('button', { name: 'Sign In' }));
+      await user.click(getLoginSubmitButton());
 
       await waitFor(() => {
         const errorElement = screen.getByText('Test error');

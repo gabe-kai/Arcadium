@@ -210,7 +210,7 @@ export function MetadataForm({
   const selectedParent = parentOptions.find(p => p.id === parentId);
 
   return (
-    <div className="arc-metadata-form">
+    <div className="arc-metadata-form" data-testid="metadata-form">
       <h3 className="arc-metadata-form-title">Page Metadata</h3>
       
       {/* Title */}
@@ -220,6 +220,7 @@ export function MetadataForm({
         </label>
         <input
           id="metadata-title"
+          data-testid="metadata-title"
           type="text"
           className={`arc-metadata-form-input ${errors.title ? 'arc-metadata-form-input-error' : ''}`}
           value={title}
@@ -240,6 +241,7 @@ export function MetadataForm({
         <div className="arc-metadata-form-slug-wrapper">
           <input
             id="metadata-slug"
+            data-testid="metadata-slug"
             type="text"
             className={`arc-metadata-form-input ${errors.slug || !slugValidation.valid ? 'arc-metadata-form-input-error' : ''} ${slugValidation.valid && slug ? 'arc-metadata-form-input-valid' : ''}`}
             value={slug}
@@ -349,7 +351,7 @@ export function MetadataForm({
           type="number"
           min="0"
           className={`arc-metadata-form-input ${errors.order ? 'arc-metadata-form-input-error' : ''}`}
-          value={order || ''}
+          value={order !== undefined && order !== null && order !== '' ? order : ''}
           onChange={(e) => {
             const value = e.target.value;
             if (value === '' || (!isNaN(value) && parseInt(value, 10) >= 0)) {

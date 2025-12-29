@@ -455,9 +455,11 @@ def test_cors_headers_present(client, test_page):
     
     # Check for CORS headers
     assert 'Access-Control-Allow-Origin' in response.headers
-    # CORS should allow localhost:3000 (React dev server)
-    assert 'localhost:3000' in response.headers.get('Access-Control-Allow-Origin', '') or \
-           '*' in response.headers.get('Access-Control-Allow-Origin', '')
+    # CORS should allow localhost:3000 (React dev server) - can be http://127.0.0.1:3000 or http://localhost:3000
+    origin_header = response.headers.get('Access-Control-Allow-Origin', '')
+    assert ('localhost:3000' in origin_header or '127.0.0.1:3000' in origin_header or 
+            '*' in origin_header or origin_header == 'http://localhost:3000' or 
+            origin_header == 'http://127.0.0.1:3000')
 
 
 def test_archive_page_success(client, app, test_writer_id):

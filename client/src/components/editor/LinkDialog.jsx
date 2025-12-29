@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { searchPages } from '../../services/api/search';
+import { searchPages } from '../../services/api/pages';
 import './LinkDialog.css';
 
 /**
@@ -52,9 +52,9 @@ export function LinkDialog({ isOpen, onClose, onInsert, initialUrl = '' }) {
     setIsSearching(true);
     searchTimerRef.current = setTimeout(async () => {
       try {
-        const searchData = await searchPages(searchQuery.trim(), { limit: 20 });
-        // Search API returns { results: [...], total: ..., query: ... }
-        setSearchResults(searchData?.results || []);
+        // Pages API search returns an array of pages
+        const results = await searchPages(searchQuery.trim());
+        setSearchResults(results || []);
       } catch (error) {
         console.error('Error searching pages:', error);
         setSearchResults([]);

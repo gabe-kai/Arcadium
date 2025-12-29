@@ -153,9 +153,17 @@ describe('PageNavigation', () => {
       </MemoryRouter>
     );
 
-    expect(screen.getByText('Previous')).toBeInTheDocument();
+    // When title is "Previous", it appears in both label and title spans
+    // Check that the previous link exists and has the correct href
+    const prevLink = screen.getByRole('link', { name: /Previous/i });
+    expect(prevLink).toBeInTheDocument();
+    expect(prevLink).toHaveAttribute('href', '/pages/page-1');
+    
     // Should still render even with missing fields
-    expect(screen.getByText('Next')).toBeInTheDocument();
+    // For next, check that the link exists (title may be undefined but link should render)
+    const nextLink = screen.getByRole('link', { name: /Next/i });
+    expect(nextLink).toBeInTheDocument();
+    expect(nextLink).toHaveAttribute('href', '/pages/page-2');
   });
 
   it('handles very long page titles', () => {

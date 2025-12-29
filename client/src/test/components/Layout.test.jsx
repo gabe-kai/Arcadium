@@ -1,9 +1,26 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { Header } from '../../components/layout/Header';
 import { Footer } from '../../components/layout/Footer';
 import { Layout } from '../../components/layout/Layout';
+import React from 'react';
+
+// Mock AuthContext to avoid provider requirements in layout tests
+vi.mock('../../services/auth/AuthContext', () => ({
+  useAuth: vi.fn(() => ({
+    isAuthenticated: false,
+    user: null,
+    signOut: vi.fn(),
+    signIn: vi.fn(),
+  })),
+  AuthProvider: ({ children }) => <>{children}</>,
+}));
+
+// Mock navigation tree hook to avoid API calls
+vi.mock('../../services/api/pages', () => ({
+  useNavigationTree: vi.fn(() => ({ data: [], isLoading: false, isError: false })),
+}));
 
 describe('Layout Components', () => {
   describe('Header', () => {
@@ -134,7 +151,8 @@ describe('Layout Components', () => {
         </MemoryRouter>
       );
       
-      expect(screen.getByText(/Arcadium Wiki/i)).toBeInTheDocument();
+      const logos = screen.getAllByText(/Arcadium Wiki/i);
+      expect(logos.length).toBeGreaterThan(0);
     });
   });
 });

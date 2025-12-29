@@ -50,9 +50,9 @@ describe('Search Flow Integration', () => {
 
   it('renders search page placeholder', () => {
     renderSearchPage();
-    expect(screen.getByText('Search')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Search' })).toBeInTheDocument();
     expect(
-      screen.getByText(/Global search results will appear here/i),
+      screen.getByText(/Enter a search query to find pages/i),
     ).toBeInTheDocument();
   });
 

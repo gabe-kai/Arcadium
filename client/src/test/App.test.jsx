@@ -1,6 +1,23 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { App } from '../App';
+import React from 'react';
+
+// Mock AuthContext to avoid provider requirements in tests
+vi.mock('../services/auth/AuthContext', () => ({
+  useAuth: vi.fn(() => ({
+    isAuthenticated: false,
+    user: null,
+    signOut: vi.fn(),
+    signIn: vi.fn(),
+  })),
+  AuthProvider: ({ children }) => <>{children}</>,
+}));
+
+// Mock navigation tree hook to avoid API calls
+vi.mock('../services/api/pages', () => ({
+  useNavigationTree: vi.fn(() => ({ data: [], isLoading: false, isError: false })),
+}));
 
 // Mock BrowserRouter to use MemoryRouter for testing
 let mockInitialEntries = ['/'];
@@ -22,13 +39,14 @@ describe('App', () => {
 
   it('renders without crashing', () => {
     render(<App />);
-    expect(screen.getByText(/Arcadium Wiki/i)).toBeInTheDocument();
+    const logos = screen.getAllByText(/Arcadium Wiki/i);
+    expect(logos.length).toBeGreaterThan(0);
   });
 
   it('renders the header with logo', () => {
     render(<App />);
-    const logo = screen.getByText(/Arcadium Wiki/i);
-    expect(logo).toBeInTheDocument();
+    const logos = screen.getAllByText(/Arcadium Wiki/i);
+    expect(logos.length).toBeGreaterThan(0);
   });
 
   it('renders the home page by default', () => {

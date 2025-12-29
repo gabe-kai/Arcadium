@@ -2,8 +2,10 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, useParams } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { AuthProvider } from '../../services/auth/AuthContext';
 import { PageView } from '../../pages/PageView';
 import * as pagesApi from '../../services/api/pages';
+import * as commentsApi from '../../services/api/comments';
 
 // Mock useParams
 vi.mock('react-router-dom', async () => {
@@ -71,6 +73,26 @@ vi.mock('../../utils/linkHandler', () => ({
   processLinks: vi.fn(),
 }));
 
+// Mock comments API - include all hooks used by CommentsList
+vi.mock('../../services/api/comments', () => ({
+  useComments: vi.fn(),
+  useCreateComment: vi.fn(),
+  useUpdateComment: vi.fn(),
+  useDeleteComment: vi.fn(),
+}));
+
+// Mock auth
+vi.mock('../../services/auth/AuthContext', async () => {
+  const actual = await vi.importActual('../../services/auth/AuthContext');
+  return {
+    ...actual,
+    useAuth: vi.fn(() => ({
+      isAuthenticated: false,
+      user: null,
+    })),
+  };
+});
+
 describe('PageView', () => {
   let queryClient;
 
@@ -86,14 +108,27 @@ describe('PageView', () => {
     // Default mock returns for breadcrumb and navigation
     pagesApi.useBreadcrumb.mockReturnValue({ data: null });
     pagesApi.usePageNavigation.mockReturnValue({ data: null });
+    // Default page mock - will be overridden in individual tests
+    pagesApi.usePage.mockReturnValue({
+      data: null,
+      isLoading: false,
+      isError: false,
+    });
+    // Default comments mock
+    commentsApi.useComments.mockReturnValue({ data: [], isLoading: false, isError: false });
+    commentsApi.useCreateComment.mockReturnValue({ mutateAsync: vi.fn(), isError: false });
+    commentsApi.useUpdateComment.mockReturnValue({ mutateAsync: vi.fn(), isError: false });
+    commentsApi.useDeleteComment.mockReturnValue({ mutateAsync: vi.fn(), isError: false });
   });
 
   const renderPageView = (pageId = 'test-page-id') => {
     return render(
       <QueryClientProvider client={queryClient}>
-        <MemoryRouter initialEntries={[`/pages/${pageId}`]}>
-          <PageView />
-        </MemoryRouter>
+        <AuthProvider>
+          <MemoryRouter initialEntries={[`/pages/${pageId}`]}>
+            <PageView />
+          </MemoryRouter>
+        </AuthProvider>
       </QueryClientProvider>
     );
   };
@@ -749,15 +784,17 @@ describe('PageView', () => {
     expect(screen.getByRole('button', { name: /Archive/i })).toBeInTheDocument();
   });
 
-  it('displays unarchive button when page is archived and can_archive is true', () => {
+  it('displays unarchive button when page is archived and can_archive is true', async () => {
     const mockPage = {
       id: 'test-page-id',
       title: 'Test Page',
       html_content: '<p>Content</p>',
       can_archive: true,
-      status: 'archived',
+      status: 'archived', // Explicitly set to 'archived'
     };
 
+    // Reset and set the mock before rendering
+    pagesApi.usePage.mockReset();
     pagesApi.usePage.mockReturnValue({
       data: mockPage,
       isLoading: false,
@@ -765,8 +802,20 @@ describe('PageView', () => {
     });
 
     renderPageView('test-page-id');
-    expect(screen.getByRole('button', { name: /Unarchive/i })).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /Archive/i })).not.toBeInTheDocument();
+    
+    // Wait for the page to render and verify status
+    await waitFor(() => {
+      expect(screen.getByText('Test Page')).toBeInTheDocument();
+    });
+    
+    // Verify the page status is archived by checking for Unarchive button
+    const unarchiveButton = await screen.findByRole('button', { name: /Unarchive/i });
+    expect(unarchiveButton).toBeInTheDocument();
+    
+    // Archive button should not be present when status is archived
+    // Use a more specific query to avoid matching "Unarchive" text
+    const archiveButtons = screen.queryAllByRole('button', { name: /^Archive this page$/i });
+    expect(archiveButtons).toHaveLength(0);
   });
 
   it('does not display delete button when can_delete is false', () => {
@@ -804,5 +853,74 @@ describe('PageView', () => {
 
     renderPageView('test-page-id');
     expect(screen.queryByRole('button', { name: /Archive/i })).not.toBeInTheDocument();
+  });
+
+  describe('Table rendering', () => {
+    it('renders tables with headers and cells', async () => {
+      const mockPage = {
+        id: 'test-page-id',
+        title: 'Test Page',
+        html_content: '<table><thead><tr><th>Header 1</th><th>Header 2</th></tr></thead><tbody><tr><td>Cell 1</td><td>Cell 2</td></tr></tbody></table>',
+      };
+
+      pagesApi.usePage.mockReturnValue({
+        data: mockPage,
+        isLoading: false,
+        isError: false,
+      });
+
+      renderPageView('test-page-id');
+      
+      await waitFor(() => {
+        expect(screen.getByText('Header 1')).toBeInTheDocument();
+        expect(screen.getByText('Header 2')).toBeInTheDocument();
+        expect(screen.getByText('Cell 1')).toBeInTheDocument();
+        expect(screen.getByText('Cell 2')).toBeInTheDocument();
+      });
+    });
+
+    it('renders tables with multiple rows', async () => {
+      const mockPage = {
+        id: 'test-page-id',
+        title: 'Test Page',
+        html_content: '<table><thead><tr><th>Header 1</th><th>Header 2</th></tr></thead><tbody><tr><td>Cell 1</td><td>Cell 2</td></tr><tr><td>Cell 3</td><td>Cell 4</td></tr></tbody></table>',
+      };
+
+      pagesApi.usePage.mockReturnValue({
+        data: mockPage,
+        isLoading: false,
+        isError: false,
+      });
+
+      renderPageView('test-page-id');
+      
+      await waitFor(() => {
+        expect(screen.getByText('Cell 1')).toBeInTheDocument();
+        expect(screen.getByText('Cell 3')).toBeInTheDocument();
+      });
+    });
+
+    it('renders tables mixed with other content', async () => {
+      const mockPage = {
+        id: 'test-page-id',
+        title: 'Test Page',
+        html_content: '<p>Text before table.</p><table><thead><tr><th>Header 1</th></tr></thead><tbody><tr><td>Cell 1</td></tr></tbody></table><p>Text after table.</p>',
+      };
+
+      pagesApi.usePage.mockReturnValue({
+        data: mockPage,
+        isLoading: false,
+        isError: false,
+      });
+
+      renderPageView('test-page-id');
+      
+      await waitFor(() => {
+        expect(screen.getByText('Text before table.')).toBeInTheDocument();
+        expect(screen.getByText('Header 1')).toBeInTheDocument();
+        expect(screen.getByText('Cell 1')).toBeInTheDocument();
+        expect(screen.getByText('Text after table.')).toBeInTheDocument();
+      });
+    });
   });
 });

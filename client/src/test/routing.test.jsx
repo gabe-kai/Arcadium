@@ -2,6 +2,18 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { App } from '../App';
+import React from 'react';
+
+// Mock AuthContext to simplify routing tests
+vi.mock('../services/auth/AuthContext', () => ({
+  useAuth: vi.fn(() => ({
+    isAuthenticated: false,
+    user: null,
+    signOut: vi.fn(),
+    signIn: vi.fn(),
+  })),
+  AuthProvider: ({ children }) => <>{children}</>,
+}));
 
 // Mock BrowserRouter to use MemoryRouter for testing with configurable initial entries
 let mockInitialEntries = ['/'];
@@ -21,6 +33,7 @@ vi.mock('../services/api/pages', () => ({
   usePage: vi.fn(() => ({ data: null, isLoading: false, isError: false })),
   useBreadcrumb: vi.fn(() => ({ data: null })),
   usePageNavigation: vi.fn(() => ({ data: null })),
+  useNavigationTree: vi.fn(() => ({ data: [], isLoading: false, isError: false })),
 }));
 
 // Mock utility functions
@@ -73,7 +86,8 @@ describe('Routing', () => {
         <App />
       </QueryClientProvider>
     );
-    expect(screen.getByText(/Search/i)).toBeInTheDocument();
+    // Use heading to avoid multiple text matches
+    expect(screen.getByRole('heading', { name: /Search/i })).toBeInTheDocument();
   });
 
   it('renders EditPage for edit route', () => {
