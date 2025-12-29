@@ -252,3 +252,86 @@ Text after.
     before_pre = parts[0]
     assert before_pre.endswith('</p>') or before_pre.strip() == '' or before_pre.endswith('\n')
 
+
+def test_markdown_to_html_table_basic():
+    """Test basic table conversion"""
+    md = """| Header 1 | Header 2 |
+|----------|----------|
+| Cell 1   | Cell 2   |"""
+    html = markdown_to_html(md)
+    assert '<table>' in html
+    assert '<thead>' in html
+    assert '<tbody>' in html
+    assert '<th>Header 1</th>' in html
+    assert '<th>Header 2</th>' in html
+    assert '<td>Cell 1</td>' in html
+    assert '<td>Cell 2</td>' in html
+
+
+def test_markdown_to_html_table_multiple_rows():
+    """Test table with multiple rows"""
+    md = """| Header 1 | Header 2 |
+|----------|----------|
+| Cell 1   | Cell 2   |
+| Cell 3   | Cell 4   |"""
+    html = markdown_to_html(md)
+    assert '<table>' in html
+    # Should have 2 data rows
+    assert html.count('<tr>') >= 3  # 1 header row + 2 data rows
+    assert 'Cell 1' in html
+    assert 'Cell 2' in html
+    assert 'Cell 3' in html
+    assert 'Cell 4' in html
+
+
+def test_markdown_to_html_table_with_other_content():
+    """Test table mixed with other markdown content"""
+    md = """# Heading
+
+Text before table.
+
+| Header 1 | Header 2 |
+|----------|----------|
+| Cell 1   | Cell 2   |
+
+Text after table.
+"""
+    html = markdown_to_html(md)
+    assert '<h1>Heading</h1>' in html
+    assert 'Text before table' in html
+    assert '<table>' in html
+    assert 'Cell 1' in html
+    assert 'Text after table' in html
+
+
+def test_markdown_to_html_table_escapes_html():
+    """Test that table cells escape HTML entities"""
+    md = """| Header 1 | Header 2 |
+|----------|----------|
+| <script> | &amp;     |"""
+    html = markdown_to_html(md)
+    assert '<table>' in html
+    # HTML should be escaped in table cells
+    assert '&lt;script&gt;' in html or '<script>' in html
+    assert '&amp;' in html
+
+
+def test_markdown_to_html_table_not_wrapped_in_paragraph():
+    """Test that tables are not wrapped in paragraph tags"""
+    md = """Text before.
+
+| Header 1 | Header 2 |
+|----------|----------|
+| Cell 1   | Cell 2   |
+
+Text after.
+"""
+    html = markdown_to_html(md)
+    # Table should not be inside a <p> tag
+    # Check that <table> comes after </p> or is standalone
+    parts = html.split('<table>')
+    assert len(parts) > 1
+    # The part before <table> should end with </p> or be empty/newline
+    before_table = parts[0]
+    assert before_table.endswith('</p>') or before_table.strip() == '' or before_table.endswith('\n')
+

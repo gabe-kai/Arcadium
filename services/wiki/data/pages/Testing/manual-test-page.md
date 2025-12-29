@@ -30,7 +30,6 @@ Bullet List:
         -   sub sub bullet 2
             
             -   sub sub sub bullet 3
-                
 
 Numbered List:
 
@@ -45,7 +44,6 @@ Numbered List:
         1.  sub sub number 2
             
             1.  sub sub sub number 3
-                
 
 ### Image Formatting
 
@@ -62,3 +60,5 @@ if __name__ == '__main__':
 ```
 
 ### Tables
+
+<table class="arc-editor-table" style="min-width: 75px;"><colgroup><col style="min-width: 25px;"><col style="min-width: 25px;"><col style="min-width: 25px;"></colgroup><tbody><tr><th colspan="1" rowspan="1"><p></p></th><th colspan="1" rowspan="1"><p>Col 1</p></th><th colspan="1" rowspan="1"><p>Col 2</p></th></tr><tr><td colspan="1" rowspan="1"><p>Row 1</p></td><td colspan="1" rowspan="1"><p></p></td><td colspan="1" rowspan="1"><p></p></td></tr><tr><td colspan="1" rowspan="1"><p>Row 2</p></td><td colspan="1" rowspan="1"><p></p></td><td colspan="1" rowspan="1"><p></p></td></tr></tbody></table>

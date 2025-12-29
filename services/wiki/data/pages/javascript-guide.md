@@ -1,6 +1,6 @@
 ---
-slug: javascript-guide
 status: published
 title: JavaScript Guide
+slug: javascript-guide
 ---
 JavaScript programming guide.

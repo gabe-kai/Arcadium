@@ -87,7 +87,7 @@
 - Auto-generated TOC (if page has multiple headings)
 - Inline link styling (distinguish internal vs external)
 - Image galleries
-- Table formatting
+- Table formatting (GFM markdown tables with proper HTML rendering)
 - Block quotes
 
 ### Table of Contents (Right Sidebar)
@@ -168,7 +168,11 @@
 - Auto-save drafts
 - Link insertion dialog with page search
 - Image upload with preview
-- Table editor (visual grid)
+- **Table insertion dialog** - Customizable rows (1-20) and columns (1-20) with optional header row
+- **Table controls toolbar** - Second toolbar row appears when cursor is inside a table:
+  - Add/Delete columns (before/after current column)
+  - Add/Delete rows (before/after current row)
+  - Delete entire table
 - Tiptap extensions for enhanced features
 
 **Tiptap Benefits**:

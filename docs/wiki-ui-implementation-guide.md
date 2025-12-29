@@ -419,7 +419,7 @@ This guide outlines the implementation plan for building the Wiki User Interface
   - [x] Link button (with prompt dialog)
   - [x] Image insert button (with prompt dialog)
   - [x] Code block button
-  - [x] Table button
+  - [x] Table button (opens dialog for custom dimensions)
   - [x] Undo/Redo buttons
 
 - [x] **Editor Features** ✅
@@ -428,7 +428,12 @@ This guide outlines the implementation plan for building the Wiki User Interface
   - [x] Auto-save drafts (localStorage)
   - [x] Link insertion (basic prompt)
   - [x] Image insertion (basic prompt)
-  - [x] Table editor (visual grid)
+  - [x] **Table insertion dialog** - Customizable rows (1-20) and columns (1-20) with optional header row
+  - [x] **Table controls toolbar** - Second toolbar row appears when cursor is inside a table:
+    - Add/Delete columns (before/after current column)
+    - Add/Delete rows (before/after current row)
+    - Delete entire table
+  - [x] **Table markdown conversion** - Full round-trip support (HTML ↔ GFM markdown)
   - [x] Keyboard shortcuts (Tiptap built-in)
   - [x] Real-time preview toggle - ✅ Complete (toggle between editor and preview)
   - [x] Link insertion dialog with page search - ✅ Complete (searchable dialog for internal/external links)
@@ -1308,6 +1313,121 @@ Phase 11: Page Delete and Archive Functionality has been completed.
 **Phase 11 Status: ✅ COMPLETE**
 
 ---
+
+## Table Implementation Summary
+
+Tables have been fully implemented with comprehensive support for creation, editing, and markdown conversion.
+
+### Frontend Implementation
+
+**TableDialog Component** (`client/src/components/editor/TableDialog.jsx`):
+- Dialog for inserting tables with custom dimensions
+- Rows: 1-20 (default: 3)
+- Columns: 1-20 (default: 3)
+- Optional header row checkbox
+- Keyboard support (Escape to close)
+- Click outside to close
+
+**EditorToolbar Table Controls** (`client/src/components/editor/EditorToolbar.jsx`):
+- **Two-row toolbar design**:
+  - Main row: Standard formatting tools
+  - Secondary row: Table-specific controls (appears when cursor is inside a table)
+- **Table detection**: Reactive detection using multiple methods:
+  - `editor.isActive('tableCell')` / `editor.isActive('tableHeader')`
+  - `editor.can().addColumnBefore()` / `editor.can().addRowBefore()` (command availability)
+  - Node tree traversal (fallback)
+- **Table controls** (second toolbar row):
+  - Add Column Before/After
+  - Delete Column
+  - Add Row Before/After
+  - Delete Row
+  - Delete Table
+- **Event listeners**: Updates on selection changes, content updates, focus, click, and keydown events
+
+**Table Styling**:
+- Sticky toolbar (stays visible while scrolling)
+- Editor max-height: `calc(100vh - 300px)` for comfortable editing
+- Table controls highlighted with accent border
+- Small button style for compact table controls
+
+### Backend Implementation
+
+**Markdown Conversion** (`services/wiki/app/utils/markdown_service.py`):
+- **GFM table syntax support**: Converts markdown tables to HTML
+  - Pattern: `| Header | Header |\n|--------|\n| Cell | Cell |`
+  - Handles multiple rows and columns
+  - Preserves header row structure
+- **Table protection**: Tables are protected from paragraph wrapping
+  - Extracted early in processing (before headers)
+  - Protected during paragraph processing
+  - Restored after all other markdown transformations
+- **HTML escaping**: Table cell content is properly escaped
+- **Test coverage**: 5 comprehensive backend tests
+
+### Markdown Round-Trip
+
+**HTML to Markdown** (`client/src/utils/markdown.js`):
+- Uses `turndown-plugin-gfm` for table conversion
+- HTML tables → GFM markdown table syntax
+- Preserves table structure and content
+
+**Markdown to HTML**:
+- **Backend**: Custom regex-based parser with table support
+- **Frontend**: `marked.js` with GFM enabled (for editor preview)
+- Both preserve table structure correctly
+
+### Key Features
+
+1. **Table Creation**:
+   - Dialog-based insertion with customizable dimensions
+   - Default 3x3 table with header row
+   - Range validation (1-20 rows/columns)
+
+2. **Table Editing**:
+   - Visual editing in Tiptap editor
+   - Resizable columns (Tiptap built-in)
+   - Full table manipulation controls
+
+3. **Table Persistence**:
+   - Tables saved as GFM markdown
+   - Full round-trip support (HTML ↔ Markdown)
+   - Tables render correctly in both editor and view modes
+
+4. **Table Rendering**:
+   - Proper HTML structure (`<table>`, `<thead>`, `<tbody>`, `<th>`, `<td>`)
+   - Styled with CSS (striped rows, hover effects, borders)
+   - Responsive design
+
+### Test Coverage
+
+**Backend Tests** (`services/wiki/tests/test_utils/test_markdown_service.py`):
+- `test_markdown_to_html_table_basic` - Basic table conversion
+- `test_markdown_to_html_table_multiple_rows` - Multiple row tables
+- `test_markdown_to_html_table_with_other_content` - Tables mixed with other content
+- `test_markdown_to_html_table_escapes_html` - HTML escaping in cells
+- `test_markdown_to_html_table_not_wrapped_in_paragraph` - Paragraph wrapping protection
+
+**Frontend Tests** (`client/src/test/utils/markdown.test.js`):
+- Table HTML to markdown conversion
+- Table markdown to HTML conversion
+
+**Integration Tests**:
+- Table creation and editing flows
+- Table persistence across save/load cycles
+
+### Files Modified/Created
+
+**Frontend**:
+- `client/src/components/editor/TableDialog.jsx` - New table insertion dialog
+- `client/src/components/editor/TableDialog.css` - Dialog styles
+- `client/src/components/editor/EditorToolbar.jsx` - Table controls and two-row toolbar
+- `client/src/utils/markdown.js` - Added `turndown-plugin-gfm` support
+- `client/src/styles.css` - Table toolbar and editor height styles
+- `client/package.json` - Added `turndown-plugin-gfm` dependency
+
+**Backend**:
+- `services/wiki/app/utils/markdown_service.py` - Table markdown conversion
+- `services/wiki/tests/test_utils/test_markdown_service.py` - Table conversion tests
 
 ## Code Block Implementation Summary
 

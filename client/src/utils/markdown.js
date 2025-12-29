@@ -1,4 +1,5 @@
 import TurndownService from 'turndown';
+import { gfm } from 'turndown-plugin-gfm';
 import { marked } from 'marked';
 
 /**
@@ -130,6 +131,9 @@ export function htmlToMarkdown(html) {
     codeBlockStyle: 'fenced', // Use ``` for code blocks
     bulletListMarker: '-', // Use - for bullet lists
   });
+  
+  // Enable GFM features (tables, strikethrough, task lists)
+  turndownService.use(gfm);
   
   return turndownService.turndown(html);
 }

@@ -217,7 +217,75 @@ def markdown_to_html(markdown: str) -> str:
     # Pattern: ``` followed by optional language, optional whitespace/newline, then code content, then ```
     html = re.sub(r'```(\w+)?\s*\n?(.*?)```', replace_code_block, html, flags=re.DOTALL)
     
-    # Headers (H1-H6) - do after code blocks to avoid conflicts
+    # Tables (GFM syntax) - do before headers to avoid conflicts
+    # Pattern: | Header | Header |\n|--------|--------|\n| Cell | Cell |
+    # Tables must be protected from other processing
+    tables = []
+    def replace_table(match):
+        full_match = match.group(0)
+        # Parse table rows
+        lines = [line.rstrip() for line in full_match.strip().split('\n') if line.strip()]
+        if len(lines) < 2:
+            return full_match
+        
+        # First line is header
+        header_line = lines[0]
+        # Second line is separator (|----|----|) - skip it
+        # Remaining lines are data rows
+        
+        # Extract header cells (split by |, filter empty strings from leading/trailing)
+        header_parts = [p.strip() for p in header_line.split('|')]
+        # Remove empty strings from start/end (markdown tables have | at start and end)
+        header_cells = [p for p in header_parts if p]
+        
+        # Extract data rows (skip separator line at index 1)
+        data_rows = []
+        for line in lines[2:]:
+            if not line.strip() or not line.strip().startswith('|'):
+                break  # End of table
+            cells_parts = [p.strip() for p in line.split('|')]
+            cells = [p for p in cells_parts if p]
+            if cells:
+                data_rows.append(cells)
+        
+        # Build HTML table
+        table_html = '<table>\n<thead>\n<tr>'
+        for cell in header_cells:
+            # Escape HTML in cell content
+            cell_escaped = cell.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
+            table_html += f'<th>{cell_escaped}</th>'
+        table_html += '</tr>\n</thead>\n<tbody>'
+        
+        for row in data_rows:
+            table_html += '\n<tr>'
+            # Pad row to match header length if needed
+            while len(row) < len(header_cells):
+                row.append('')
+            for cell in row[:len(header_cells)]:
+                # Escape HTML in cell content
+                cell_escaped = cell.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;')
+                table_html += f'<td>{cell_escaped}</td>'
+            table_html += '</tr>'
+        
+        table_html += '\n</tbody>\n</table>'
+        
+        # Store with placeholder
+        placeholder = f'<TABLEBLOCK{len(tables)}TABLEBLOCK>'
+        tables.append((placeholder, table_html))
+        return placeholder
+    
+    # Match GFM tables: lines starting with |, followed by separator line, then data rows
+    # Pattern: | ... |\n|----|\n| ... |
+    # More flexible pattern that handles various table formats
+    table_pattern = re.compile(
+        r'^\|.+\|\s*\n'  # Header row: | col1 | col2 |
+        r'\|[-\s:]+(?:\|[-\s:]+)*\|\s*\n'  # Separator: |------|------| (one or more columns)
+        r'(\|.+\|\s*\n?)+',  # Data rows: | cell1 | cell2 | (one or more rows)
+        re.MULTILINE
+    )
+    html = table_pattern.sub(replace_table, html)
+    
+    # Headers (H1-H6) - do after code blocks and tables to avoid conflicts
     html = re.sub(r'^# (.+)$', r'<h1>\1</h1>', html, flags=re.MULTILINE)
     html = re.sub(r'^## (.+)$', r'<h2>\1</h2>', html, flags=re.MULTILINE)
     html = re.sub(r'^### (.+)$', r'<h3>\1</h3>', html, flags=re.MULTILINE)
@@ -258,10 +326,15 @@ def markdown_to_html(markdown: str) -> str:
         code_html = f'<pre><code{lang_attr}>{code_content}</code></pre>'
         html = html.replace(placeholder, code_html)
     
+    # Restore tables before paragraph processing
+    for placeholder, table_html in tables:
+        html = html.replace(placeholder, table_html)
+    
     # Paragraphs (lines not starting with #, *, -, <ul, <ol, <li, <pre, etc.)
-    # Handle code blocks carefully - they may span multiple lines after restoration
-    # First, protect code blocks by replacing them with placeholders
+    # Handle code blocks and tables carefully - they may span multiple lines after restoration
+    # First, protect code blocks and tables by replacing them with placeholders
     code_block_pattern = re.compile(r'(<pre><code[^>]*>.*?</code></pre>)', re.DOTALL)
+    table_pattern = re.compile(r'(<table>.*?</table>)', re.DOTALL)
     protected_blocks = []
     def protect_code_block(match):
         block = match.group(1)
@@ -271,7 +344,14 @@ def markdown_to_html(markdown: str) -> str:
         protected_blocks.append((placeholder, block))
         return placeholder
     
+    def protect_table(match):
+        block = match.group(1)
+        placeholder = f'<PROTECTEDTABLE{len(protected_blocks)}PROTECTEDTABLE>'
+        protected_blocks.append((placeholder, block))
+        return placeholder
+    
     html = code_block_pattern.sub(protect_code_block, html)
+    html = table_pattern.sub(protect_table, html)
     
     # Now split by newlines for paragraph processing
     lines = html.split('\n')
@@ -282,8 +362,8 @@ def markdown_to_html(markdown: str) -> str:
     for line in lines:
         stripped = line.strip()
         
-        # Check if this line contains a protected code block - must check before other processing
-        if '<PROTECTEDCODE' in line:
+        # Check if this line contains a protected code block or table - must check before other processing
+        if '<PROTECTEDCODE' in line or '<PROTECTEDTABLE' in line:
             if in_paragraph:
                 result.append(f'<p>{" ".join(current_paragraph)}</p>')
                 current_paragraph = []
@@ -297,7 +377,7 @@ def markdown_to_html(markdown: str) -> str:
                 current_paragraph = []
                 in_paragraph = False
             result.append('')
-        elif stripped.startswith(('<h', '<p', '<pre', '<ul', '<ol', '<li', '<blockquote', '</ul', '</ol', '<PROTECTEDCODE')):
+        elif stripped.startswith(('<h', '<p', '<pre', '<ul', '<ol', '<li', '<blockquote', '</ul', '</ol', '<table', '</table', '<PROTECTEDCODE', '<PROTECTEDTABLE')):
             if in_paragraph:
                 result.append(f'<p>{" ".join(current_paragraph)}</p>')
                 current_paragraph = []
@@ -312,11 +392,43 @@ def markdown_to_html(markdown: str) -> str:
     
     html = '\n'.join(result)
     
-    # Restore protected code blocks - must happen after all processing
+    # Restore protected code blocks and tables - must happen after all processing
     for placeholder, block in protected_blocks:
-        html = html.replace(placeholder, block)
+        # Ensure blocks are on their own lines for proper paragraph separation
+        html = html.replace(placeholder, f'\n{block}\n')
     
-    return html
+    # Final cleanup: remove excessive newlines but preserve structure
+    html = re.sub(r'\n{3,}', '\n\n', html)
+    
+    # Post-process: wrap any remaining unwrapped text lines in paragraphs
+    # This handles text that comes after tables/code blocks
+    lines = html.split('\n')
+    final_result = []
+    current_text = []
+    
+    for line in lines:
+        stripped = line.strip()
+        if not stripped:
+            # Empty line - flush any accumulated text
+            if current_text:
+                final_result.append(f'<p>{" ".join(current_text)}</p>')
+                current_text = []
+            final_result.append('')
+        elif stripped.startswith(('<', '</')):
+            # HTML tag - flush any accumulated text, then add the tag
+            if current_text:
+                final_result.append(f'<p>{" ".join(current_text)}</p>')
+                current_text = []
+            final_result.append(line)
+        else:
+            # Plain text - accumulate for paragraph
+            current_text.append(stripped)
+    
+    # Flush any remaining text
+    if current_text:
+        final_result.append(f'<p>{" ".join(current_text)}</p>')
+    
+    return '\n'.join(final_result)
 
 
 def extract_internal_links(content: str) -> list:

@@ -52,6 +52,17 @@ describe('markdown utilities', () => {
       expect(markdown).toContain('const x = 1;');
     });
 
+    it('converts tables to markdown', () => {
+      const html = '<table><thead><tr><th>Header 1</th><th>Header 2</th></tr></thead><tbody><tr><td>Cell 1</td><td>Cell 2</td></tr></tbody></table>';
+      const markdown = htmlToMarkdown(html);
+      // Should contain table markdown syntax
+      expect(markdown).toContain('|');
+      expect(markdown).toContain('Header 1');
+      expect(markdown).toContain('Header 2');
+      expect(markdown).toContain('Cell 1');
+      expect(markdown).toContain('Cell 2');
+    });
+
     it('converts inline code', () => {
       const html = '<p>Use <code>console.log</code> to debug</p>';
       const markdown = htmlToMarkdown(html);
@@ -141,6 +152,35 @@ describe('markdown utilities', () => {
       const html = markdownToHtml(markdown);
       expect(html).toContain('<pre><code>');
       expect(html).toContain('const x = 1;');
+    });
+
+    it('converts markdown tables to HTML', () => {
+      const markdown = '| Header 1 | Header 2 |\n|----------|----------|\n| Cell 1   | Cell 2   |';
+      const html = markdownToHtml(markdown);
+      // marked.js with GFM should convert tables
+      expect(html).toContain('<table>');
+      expect(html).toContain('Header 1');
+      expect(html).toContain('Cell 1');
+    });
+
+    it('converts markdown tables with multiple rows to HTML', () => {
+      const markdown = '| Header 1 | Header 2 |\n|----------|----------|\n| Cell 1   | Cell 2   |\n| Cell 3   | Cell 4   |';
+      const html = markdownToHtml(markdown);
+      expect(html).toContain('<table>');
+      expect(html).toContain('Cell 1');
+      expect(html).toContain('Cell 3');
+    });
+
+    it('preserves table structure in round-trip conversion', () => {
+      const originalHtml = '<table><thead><tr><th>Header 1</th><th>Header 2</th></tr></thead><tbody><tr><td>Cell 1</td><td>Cell 2</td></tr><tr><td>Cell 3</td><td>Cell 4</td></tr></tbody></table>';
+      const markdown = htmlToMarkdown(originalHtml);
+      const convertedHtml = markdownToHtml(markdown);
+      
+      // Should contain table structure
+      expect(convertedHtml).toContain('<table>');
+      expect(convertedHtml).toContain('Header 1');
+      expect(convertedHtml).toContain('Cell 1');
+      expect(convertedHtml).toContain('Cell 3');
     });
 
     it('converts inline code', () => {

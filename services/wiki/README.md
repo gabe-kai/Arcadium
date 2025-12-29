@@ -99,6 +99,12 @@ Markdown content here...
 - **Metadata form** - Standard fields (title, slug, section, status, order) are managed through the Metadata Form UI
 - **Custom fields preserved** - Custom frontmatter fields (e.g., `tags`, `author`, `category`) are preserved when users edit pages
 - **Code blocks** - Code blocks (```language\ncode```) are properly converted to HTML with language classes, whitespace preservation, and syntax highlighting support
+- **Tables** - GFM (GitHub Flavored Markdown) tables are properly converted to HTML with full structure preservation:
+  - Pattern: `| Header | Header |\n|--------|\n| Cell | Cell |`
+  - Supports multiple rows and columns
+  - Header row structure preserved (`<thead>` / `<tbody>`)
+  - HTML escaping in table cells
+  - Tables protected from paragraph wrapping
 - **AI system compatible** - AI content management systems can write files with custom frontmatter fields, and they will be preserved through the sync and edit workflow
 
 ## Frontend Integration

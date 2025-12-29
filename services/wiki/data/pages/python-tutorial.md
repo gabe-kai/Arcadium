@@ -1,8 +1,8 @@
 ---
 keywords: python, programming, tutorial
-slug: python-tutorial
 status: published
 title: Python Tutorial
+slug: python-tutorial
 ---
 # Python Tutorial
 

@@ -1,6 +1,6 @@
 ---
-slug: test
 status: published
 title: ''
+slug: test
 ---
 Content
