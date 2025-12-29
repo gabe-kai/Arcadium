@@ -193,8 +193,8 @@ describe('Auth Flow Integration', () => {
         expect(clearToken).toHaveBeenCalled();
       });
 
-      // Verify navigation
-      expect(mockNavigate).toHaveBeenCalledWith('/');
+      // Should not navigate away - user stays on current page
+      expect(mockNavigate).not.toHaveBeenCalled();
     });
   });
 

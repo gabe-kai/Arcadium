@@ -127,7 +127,7 @@ describe('Header', () => {
       expect(screen.getByText('User')).toBeInTheDocument();
     });
 
-    it('calls signOut and navigates to home when sign out is clicked', async () => {
+    it('calls signOut and stays on current page when sign out is clicked', async () => {
       const user = userEvent.setup();
       const mockSignOut = vi.fn();
       useAuth.mockReturnValue({
@@ -141,7 +141,8 @@ describe('Header', () => {
       await user.click(screen.getByRole('button', { name: 'Sign out' }));
 
       expect(mockSignOut).toHaveBeenCalled();
-      expect(mockNavigate).toHaveBeenCalledWith('/');
+      // Should not navigate away - user stays on current page
+      expect(mockNavigate).not.toHaveBeenCalled();
     });
 
     it('handles sign out with different user roles', async () => {

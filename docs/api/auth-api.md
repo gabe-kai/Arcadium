@@ -142,7 +142,7 @@ Authorization: Bearer <token>
 }
 ```
 
-**Note:** Token is added to blacklist. User should be redirected to home page as viewer.
+**Note:** Token is added to blacklist. User remains on current page, and the UI automatically updates to reflect the unauthenticated state (permission-based buttons disappear).
 
 **Permissions:** Authenticated users
 

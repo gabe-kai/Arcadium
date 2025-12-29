@@ -81,12 +81,16 @@ export function Header() {
   }, []);
 
   const handleSignInClick = () => {
+    // Store current location to redirect back after login
+    const currentPath = location.pathname + location.search;
+    sessionStorage.setItem('redirectAfterLogin', currentPath);
     navigate('/signin');
   };
 
   const handleSignOut = () => {
     signOut();
-    navigate('/');
+    // Stay on current page after sign-out (don't redirect to home)
+    // The page will automatically update to reflect the new unauthenticated state
   };
 
   const handleSearchSubmit = (e) => {

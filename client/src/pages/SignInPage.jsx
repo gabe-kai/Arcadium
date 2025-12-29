@@ -46,9 +46,20 @@ export function SignInPage() {
       // Store token and user info
       await signIn(response.token, response.user);
 
-      // Redirect to home after a brief delay to show success message
+      // Set flag to indicate we just signed in (so pages can refetch with new permissions)
+      sessionStorage.setItem('justSignedIn', 'true');
+
+      // Check for stored redirect path, otherwise go to home
+      // Prevent redirecting back to sign-in page to avoid loops
+      const redirectPath = sessionStorage.getItem('redirectAfterLogin');
+      if (redirectPath) {
+        sessionStorage.removeItem('redirectAfterLogin');
+      }
+      const targetPath = (redirectPath && !redirectPath.startsWith('/signin')) ? redirectPath : '/';
+
+      // Redirect after a brief delay to show success message
       setTimeout(() => {
-        navigate('/');
+        navigate(targetPath);
       }, mode === 'register' ? 1500 : 0);
     } catch (err) {
       const errorMessage =

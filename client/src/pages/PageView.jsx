@@ -11,6 +11,7 @@ import { CommentsList } from '../components/comments/CommentsList';
 import { DeleteArchiveDialog } from '../components/page/DeleteArchiveDialog';
 import { usePage, useBreadcrumb, usePageNavigation, deletePage, archivePage, unarchivePage } from '../services/api/pages';
 import { useComments } from '../services/api/comments';
+import { useAuth } from '../services/auth/AuthContext';
 import { highlightCodeBlocks } from '../utils/syntaxHighlight';
 import { processLinks } from '../utils/linkHandler';
 
@@ -18,6 +19,7 @@ export function PageView() {
   const { pageId } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { isAuthenticated } = useAuth();
   const { data: page, isLoading, isError } = usePage(pageId);
   const { data: breadcrumb } = useBreadcrumb(pageId);
   const { data: navigation } = usePageNavigation(pageId);
@@ -87,6 +89,39 @@ export function PageView() {
   const handleUnarchiveConfirm = () => {
     unarchiveMutation.mutate();
   };
+
+  // Refetch page data when authentication state changes (to update permission flags)
+  const prevAuthRef = useRef(isAuthenticated);
+  useEffect(() => {
+    if (!pageId) return;
+    
+    const authChanged = prevAuthRef.current !== isAuthenticated;
+    
+    // Check if we just signed in (flag set by SignInPage)
+    const justSignedIn = sessionStorage.getItem('justSignedIn') === 'true';
+    
+    // Refetch if:
+    // 1. Authentication state changed (user signed in/out while on this page), OR
+    // 2. We just signed in (flag is set, meaning we navigated here after sign-in)
+    const shouldRefetch = authChanged || justSignedIn;
+    
+    if (shouldRefetch) {
+      // Force refetch of all page-related queries to get updated permissions
+      // Use refetchQueries to ensure immediate refetch regardless of staleTime
+      queryClient.refetchQueries({ queryKey: ['page', pageId] });
+      queryClient.refetchQueries({ queryKey: ['breadcrumb', pageId] });
+      queryClient.refetchQueries({ queryKey: ['pageNavigation', pageId] });
+      queryClient.refetchQueries({ queryKey: ['comments', pageId] });
+      
+      // Clear the flag after refetching
+      if (justSignedIn) {
+        sessionStorage.removeItem('justSignedIn');
+      }
+    }
+    
+    // Update ref to track current auth state
+    prevAuthRef.current = isAuthenticated;
+  }, [isAuthenticated, pageId, queryClient]);
 
   // Process content after it's rendered (syntax highlighting, link processing)
   useEffect(() => {

@@ -184,7 +184,7 @@ CREATE INDEX idx_password_history_user ON password_history(user_id, created_at D
 - No server-side session storage
 - Multiple concurrent sessions per user allowed
 - Client tracks active sessions
-- On token expiration or logout: User redirected to home page as viewer
+- On token expiration or logout: User remains on current page, UI updates to reflect unauthenticated state
 
 ## Service Architecture
 
@@ -236,7 +236,7 @@ services/auth/
 - `POST /api/auth/logout` endpoint
 - Adds token to blacklist
 - Client should delete token from storage
-- User redirected to home page as viewer
+- User remains on current page, UI automatically updates to reflect unauthenticated state (permission-based buttons disappear)
 
 ### Token Revocation
 - `POST /api/auth/revoke` endpoint
