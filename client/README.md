@@ -90,11 +90,43 @@ Web client application for the **Arcadium Wiki**. This frontend consumes the Wik
   - `compareVersions`
   - `restoreVersion`
 
-### 🚧 In Progress / Planned
-- `SearchPage` – search results (Phase 6)
-- `IndexPage` – alphabetical index (Phase 6)
-- Version comparison view (Phase 10.5)
-- Version restore functionality (Phase 10.5)
+### ✅ Phase 6: Search Interface (Complete)
+- **SearchPage component** – Full-text search with results display
+  - Search input with keyboard shortcut (Ctrl+K / Cmd+K)
+  - Search results with highlighting
+  - Recent searches dropdown
+- **IndexPage component** – Alphabetical index of all pages
+  - Grouped by first letter
+  - Click to navigate to page
+
+### ✅ Phase 10: Page Creation Flow (Complete)
+- **New page creation** – Full workflow from creation to viewing
+- **Auto-save drafts** – LocalStorage-based draft saving
+- **Unsaved changes warning** – Prevents accidental navigation loss
+
+### ✅ Phase 10.5: Version History & Comparison (Complete)
+- **PageHistoryPage component** – Version history viewer
+- **PageVersionView component** – View specific version
+- **PageVersionCompare component** – Side-by-side version comparison
+- **Version restore functionality** – Restore any previous version
+
+### ✅ Phase 11: Page Delete and Archive Functionality (Complete)
+- **Delete page** – Permanent deletion with confirmation dialog
+- **Archive/Unarchive** – Archive pages while preserving content
+- **Permission-based actions** – Role-based access control
+
+### ✅ Phase 15: Polish & Enhancements (Complete)
+- **Notification system** – Toast-style notifications for user feedback
+- **Theme support** – Light/dark mode with system preference detection
+- **Animations & transitions** – Smooth page transitions, hover effects, loading skeletons
+- **Error handling** – User-friendly error messages with retry mechanisms
+- **Print stylesheet** – Print-friendly page formatting
+- **Share functionality** – Share/copy page links with Web Share API support
+
+### 🚧 Future Enhancements
+- Responsive design (Phase 12)
+- Accessibility improvements (Phase 13)
+- Performance optimizations (Phase 14)
 
 ## Setup
 
@@ -203,19 +235,22 @@ See `e2e/README.md` for detailed E2E testing documentation.
 
 ### Test Coverage
 
-- **Component tests**: 460+ test cases covering all components
+- **Component tests**: 523+ test cases covering all components
   - PageView, Breadcrumb, PageNavigation, NavigationTree
   - TableOfContents, Backlinks, Layout, Footer, Sidebar
   - Editor, EditorToolbar, MetadataForm
   - CommentsList, CommentItem, CommentForm
   - EditPage, HomePage, SearchPage, IndexPage, SignInPage
+  - PageHistoryPage, PageVersionView, PageVersionCompare
+  - DeleteArchiveDialog, ThemeToggle, ShareButton, Notification components
   - All utility functions
-- **Integration tests**: 25+ test cases
+- **Integration tests**: 30+ test cases
   - Page creation/editing flows
   - Metadata integration
   - Navigation flows
   - Authentication flows
   - Comments flows
+  - Version history flows
 - **E2E tests**: 32+ Playwright tests
   - Full user journeys
   - Browser-based testing
@@ -224,7 +259,7 @@ See `e2e/README.md` for detailed E2E testing documentation.
   - All components fully tested
   - Edge cases and error scenarios covered
   - API error handling tested
-  - **Total**: 550+ tests across 35 test files
+  - **Total**: 523+ client tests + 560+ backend tests = 1,115+ total tests across 89+ test files
 
 ## Related Documentation
 
