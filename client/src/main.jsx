@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { App } from './App';
 import './styles.css';
+import './styles-animations-print.css';
 import { queryClient } from './state/queryClient';
 import { AuthProvider } from './services/auth/AuthContext';
 import { initSyntaxHighlighting } from './utils/syntaxHighlight';

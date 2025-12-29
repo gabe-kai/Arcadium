@@ -1,0 +1,29 @@
+.arc-theme-toggle {
+  background: transparent;
+  border: 1px solid var(--arc-border);
+  border-radius: var(--arc-radius-md);
+  color: var(--arc-text);
+  cursor: pointer;
+  padding: 0.5rem;
+  width: 2.5rem;
+  height: 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--arc-transition-fast);
+}
+
+.arc-theme-toggle:hover {
+  background: var(--arc-surface);
+  border-color: var(--arc-accent);
+  transform: scale(1.05);
+}
+
+.arc-theme-toggle:active {
+  transform: scale(0.95);
+}
+
+.arc-theme-icon {
+  font-size: 1.25rem;
+  line-height: 1;
+}

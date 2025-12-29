@@ -2,6 +2,7 @@
 
 :root {
   color-scheme: light dark;
+  /* Dark theme (default) */
   --arc-bg: #0f172a;
   --arc-bg-elevated: #020617;
   --arc-surface: #0b1120;
@@ -30,6 +31,36 @@
   --arc-radius-md: 0.5rem;
   /* Shadow */
   --arc-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+  /* Transitions */
+  --arc-transition-fast: 0.15s ease;
+  --arc-transition-base: 0.3s ease;
+  --arc-transition-slow: 0.5s ease;
+}
+
+/* Light theme */
+[data-theme='light'],
+.theme-light {
+  --arc-bg: #ffffff;
+  --arc-bg-elevated: #f8f9fa;
+  --arc-surface: #f1f3f5;
+  --arc-border: #dee2e6;
+  --arc-accent: #0ea5e9;
+  --arc-accent-soft: rgba(14, 165, 233, 0.1);
+  --arc-text: #1e293b;
+  --arc-text-subtle: #64748b;
+  --arc-primary: #0ea5e9;
+  --arc-primary-hover: #0284c7;
+  --arc-primary-alpha: rgba(14, 165, 233, 0.1);
+  --arc-on-primary: #ffffff;
+  --arc-text-primary: #1e293b;
+  --arc-text-secondary: #64748b;
+  --arc-error-bg: rgba(239, 68, 68, 0.1);
+  --arc-error-text: #dc2626;
+  --arc-error-border: rgba(239, 68, 68, 0.3);
+  --arc-success-bg: rgba(34, 197, 94, 0.1);
+  --arc-success-text: #16a34a;
+  --arc-success-border: rgba(34, 197, 94, 0.3);
+  --arc-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
 * {
@@ -40,8 +71,13 @@ body {
   margin: 0;
   font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI',
     sans-serif;
-  background: radial-gradient(circle at top, #0f172a, #020617 55%, #000 100%);
+  background: radial-gradient(circle at top, var(--arc-bg), var(--arc-bg-elevated) 55%, var(--arc-surface) 100%);
   color: var(--arc-text);
+  transition: background var(--arc-transition-base), color var(--arc-transition-base);
+}
+
+.theme-light body {
+  background: linear-gradient(to bottom, var(--arc-bg), var(--arc-bg-elevated));
 }
 
 .arc-app {
@@ -56,10 +92,11 @@ body {
   justify-content: space-between;
   padding: 0.75rem 1.5rem;
   border-bottom: 1px solid var(--arc-border);
-  background: linear-gradient(to right, #020617, #0b1120);
+  background: linear-gradient(to right, var(--arc-bg-elevated), var(--arc-surface));
   position: sticky;
   top: 0;
   z-index: 10;
+  transition: background var(--arc-transition-base), border-color var(--arc-transition-base);
 }
 
 .arc-logo {
@@ -128,17 +165,17 @@ body {
 }
 
 .arc-header-button-new-page {
-  background: var(--arc-accent);
-  border-color: var(--arc-accent);
-  color: #000;
+  background: var(--arc-primary);
+  border-color: var(--arc-primary);
+  color: var(--arc-on-primary);
   font-weight: 500;
   text-decoration: none;
 }
 
 .arc-header-button-new-page:hover {
-  background: #06b6d4;
-  border-color: #06b6d4;
-  color: #000;
+  background: var(--arc-primary-hover);
+  border-color: var(--arc-primary-hover);
+  color: var(--arc-on-primary);
 }
 
 .arc-user-menu {

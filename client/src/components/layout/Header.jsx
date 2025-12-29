@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../services/auth/AuthContext';
+import { ThemeToggle } from '../common/ThemeToggle';
 
 const RECENT_SEARCHES_KEY = 'arcadium_recent_searches';
 const MAX_RECENT_SEARCHES = 10;
@@ -185,6 +186,7 @@ export function Header() {
             + New Page
           </Link>
         )}
+        <ThemeToggle />
         {isAuthenticated ? (
           <div className="arc-user-menu">
             <span className="arc-username">{user?.username || 'User'}</span>

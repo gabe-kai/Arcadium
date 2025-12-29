@@ -9,17 +9,20 @@ import { TableOfContents } from '../components/navigation/TableOfContents';
 import { Backlinks } from '../components/navigation/Backlinks';
 import { CommentsList } from '../components/comments/CommentsList';
 import { DeleteArchiveDialog } from '../components/page/DeleteArchiveDialog';
+import { ShareButton } from '../components/common/ShareButton';
 import { usePage, useBreadcrumb, usePageNavigation, deletePage, archivePage, unarchivePage } from '../services/api/pages';
 import { useComments } from '../services/api/comments';
 import { useAuth } from '../services/auth/AuthContext';
 import { highlightCodeBlocks } from '../utils/syntaxHighlight';
 import { processLinks } from '../utils/linkHandler';
+import { useNotificationContext } from '../components/common/NotificationProvider';
 
 export function PageView() {
   const { pageId } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { isAuthenticated } = useAuth();
+  const { showSuccess, showError } = useNotificationContext();
   const { data: page, isLoading, isError } = usePage(pageId);
   const { data: breadcrumb } = useBreadcrumb(pageId);
   const { data: navigation } = usePageNavigation(pageId);
@@ -36,7 +39,11 @@ export function PageView() {
       queryClient.invalidateQueries({ queryKey: ['page', pageId] });
       queryClient.invalidateQueries({ queryKey: ['navigationTree'] });
       queryClient.invalidateQueries({ queryKey: ['index'] });
+      showSuccess('Page deleted successfully');
       navigate('/');
+    },
+    onError: (error) => {
+      showError(error.response?.data?.error || 'Failed to delete page');
     },
   });
 
@@ -46,7 +53,11 @@ export function PageView() {
       queryClient.invalidateQueries({ queryKey: ['page', pageId] });
       queryClient.invalidateQueries({ queryKey: ['navigationTree'] });
       queryClient.invalidateQueries({ queryKey: ['index'] });
+      showSuccess('Page archived successfully');
       setShowArchiveDialog(false);
+    },
+    onError: (error) => {
+      showError(error.response?.data?.error || 'Failed to archive page');
     },
   });
 
@@ -56,7 +67,11 @@ export function PageView() {
       queryClient.invalidateQueries({ queryKey: ['page', pageId] });
       queryClient.invalidateQueries({ queryKey: ['navigationTree'] });
       queryClient.invalidateQueries({ queryKey: ['index'] });
+      showSuccess('Page unarchived successfully');
       setShowUnarchiveDialog(false);
+    },
+    onError: (error) => {
+      showError(error.response?.data?.error || 'Failed to unarchive page');
     },
   });
 
@@ -152,6 +167,7 @@ export function PageView() {
           <div className="arc-page-header-top">
             <h1>{page.title}</h1>
             <div className="arc-page-header-actions">
+              <ShareButton pageId={pageId} pageTitle={page.title} />
               {page.can_edit && (
                 <button
                   type="button"

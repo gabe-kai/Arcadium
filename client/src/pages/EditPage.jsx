@@ -10,6 +10,7 @@ import { usePage, createPage, updatePage, useVersionHistory } from '../services/
 import { htmlToMarkdown, markdownToHtml, parseFrontmatter, addFrontmatter } from '../utils/markdown';
 import { highlightCodeBlocks } from '../utils/syntaxHighlight';
 import { processLinks } from '../utils/linkHandler';
+import { useNotificationContext } from '../components/common/NotificationProvider';
 
 /**
  * EditPage component - WYSIWYG editor for creating/editing pages
@@ -18,6 +19,7 @@ export function EditPage() {
   const { pageId } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { showSuccess, showError } = useNotificationContext();
   const isNewPage = !pageId || pageId === 'new';
 
   const [title, setTitle] = useState('');
@@ -142,6 +144,7 @@ export function EditPage() {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['page', data.id] });
       queryClient.invalidateQueries({ queryKey: ['navigationTree'] });
+      showSuccess('Page created successfully');
       navigate(`/pages/${data.id}`);
     },
     onError: (error) => {
@@ -149,8 +152,7 @@ export function EditPage() {
         // Token expired or invalid - error handler in apiClient will redirect
         console.error('Authentication failed. Please sign in again.');
       } else {
-        console.error('Failed to create page:', error);
-        alert(`Failed to create page: ${error.response?.data?.error || error.message || 'Unknown error'}`);
+        showError(error.response?.data?.error || 'Failed to create page');
       }
     },
   });
@@ -162,27 +164,26 @@ export function EditPage() {
       queryClient.invalidateQueries({ queryKey: ['page', pageId] });
       queryClient.invalidateQueries({ queryKey: ['navigationTree'] });
       setHasUnsavedChanges(false);
-      // Optionally show success message
+      showSuccess('Page saved successfully');
     },
     onError: (error) => {
       if (error.response?.status === 401) {
         // Token expired or invalid - error handler in apiClient will redirect
         console.error('Authentication failed. Please sign in again.');
       } else {
-        console.error('Failed to update page:', error);
-        alert(`Failed to update page: ${error.response?.data?.error || error.message || 'Unknown error'}`);
+        showError(error.response?.data?.error || 'Failed to update page');
       }
     },
   });
 
   const handleSave = async () => {
     if (!metadata.title || !metadata.title.trim()) {
-      alert('Please enter a page title');
+      showError('Please enter a page title');
       return;
     }
 
     if (!metadata.slug || !metadata.slug.trim()) {
-      alert('Please enter a valid slug');
+      showError('Please enter a valid slug');
       return;
     }
 
