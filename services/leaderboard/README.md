@@ -21,4 +21,3 @@ flask run --port 8003
 - `GET /api/leaderboard/<leaderboard_type>` - Get leaderboard rankings
 - `GET /api/leaderboard/<leaderboard_type>/<user_id>` - Get user's rank
 - `POST /api/leaderboard/<leaderboard_type>/<user_id>` - Update user score
-

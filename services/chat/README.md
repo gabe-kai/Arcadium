@@ -21,4 +21,3 @@ flask run --port 8002
 - `GET /api/chat/channels` - List all chat channels
 - `GET /api/chat/channels/<channel_id>/messages` - Get messages from a channel
 - `POST /api/chat/channels/<channel_id>/messages` - Send a message to a channel
-

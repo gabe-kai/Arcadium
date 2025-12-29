@@ -8,4 +8,3 @@ Shared logging utilities and configuration.
 - Log levels
 - Log formatting
 - Centralized log configuration
-

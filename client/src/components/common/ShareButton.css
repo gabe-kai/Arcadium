@@ -1,0 +1,30 @@
+.arc-share-button {
+  background: transparent;
+  border: 1px solid var(--arc-border);
+  border-radius: var(--arc-radius-md);
+  color: var(--arc-text);
+  cursor: pointer;
+  padding: 0.5rem;
+  width: 2.5rem;
+  height: 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--arc-transition-fast);
+  font-size: 1.25rem;
+}
+
+.arc-share-button:hover:not(:disabled) {
+  background: var(--arc-surface);
+  border-color: var(--arc-accent);
+  transform: scale(1.05);
+}
+
+.arc-share-button:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
+.arc-share-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

@@ -27,8 +27,9 @@ Project documentation for Arcadium.
 ### Auth Service
 - [Auth Service Specification](services/auth-service.md) - Authentication and authorization service
 - [Auth Service API](api/auth-api.md) - REST API endpoints
+- [Auth Service Implementation Guide](auth-service-implementation-guide.md) - Step-by-step implementation plan
+- [Auth Implementation Assessment](auth-implementation-assessment.md) - Design readiness assessment
 
 ### Notification Service
 - [Notification Service Specification](services/notification-service.md) - Internal messaging and notifications
 - [Notification Service API](api/notification-api.md) - REST API endpoints
-

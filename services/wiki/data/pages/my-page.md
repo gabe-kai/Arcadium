@@ -1,6 +1,6 @@
 ---
+status: published
 title: My Page
 slug: my-page
-status: published
 ---
 Content

@@ -11,4 +11,3 @@
 5. After writing files, remind user to run: `python -m app.sync sync-all`
 
 See `docs/wiki-ai-content-management.md` for the Quick Reference guide and full details.
-

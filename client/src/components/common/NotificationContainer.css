@@ -1,0 +1,27 @@
+.arc-notification-container {
+  position: fixed;
+  top: 4rem;
+  right: 1rem;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  pointer-events: none;
+}
+
+.arc-notification-container > * {
+  pointer-events: auto;
+}
+
+@media (max-width: 768px) {
+  .arc-notification-container {
+    top: 3.5rem;
+    right: 0.5rem;
+    left: 0.5rem;
+  }
+
+  .arc-notification-container .arc-notification {
+    max-width: 100%;
+    min-width: auto;
+  }
+}

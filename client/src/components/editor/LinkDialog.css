@@ -1,0 +1,226 @@
+/* Link Dialog Styles */
+
+.arc-link-dialog-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.arc-link-dialog {
+  background: var(--arc-bg-elevated);
+  border: 1px solid var(--arc-border);
+  border-radius: var(--arc-radius-md);
+  width: 90%;
+  max-width: 500px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: var(--arc-shadow-md);
+}
+
+.arc-link-dialog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid var(--arc-border);
+}
+
+.arc-link-dialog-header h3 {
+  margin: 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--arc-text);
+}
+
+.arc-link-dialog-close {
+  background: none;
+  border: none;
+  color: var(--arc-text-subtle);
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0;
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.25rem;
+  transition: all 0.2s;
+}
+
+.arc-link-dialog-close:hover {
+  background: var(--arc-surface);
+  color: var(--arc-text);
+}
+
+.arc-link-dialog-form {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  overflow-y: auto;
+}
+
+.arc-link-dialog-type {
+  display: flex;
+  gap: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--arc-border);
+}
+
+.arc-link-dialog-type label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--arc-text);
+  cursor: pointer;
+  font-size: 0.875rem;
+}
+
+.arc-link-dialog-type input[type="radio"] {
+  cursor: pointer;
+}
+
+.arc-link-dialog-internal,
+.arc-link-dialog-external {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.arc-link-dialog-internal label,
+.arc-link-dialog-external label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--arc-text);
+}
+
+.arc-link-dialog-search,
+.arc-link-dialog-input {
+  padding: 0.75rem;
+  background: var(--arc-bg);
+  border: 1px solid var(--arc-border);
+  border-radius: var(--arc-radius-sm);
+  color: var(--arc-text);
+  font-size: 0.875rem;
+  font-family: inherit;
+}
+
+.arc-link-dialog-search:focus,
+.arc-link-dialog-input:focus {
+  outline: none;
+  border-color: var(--arc-accent);
+  box-shadow: 0 0 0 2px var(--arc-accent-soft);
+}
+
+.arc-link-dialog-loading,
+.arc-link-dialog-no-results {
+  padding: 0.75rem;
+  text-align: center;
+  color: var(--arc-text-subtle);
+  font-size: 0.875rem;
+  font-style: italic;
+}
+
+.arc-link-dialog-help {
+  font-size: 0.75rem;
+  color: var(--arc-text-subtle);
+  font-style: italic;
+  margin-top: -0.5rem;
+}
+
+.arc-link-dialog-results {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  max-height: 200px;
+  overflow-y: auto;
+  border: 1px solid var(--arc-border);
+  border-radius: var(--arc-radius-sm);
+  background: var(--arc-bg);
+}
+
+.arc-link-dialog-result-item {
+  width: 100%;
+  padding: 0.75rem;
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--arc-border);
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  transition: background 0.15s;
+}
+
+.arc-link-dialog-result-item:last-child {
+  border-bottom: none;
+}
+
+.arc-link-dialog-result-item:hover {
+  background: var(--arc-surface);
+}
+
+.arc-link-dialog-result-title {
+  color: var(--arc-text);
+  font-weight: 500;
+  font-size: 0.875rem;
+}
+
+.arc-link-dialog-result-section {
+  color: var(--arc-text-subtle);
+  font-size: 0.75rem;
+}
+
+.arc-link-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--arc-border);
+}
+
+.arc-link-dialog-button {
+  padding: 0.5rem 1rem;
+  border-radius: var(--arc-radius-md);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 1px solid var(--arc-border);
+}
+
+.arc-link-dialog-button-cancel {
+  background: transparent;
+  color: var(--arc-text);
+}
+
+.arc-link-dialog-button-cancel:hover {
+  background: var(--arc-surface);
+}
+
+.arc-link-dialog-button-insert {
+  background: var(--arc-primary);
+  color: var(--arc-on-primary);
+  border-color: var(--arc-primary);
+}
+
+.arc-link-dialog-button-insert:hover:not(:disabled) {
+  background: var(--arc-primary-hover);
+  border-color: var(--arc-primary-hover);
+}
+
+.arc-link-dialog-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

@@ -16,4 +16,5 @@ Architecture decisions, diagrams, and system design documents.
 ## Infrastructure
 
 - [Database Configuration](database-configuration.md) - Database setup and configuration for all services
-
+- [Database Credentials](database-credentials.md) - Using arcadium_user and arcadium_pass environment variables
+- [Database Naming Convention](database-naming-convention.md) - arcadium_ prefix for all databases

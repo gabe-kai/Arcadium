@@ -21,4 +21,3 @@ flask run --port 8005
 - `GET /` - Admin dashboard
 - `GET /api/admin/stats` - Get system statistics
 - `GET /api/admin/users` - List all users
-

@@ -20,4 +20,3 @@ flask run --port 8001
 
 - `GET /api/presence/<user_id>` - Get user presence status
 - `POST /api/presence/<user_id>` - Update user presence status
-

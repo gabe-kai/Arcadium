@@ -7,4 +7,3 @@ Protocol Buffer definitions for gRPC services.
 - `.proto` files for each service
 - Generated code (if applicable)
 - Service definitions
-

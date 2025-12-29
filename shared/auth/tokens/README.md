@@ -8,4 +8,3 @@ Shared authentication token validation, generation, and management logic.
 - Token validation
 - Token refresh
 - JWT handling
-

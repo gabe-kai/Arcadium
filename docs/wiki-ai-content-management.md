@@ -14,7 +14,7 @@
    - `status`: "published" or "draft" (default: "published")
    - `created_by: "admin"` and `updated_by: "admin"` (always use "admin")
 3. **File location:** Mirror hierarchy in filesystem (e.g., `section-name/page.md`)
-4. **After writing:** 
+4. **After writing:**
    - **Option A (Automatic):** If file watcher is running (`python -m app.sync watch`), files sync automatically
    - **Option B (Manual):** Run `python -m app.sync sync-all` to sync to database
 
@@ -40,12 +40,14 @@ Content here...
 - Use `parent_slug` (slug string), not `parent_id` (UUID) - easier for AI to reference
 - Always set `created_by: "admin"` and `updated_by: "admin"`
 - File paths should mirror the page hierarchy (e.g., `game-mechanics/combat.md`)
+- **Custom frontmatter fields are preserved** - You can add any custom fields (e.g., `tags`, `author`, `category`, `ai_generated`) and they will be preserved when users edit pages through the UI
 - The sync utility will automatically:
   - Resolve `parent_slug` to `parent_id`
   - Update link tracking
   - Update search index
   - Create version history (on updates)
   - Assign pages to admin user
+  - Preserve all frontmatter fields (including custom ones) in the database
 
 ---
 
@@ -97,12 +99,23 @@ order: 1
 status: "published"
 created_by: "admin"  # Special value: assigns to admin user
 updated_by: "admin"
+# Custom fields (optional, preserved when users edit):
+tags: [ai, content, wiki]
+author: "AI Assistant"
+category: "documentation"
+ai_generated: true
 ---
 
 # Page Title
 
 Page content in markdown...
 ```
+
+**Frontmatter Handling:**
+- **Standard fields** (title, slug, section, status, order) are managed through the UI Metadata Form
+- **Custom fields** (tags, author, category, etc.) are preserved when users edit pages
+- **Frontmatter is hidden from editor** - Users only see and edit the markdown content
+- **All frontmatter is stored in database** - Full frontmatter (including custom fields) is preserved in `page.content` field
 
 ### AI Writing Rules
 
@@ -567,9 +580,8 @@ wiki-watch-debounce:
 
 **Why**: Simplest for AI, most reliable, no dependencies
 
-**Implementation**: 
+**Implementation**:
 - AI writes markdown files with YAML frontmatter
 - Sync utility updates database
 - Admin user assignment automatic
 - All wiki features work normally
-

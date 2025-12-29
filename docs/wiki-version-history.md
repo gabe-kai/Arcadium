@@ -242,4 +242,3 @@ POST /api/pages/{page_id}/versions/{version}/restore
 - Prevent version tampering
 - Maintain immutable version history
 - Audit log for all version operations
-

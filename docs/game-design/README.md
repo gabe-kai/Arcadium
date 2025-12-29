@@ -10,4 +10,3 @@ Game design documents and specifications.
 - Gameplay loops
 
 Note: Detailed design documents will also be maintained in the wiki service.
-

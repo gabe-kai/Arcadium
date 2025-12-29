@@ -161,7 +161,7 @@ Create a service to check health of all services:
 
 class ServiceStatusService:
     """Service for checking health of all Arcadium services"""
-    
+
     SERVICES = {
         'wiki': {
             'name': 'Wiki Service',
@@ -175,15 +175,15 @@ class ServiceStatusService:
         },
         # ... other services
     }
-    
+
     def check_service_health(self, service_id: str) -> Dict:
         """Check health of a specific service"""
         # Implementation
-        
+
     def check_all_services(self) -> Dict[str, Dict]:
         """Check health of all services"""
         # Implementation
-        
+
     def determine_status(self, health_response: Dict) -> str:
         """Determine status (healthy/degraded/unhealthy) from health response"""
         # Implementation

@@ -11,7 +11,13 @@ go mod download
 
 2. Set up environment variables:
 ```bash
-export DATABASE_URL=postgresql://arcadium:arcadium_dev@localhost:5432/arcadium
+# Option 1: Using arcadium_user and arcadium_pass (recommended)
+export arcadium_user=arcadium
+export arcadium_pass=your-secure-password
+export DB_NAME=arcadium_game_server
+
+# Option 2: Using DATABASE_URL directly
+export DATABASE_URL=postgresql://arcadium:your-secure-password@localhost:5432/arcadium_game_server
 export AUTH_SERVICE_URL=http://localhost:8000
 export PORT=8080
 ```
@@ -26,4 +32,3 @@ go run cmd/server/main.go
 - `GET /health` - Health check
 - `GET /api/game/status` - Game server status
 - `WS /ws` - WebSocket connection for real-time game communication
-

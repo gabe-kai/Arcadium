@@ -34,7 +34,7 @@ POST /api/auth/register
 }
 ```
 
-**Note:** 
+**Note:**
 - First user to register automatically receives `admin` role
 - Subsequent users default to `player` role
 - Email verification required for non-first users
@@ -142,7 +142,7 @@ Authorization: Bearer <token>
 }
 ```
 
-**Note:** Token is added to blacklist. User should be redirected to home page as viewer.
+**Note:** Token is added to blacklist. User remains on current page, and the UI automatically updates to reflect the unauthenticated state (permission-based buttons disappear).
 
 **Permissions:** Authenticated users
 
@@ -442,4 +442,3 @@ Both services use shared authentication utilities from `shared/auth/`:
   "error": "Internal server error"
 }
 ```
-

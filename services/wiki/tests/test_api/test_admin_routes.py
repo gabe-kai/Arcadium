@@ -1,19 +1,20 @@
 """Tests for admin dashboard and configuration endpoints."""
-import uuid
-from datetime import datetime, timezone, timedelta
-from unittest.mock import patch, MagicMock
 
-import pytest
+from datetime import datetime, timedelta, timezone
+from unittest.mock import MagicMock, patch
 
+import requests
 from app import db
-from app.models.page import Page
 from app.models.comment import Comment
-from app.models.wiki_config import WikiConfig
 from app.models.oversized_page_notification import OversizedPageNotification
-from tests.test_api.conftest import mock_auth, auth_headers, test_admin_id, test_writer_id
+from app.models.page import Page
+from app.models.wiki_config import WikiConfig
+from tests.test_api.conftest import auth_headers, mock_auth
 
 
-def _create_page(app, user_id, size_kb=10.0, word_count=100, title="Test Page", slug="test-page"):
+def _create_page(
+    app, user_id, size_kb=10.0, word_count=100, title="Test Page", slug="test-page"
+):
     """Helper to create a page inside app context."""
     with app.app_context():
         page = Page(
@@ -124,10 +125,18 @@ def test_get_size_distribution_buckets(client, app, test_admin_id):
         db.session.commit()
 
         # Create pages to hit several buckets
-        _create_page(app, user_id, size_kb=5.0, word_count=100, title="Small", slug="small")
-        _create_page(app, user_id, size_kb=20.0, word_count=800, title="Medium", slug="medium")
-        _create_page(app, user_id, size_kb=60.0, word_count=1500, title="Large", slug="large")
-        _create_page(app, user_id, size_kb=200.0, word_count=3000, title="XL", slug="xl")
+        _create_page(
+            app, user_id, size_kb=5.0, word_count=100, title="Small", slug="small"
+        )
+        _create_page(
+            app, user_id, size_kb=20.0, word_count=800, title="Medium", slug="medium"
+        )
+        _create_page(
+            app, user_id, size_kb=60.0, word_count=1500, title="Large", slug="large"
+        )
+        _create_page(
+            app, user_id, size_kb=200.0, word_count=3000, title="XL", slug="xl"
+        )
 
     with mock_auth(test_admin_id, "admin"):
         headers = auth_headers(test_admin_id, "admin")
@@ -174,8 +183,17 @@ def test_configure_page_size_success(client, app, test_admin_id):
         db.session.commit()
 
         # One within threshold, one above
-        small_page_id = _create_page(app, user_id, size_kb=100.0, word_count=1000, title="Small", slug="small-thresh")
-        big_page_id = _create_page(app, user_id, size_kb=600.0, word_count=2000, title="Big", slug="big-thresh")
+        small_page_id = _create_page(
+            app,
+            user_id,
+            size_kb=100.0,
+            word_count=1000,
+            title="Small",
+            slug="small-thresh",
+        )
+        big_page_id = _create_page(
+            app, user_id, size_kb=600.0, word_count=2000, title="Big", slug="big-thresh"
+        )
 
     with mock_auth(test_admin_id, "admin"):
         headers = auth_headers(test_admin_id, "admin")
@@ -195,18 +213,20 @@ def test_configure_page_size_success(client, app, test_admin_id):
 
     # Verify notification was created
     with app.app_context():
-        notifications = db.session.query(OversizedPageNotification).filter_by(
-            resolved=False
-        ).all()
+        notifications = (
+            db.session.query(OversizedPageNotification).filter_by(resolved=False).all()
+        )
         assert len(notifications) == 1
         assert notifications[0].page_id == big_page_id
         assert notifications[0].max_size_kb == 500.0
         assert notifications[0].current_size_kb == 600.0
-        
+
         # Verify small page has no notification
-        small_notif = db.session.query(OversizedPageNotification).filter_by(
-            page_id=small_page_id
-        ).first()
+        small_notif = (
+            db.session.query(OversizedPageNotification)
+            .filter_by(page_id=small_page_id)
+            .first()
+        )
         assert small_notif is None
 
 
@@ -256,7 +276,9 @@ def test_get_oversized_pages_and_update_status(client, app, test_admin_id):
         assert page_info["status"] == "pending"
 
         # Update status to resolved and extend due date
-        new_due = (datetime.now(timezone.utc) + timedelta(days=14)).replace(microsecond=0)
+        new_due = (datetime.now(timezone.utc) + timedelta(days=14)).replace(
+            microsecond=0
+        )
         new_due_iso = new_due.isoformat().replace("+00:00", "Z")
 
         resp = client.put(
@@ -286,16 +308,31 @@ def test_get_service_status_requires_admin(client, app, test_writer_id):
         assert resp.status_code == 403
 
 
-@patch('app.routes.admin_routes.ServiceStatusService.check_all_services')
+@patch("app.routes.admin_routes.ServiceStatusService.check_all_services")
 def test_get_service_status_success(mock_check_all, client, app, test_admin_id):
     """Get service status should return status for all services"""
     # Mock service checks
     mock_check_all.return_value = {
-        'wiki': {'status': 'healthy', 'response_time_ms': 5.0, 'error': None, 'details': {'service': 'wiki'}},
-        'auth': {'status': 'healthy', 'response_time_ms': 12.0, 'error': None, 'details': {'service': 'auth'}},
-        'notification': {'status': 'degraded', 'response_time_ms': 250.0, 'error': 'High latency', 'details': {}}
+        "wiki": {
+            "status": "healthy",
+            "response_time_ms": 5.0,
+            "error": None,
+            "details": {"service": "wiki"},
+        },
+        "auth": {
+            "status": "healthy",
+            "response_time_ms": 12.0,
+            "error": None,
+            "details": {"service": "auth"},
+        },
+        "notification": {
+            "status": "degraded",
+            "response_time_ms": 250.0,
+            "error": "High latency",
+            "details": {},
+        },
     }
-    
+
     with mock_auth(test_admin_id, "admin"):
         headers = auth_headers(test_admin_id, "admin")
         resp = client.get("/api/admin/service-status", headers=headers)
@@ -310,7 +347,9 @@ def test_get_service_status_success(mock_check_all, client, app, test_admin_id):
 
 def test_update_service_status_requires_auth(client):
     """Update service status should require authentication"""
-    resp = client.put("/api/admin/service-status", json={"service": "auth", "notes": {}})
+    resp = client.put(
+        "/api/admin/service-status", json={"service": "auth", "notes": {}}
+    )
     assert resp.status_code == 401
 
 
@@ -318,7 +357,11 @@ def test_update_service_status_requires_admin(client, app, test_writer_id):
     """Update service status should require admin role"""
     with mock_auth(test_writer_id, "writer"):
         headers = auth_headers(test_writer_id, "writer")
-        resp = client.put("/api/admin/service-status", json={"service": "auth", "notes": {}}, headers=headers)
+        resp = client.put(
+            "/api/admin/service-status",
+            json={"service": "auth", "notes": {}},
+            headers=headers,
+        )
         assert resp.status_code == 403
 
 
@@ -326,7 +369,9 @@ def test_update_service_status_missing_service(client, app, test_admin_id):
     """Update service status should return 400 if service is missing"""
     with mock_auth(test_admin_id, "admin"):
         headers = auth_headers(test_admin_id, "admin")
-        resp = client.put("/api/admin/service-status", json={"notes": {}}, headers=headers)
+        resp = client.put(
+            "/api/admin/service-status", json={"notes": {}}, headers=headers
+        )
         assert resp.status_code == 400
         data = resp.get_json()
         assert "error" in data
@@ -337,7 +382,11 @@ def test_update_service_status_unknown_service(client, app, test_admin_id):
     """Update service status should return 400 if service is unknown"""
     with mock_auth(test_admin_id, "admin"):
         headers = auth_headers(test_admin_id, "admin")
-        resp = client.put("/api/admin/service-status", json={"service": "unknown", "notes": {}}, headers=headers)
+        resp = client.put(
+            "/api/admin/service-status",
+            json={"service": "unknown", "notes": {}},
+            headers=headers,
+        )
         assert resp.status_code == 400
         data = resp.get_json()
         assert "error" in data
@@ -351,24 +400,30 @@ def test_update_service_status_success(client, app, test_admin_id):
         notes = {
             "issue": "Planned maintenance",
             "impact": "Service unavailable",
-            "eta": "2024-01-01T14:00:00Z"
+            "eta": "2024-01-01T14:00:00Z",
         }
         resp = client.put(
             "/api/admin/service-status",
             json={"service": "auth", "notes": notes},
-            headers=headers
+            headers=headers,
         )
         assert resp.status_code == 200
         data = resp.get_json()
         assert data["success"] is True
         assert data["service"] == "auth"
         assert "updated_at" in data
-    
+
     # Verify notes were stored
     with app.app_context():
         import json
+
         from app.models.wiki_config import WikiConfig
-        config = db.session.query(WikiConfig).filter_by(key="service_status_notes_auth").first()
+
+        config = (
+            db.session.query(WikiConfig)
+            .filter_by(key="service_status_notes_auth")
+            .first()
+        )
         assert config is not None
         stored_notes = json.loads(config.value)
         assert stored_notes["issue"] == "Planned maintenance"
@@ -388,24 +443,24 @@ def test_refresh_service_status_page_requires_admin(client, app, test_writer_id)
         assert resp.status_code == 403
 
 
-@patch('app.services.service_status_service.requests.get')
+@patch("app.services.service_status_service.requests.get")
 def test_refresh_service_status_page_success(mock_get, client, app, test_admin_id):
     """Refresh service status page should create or update the page"""
     from app.models.page import Page
-    
+
     # Mock health check responses (most will fail, but that's OK for testing)
     def mock_get_side_effect(url, timeout=None):
         mock_response = MagicMock()
-        if 'wiki' in url or 'localhost:5000' in url:
+        if "wiki" in url or "localhost:5000" in url:
             mock_response.status_code = 200
-            mock_response.json.return_value = {'status': 'healthy', 'service': 'wiki'}
+            mock_response.json.return_value = {"status": "healthy", "service": "wiki"}
         else:
             # Other services will fail (connection error)
             raise requests.exceptions.ConnectionError()
         return mock_response
-    
+
     mock_get.side_effect = mock_get_side_effect
-    
+
     with mock_auth(test_admin_id, "admin"):
         headers = auth_headers(test_admin_id, "admin")
         resp = client.post("/api/admin/service-status/refresh", headers=headers)
@@ -414,13 +469,13 @@ def test_refresh_service_status_page_success(mock_get, client, app, test_admin_i
         assert data["success"] is True
         assert data["page_slug"] == "service-status"
         assert "updated_at" in data
-    
+
     # Verify page was created/updated
     with app.app_context():
-        page = db.session.query(Page).filter_by(slug='service-status').first()
+        page = db.session.query(Page).filter_by(slug="service-status").first()
         assert page is not None
         assert page.is_system_page is True
-        assert 'Arcadium Service Status' in page.content
+        assert "Arcadium Service Status" in page.content
 
 
 def test_configure_upload_size_missing_field(client, app, test_admin_id):
@@ -473,9 +528,7 @@ def test_configure_upload_size_updates_existing(client, app, test_admin_id):
     with app.app_context():
         # Create initial config
         config = WikiConfig(
-            key="upload_max_size_mb",
-            value="10.0",
-            updated_by=test_admin_id
+            key="upload_max_size_mb", value="10.0", updated_by=test_admin_id
         )
         db.session.add(config)
         db.session.commit()
@@ -492,7 +545,9 @@ def test_configure_upload_size_updates_existing(client, app, test_admin_id):
         assert data["max_size_mb"] == 20
 
     with app.app_context():
-        config = db.session.query(WikiConfig).filter_by(key="upload_max_size_mb").first()
+        config = (
+            db.session.query(WikiConfig).filter_by(key="upload_max_size_mb").first()
+        )
         assert config is not None
         assert float(config.value) == 20.0
 
@@ -501,7 +556,7 @@ def test_configure_page_size_missing_fields(client, app, test_admin_id):
     """Configure page size should return 400 if required fields are missing."""
     with mock_auth(test_admin_id, "admin"):
         headers = auth_headers(test_admin_id, "admin")
-        
+
         # Missing max_size_kb
         resp = client.post(
             "/api/admin/config/page-size",
@@ -512,7 +567,7 @@ def test_configure_page_size_missing_fields(client, app, test_admin_id):
         data = resp.get_json()
         assert "error" in data
         assert "max_size_kb" in data["error"].lower()
-        
+
         # Missing resolution_due_date
         resp = client.post(
             "/api/admin/config/page-size",
@@ -571,10 +626,18 @@ def test_configure_page_size_creates_multiple_notifications(client, app, test_ad
         db.session.commit()
 
         # Create multiple oversized pages
-        page1_id = _create_page(app, user_id, size_kb=600.0, word_count=2000, title="Big 1", slug="big-1")
-        page2_id = _create_page(app, user_id, size_kb=700.0, word_count=3000, title="Big 2", slug="big-2")
-        page3_id = _create_page(app, user_id, size_kb=800.0, word_count=4000, title="Big 3", slug="big-3")
-        _create_page(app, user_id, size_kb=100.0, word_count=500, title="Small", slug="small")  # Under limit
+        page1_id = _create_page(
+            app, user_id, size_kb=600.0, word_count=2000, title="Big 1", slug="big-1"
+        )
+        page2_id = _create_page(
+            app, user_id, size_kb=700.0, word_count=3000, title="Big 2", slug="big-2"
+        )
+        page3_id = _create_page(
+            app, user_id, size_kb=800.0, word_count=4000, title="Big 3", slug="big-3"
+        )
+        _create_page(
+            app, user_id, size_kb=100.0, word_count=500, title="Small", slug="small"
+        )  # Under limit
 
     with mock_auth(test_admin_id, "admin"):
         headers = auth_headers(test_admin_id, "admin")
@@ -593,11 +656,11 @@ def test_configure_page_size_creates_multiple_notifications(client, app, test_ad
 
     # Verify all notifications were created
     with app.app_context():
-        notifications = db.session.query(OversizedPageNotification).filter_by(
-            resolved=False
-        ).all()
+        notifications = (
+            db.session.query(OversizedPageNotification).filter_by(resolved=False).all()
+        )
         assert len(notifications) == 3
-        
+
         page_ids = {notif.page_id for notif in notifications}
         assert page1_id in page_ids
         assert page2_id in page_ids
@@ -614,8 +677,10 @@ def test_configure_page_size_updates_existing_notifications(client, app, test_ad
         db.session.commit()
 
         # Create oversized page
-        page_id = _create_page(app, user_id, size_kb=600.0, word_count=2000, title="Big", slug="big")
-        
+        page_id = _create_page(
+            app, user_id, size_kb=600.0, word_count=2000, title="Big", slug="big"
+        )
+
         # Create initial notification
         due_date1 = datetime.now(timezone.utc) + timedelta(days=7)
         notif = OversizedPageNotification(
@@ -624,11 +689,11 @@ def test_configure_page_size_updates_existing_notifications(client, app, test_ad
             max_size_kb=500.0,
             resolution_due_date=due_date1,
             notified_users=[],
-            resolved=False
+            resolved=False,
         )
         db.session.add(notif)
         db.session.commit()
-        
+
         # Update page size
         page = db.session.query(Page).filter_by(id=page_id).first()
         page.content_size_kb = 700.0
@@ -636,7 +701,11 @@ def test_configure_page_size_updates_existing_notifications(client, app, test_ad
 
     with mock_auth(test_admin_id, "admin"):
         headers = auth_headers(test_admin_id, "admin")
-        due_date2 = (datetime.now(timezone.utc) + timedelta(days=14)).isoformat().replace("+00:00", "Z")
+        due_date2 = (
+            (datetime.now(timezone.utc) + timedelta(days=14))
+            .isoformat()
+            .replace("+00:00", "Z")
+        )
         resp = client.post(
             "/api/admin/config/page-size",
             json={
@@ -650,12 +719,11 @@ def test_configure_page_size_updates_existing_notifications(client, app, test_ad
 
     # Verify notification was updated, not duplicated
     with app.app_context():
-        notifications = db.session.query(OversizedPageNotification).filter_by(
-            page_id=page_id,
-            resolved=False
-        ).all()
+        notifications = (
+            db.session.query(OversizedPageNotification)
+            .filter_by(page_id=page_id, resolved=False)
+            .all()
+        )
         assert len(notifications) == 1  # Should be updated, not duplicated
         assert notifications[0].current_size_kb == 700.0  # Updated size
         assert notifications[0].max_size_kb == 500.0
-
-

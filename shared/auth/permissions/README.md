@@ -7,4 +7,3 @@ Shared permission checking and authorization logic.
 - Permission validation
 - Role-based access control (RBAC)
 - Resource access checks
-

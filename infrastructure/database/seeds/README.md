@@ -8,4 +8,3 @@ Load seed data:
 ```bash
 psql -U arcadium -d arcadium -f seeds/initial_data.sql
 ```
-

@@ -42,4 +42,3 @@ Internal messaging and notification system. See [Notification Service Specificat
 - `shared/auth/` - Authentication utilities
 - `shared/protocols/` - API schemas and message formats
 - `shared/utils/` - Common utilities
-

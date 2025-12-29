@@ -1,3 +1,0 @@
-ERROR: usage: python.exe -m pytest [options] [file_or_dir] [file_or_dir] [...]
-python.exe -m pytest: error: argument --tb: invalid choice: 'srt' (choose from auto, long, short, no, line, native)
-

@@ -1,6 +1,5 @@
 from flask import Blueprint
 
-main = Blueprint('main', __name__)
+main = Blueprint("main", __name__)
 
-from app.routes import wiki_routes
-
+from app.routes import wiki_routes  # noqa: E402,F401

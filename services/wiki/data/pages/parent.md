@@ -1,6 +1,6 @@
 ---
-title: Parent Page
-slug: parent
 status: published
+title: Parent
+slug: parent
 ---
-Parent content
+Content

@@ -1,4 +1,5 @@
 """Test slug generator"""
+
 from app.utils.slug_generator import generate_slug, validate_slug
 
 
@@ -30,22 +31,22 @@ def test_generate_slug_uniqueness():
 def test_generate_slug_empty_text():
     """Test that empty text raises error"""
     import pytest
+
     with pytest.raises(ValueError):
         generate_slug("")
 
 
 def test_validate_slug_valid():
     """Test validation of valid slugs"""
-    assert validate_slug("hello-world") == True
-    assert validate_slug("test_123") == True
-    assert validate_slug("a") == True
+    assert validate_slug("hello-world") is True
+    assert validate_slug("test_123") is True
+    assert validate_slug("a") is True
 
 
 def test_validate_slug_invalid():
     """Test validation of invalid slugs"""
-    assert validate_slug("") == False
-    assert validate_slug("-invalid") == False
-    assert validate_slug("invalid-") == False
-    assert validate_slug("invalid slug") == False
-    assert validate_slug("Invalid!") == False
-
+    assert validate_slug("") is False
+    assert validate_slug("-invalid") is False
+    assert validate_slug("invalid-") is False
+    assert validate_slug("invalid slug") is False
+    assert validate_slug("Invalid!") is False

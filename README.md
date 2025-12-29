@@ -33,25 +33,67 @@ venv\Scripts\activate
 # On Linux/Mac:
 source venv/bin/activate
 
-# Install dependencies
+# Install shared dependencies (from project root)
 pip install -r requirements.txt
+
+# Install service-specific dependencies
+# For Auth Service:
+pip install -r services/auth/requirements.txt
+# For Wiki Service:
+pip install -r services/wiki/requirements.txt
 
 # Note: If psycopg2-binary installation fails (especially on Python 3.14+), try:
 pip install psycopg2-binary --only-binary :all:
 ```
 
+**See [Requirements Structure](docs/requirements-structure.md) for details on the hierarchical requirements system.**
+
+### Pre-commit Hooks
+
+This project uses [pre-commit](https://pre-commit.com/) to ensure code quality and consistency. The hooks run automatically on git commits and can also be run manually.
+
+**Setup:**
+```bash
+# Install pre-commit (if not already installed)
+pip install pre-commit
+
+# Install git hooks
+pre-commit install
+
+# Run hooks on all files (optional, for initial setup)
+pre-commit run --all-files
+```
+
+**Hooks included:**
+- **Trailing whitespace** - Removes trailing whitespace
+- **End of file fixer** - Ensures files end with newline
+- **Mixed line ending** - Normalizes line endings
+- **Merge conflict** - Detects merge conflict markers
+- **YAML/JSON/TOML** - Validates configuration files
+- **Ruff** - Python linter and formatter
+- **Black** - Python code formatter
+- **isort** - Python import sorter
+
+The hooks will run automatically on `git commit`. To skip hooks (not recommended), use `git commit --no-verify`.
+
 ### Database Setup
 
 Each service uses its own PostgreSQL database. See [Database Configuration](docs/architecture/database-configuration.md) for details.
 
-**Default PostgreSQL credentials:**
-- Username: `postgres`
-- Password: `Le555ecure` (configurable via environment variables)
+**Database Credentials:**
+- Username: Set via `arcadium_user` environment variable
+- Password: Set via `arcadium_pass` environment variable
+- The user has full permissions to do anything in the database
+- These variables are used across all Arcadium services for consistency
 
 **Create databases:**
 ```sql
-CREATE DATABASE wiki;
--- Add other service databases as needed
+-- All databases use arcadium_ prefix
+CREATE DATABASE arcadium_wiki;
+CREATE DATABASE arcadium_auth;
+-- Test databases use arcadium_testing_ prefix
+CREATE DATABASE arcadium_testing_wiki;
+CREATE DATABASE arcadium_testing_auth;
 ```
 
 ### Running Services
@@ -73,6 +115,8 @@ flask run
 
 ## Testing
 
+### Local Testing
+
 Run tests for a specific service:
 
 ```bash
@@ -81,16 +125,59 @@ cd services/wiki
 pytest
 ```
 
+### CI/CD
+
+The project uses GitHub Actions for continuous integration. Tests run automatically on:
+- Push to `main` or `feature/**` branches
+- Pull requests targeting `main`
+
+**To run tests locally with CI configuration:**
+```bash
+# Set environment variables (matches CI)
+export FLASK_ENV=testing
+# TEST_DATABASE_URL will be constructed from arcadium_user and arcadium_pass if not set
+# Or set explicitly: export TEST_DATABASE_URL="postgresql://${arcadium_user}:${arcadium_pass}@localhost:5432/arcadium_testing_wiki"
+cd services/wiki
+pytest
+```
+
+See [CI/CD Documentation](docs/ci-cd.md) for detailed information about the CI setup and troubleshooting.
+
+## Web Client
+
+The web client is a React-based SPA located in `client/`. See [Client README](client/README.md) for setup and development instructions.
+
+**Current Status:**
+- ✅ Phase 1: Foundation & Setup (Complete)
+- ✅ Phase 2: Reading View - Core Components (Complete, including Edit button)
+- ✅ Phase 3: Navigation Tree (Complete)
+- ✅ Phase 4: Table of Contents & Backlinks (Complete)
+- ✅ Phase 5: Comments System (Complete)
+- ✅ Phase 6: Search Interface (Complete)
+- ✅ Phase 7: WYSIWYG Editor Integration (Complete)
+- ✅ Phase 8: Page Metadata Editor (Complete)
+- ✅ Phase 9: Editing View Layout (Complete)
+- ✅ Phase 10: Page Creation Flow (Complete)
+- ✅ Phase 10.5: Version History & Comparison (Complete)
+- ✅ Phase 11: Page Delete and Archive Functionality (Complete)
+- ✅ Phase 15: Polish & Enhancements (Complete - Theme support, notifications, animations, print stylesheet, share functionality)
+- ✅ Authentication System (Sign In/Register UI Complete)
+
+**Test Coverage:** 523+ client tests + 560+ backend tests = 1,115+ total tests across 89+ test files
+
 ## Documentation
 
 - [Architecture](docs/architecture/)
 - [API Documentation](docs/api/)
 - [Game Design](docs/game-design/)
 - [Service Specifications](docs/services/)
+- [Wiki UI Implementation Guide](docs/wiki-ui-implementation-guide.md)
+- [CI/CD](docs/ci-cd.md)
 
 ## Contributing
 
 1. Create a feature branch
 2. Make your changes
-3. Ensure all tests pass
-4. Submit a pull request
+3. Ensure pre-commit hooks pass (run `pre-commit run --all-files` if needed)
+4. Ensure all tests pass
+5. Submit a pull request

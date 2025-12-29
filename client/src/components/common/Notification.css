@@ -1,0 +1,86 @@
+.arc-notification {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  margin-bottom: 0.5rem;
+  border-radius: var(--arc-radius-md);
+  border: 1px solid;
+  box-shadow: var(--arc-shadow-md);
+  animation: slideIn 0.3s ease-out;
+  max-width: 500px;
+  min-width: 300px;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.arc-notification-content {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 1;
+}
+
+.arc-notification-icon {
+  font-size: 1.25rem;
+  font-weight: bold;
+  flex-shrink: 0;
+}
+
+.arc-notification-message {
+  flex: 1;
+  line-height: 1.5;
+}
+
+.arc-notification-close {
+  background: none;
+  border: none;
+  color: var(--arc-text-subtle);
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0;
+  width: 1.5rem;
+  height: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: color 0.2s;
+}
+
+.arc-notification-close:hover {
+  color: var(--arc-text);
+}
+
+.arc-notification-success {
+  background: var(--arc-success-bg);
+  border-color: var(--arc-success-border);
+  color: var(--arc-success-text);
+}
+
+.arc-notification-error {
+  background: var(--arc-error-bg);
+  border-color: var(--arc-error-border);
+  color: var(--arc-error-text);
+}
+
+.arc-notification-warning {
+  background: rgba(251, 191, 36, 0.1);
+  border-color: rgba(251, 191, 36, 0.3);
+  color: #fcd34d;
+}
+
+.arc-notification-info {
+  background: var(--arc-primary-alpha);
+  border-color: var(--arc-accent-soft);
+  color: var(--arc-accent);
+}

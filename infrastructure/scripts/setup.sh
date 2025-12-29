@@ -52,4 +52,3 @@ echo "Running database migrations..."
 
 echo "Setup complete!"
 echo "You can now start all services with: docker-compose up"
-

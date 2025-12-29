@@ -1,6 +1,6 @@
 ---
+status: published
 title: JavaScript Guide
 slug: javascript-guide
-status: published
 ---
 JavaScript programming guide.

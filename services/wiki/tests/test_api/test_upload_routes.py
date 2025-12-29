@@ -1,12 +1,13 @@
 """Tests for file upload endpoints (images)."""
+
 import io
 import uuid
 
 from app import db
+from app.models.image import Image
 from app.models.page import Page
-from app.models.image import Image, PageImage
 from app.models.wiki_config import WikiConfig
-from tests.test_api.conftest import mock_auth, auth_headers, test_writer_id, test_admin_id, test_user_id
+from tests.test_api.conftest import auth_headers, mock_auth
 
 
 def test_upload_image_requires_auth(client):
@@ -56,7 +57,9 @@ def test_upload_image_success_basic(client, app, test_writer_id):
 
     # Verify Image stored in DB
     with app.app_context():
-        img = db.session.query(Image).filter_by(original_filename="my-image.png").first()
+        img = (
+            db.session.query(Image).filter_by(original_filename="my-image.png").first()
+        )
         assert img is not None
         assert img.size_bytes == len(file_bytes)
 
@@ -199,7 +202,9 @@ def test_upload_image_empty_filename(client, app, test_writer_id):
         assert data.get("error") == "No selected file"
 
 
-def test_upload_image_invalid_config_falls_back_to_default(client, app, test_writer_id, test_user_id):
+def test_upload_image_invalid_config_falls_back_to_default(
+    client, app, test_writer_id, test_user_id
+):
     """Non-numeric upload_max_size_mb should fall back to default (10MB)."""
     with app.app_context():
         # Set invalid config value
@@ -240,5 +245,3 @@ def test_upload_image_invalid_config_falls_back_to_default(client, app, test_wri
         data = resp.get_json()
         assert data.get("error") == "File too large"
         assert data["max_size_bytes"] == 10 * 1024 * 1024  # Default 10MB
-
-
