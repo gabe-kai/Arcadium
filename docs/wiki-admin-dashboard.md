@@ -253,4 +253,3 @@ PUT /api/admin/oversized-pages/{page_id}/status
 - Cache size distribution data
 - Lazy-load oversized pages list
 - Paginate large result sets
-

@@ -32,4 +32,3 @@ go run cmd/server/main.go
 - `GET /health` - Health check
 - `GET /api/game/status` - Game server status
 - `WS /ws` - WebSocket connection for real-time game communication
-

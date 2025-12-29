@@ -34,11 +34,11 @@ test.describe('Table of Contents', () => {
     });
 
     await page.goto('/pages/test-page-id');
-    
+
     // Check TOC is visible
     const toc = page.locator('nav[aria-label*="Table of contents" i]');
     await expect(toc).toBeVisible();
-    
+
     // Check TOC items
     await expect(page.getByText('Contents')).toBeVisible();
     await expect(page.getByRole('button', { name: 'Section 1' })).toBeVisible();
@@ -71,24 +71,24 @@ test.describe('Table of Contents', () => {
     });
 
     await page.goto('/pages/test-page-id');
-    
+
     // Wait for page to load
     await page.waitForLoadState('networkidle');
-    
+
     // Scroll to top first
     await page.evaluate(() => window.scrollTo(0, 0));
-    
+
     // Click on Section 2 in TOC
     const section2Button = page.getByRole('button', { name: 'Section 2' });
     await section2Button.click();
-    
+
     // Wait for smooth scroll
     await page.waitForTimeout(500);
-    
+
     // Check that we've scrolled to Section 2
     const section2Element = page.locator('#section-2');
     const boundingBox = await section2Element.boundingBox();
-    
+
     // Section 2 should be visible in viewport (roughly)
     expect(boundingBox).toBeTruthy();
   });
@@ -119,7 +119,7 @@ test.describe('Table of Contents', () => {
 
     await page.goto('/pages/test-page-id');
     await page.waitForLoadState('networkidle');
-    
+
     // Scroll to Section 2
     await page.evaluate(() => {
       const section2 = document.getElementById('section-2');
@@ -127,17 +127,17 @@ test.describe('Table of Contents', () => {
         section2.scrollIntoView();
       }
     });
-    
+
     // Wait for scroll event to be processed
     await page.waitForTimeout(500);
-    
+
     // Check that Section 2 TOC item is active
     const section2Button = page.getByRole('button', { name: 'Section 2' });
     const isActive = await section2Button.evaluate((el) => {
-      return el.getAttribute('aria-current') === 'location' || 
+      return el.getAttribute('aria-current') === 'location' ||
              el.closest('li')?.classList.contains('arc-toc-item-active');
     });
-    
+
     expect(isActive).toBeTruthy();
   });
 
@@ -158,7 +158,7 @@ test.describe('Table of Contents', () => {
     });
 
     await page.goto('/pages/test-page-id');
-    
+
     // TOC should not be visible
     const toc = page.locator('nav[aria-label*="Table of contents" i]');
     await expect(toc).not.toBeVisible();
@@ -186,15 +186,15 @@ test.describe('Backlinks', () => {
     });
 
     await page.goto('/pages/test-page-id');
-    
+
     // Check backlinks section is visible
     const backlinks = page.locator('nav[aria-label*="Pages linking here" i]');
     await expect(backlinks).toBeVisible();
-    
+
     // Check backlink count
     await expect(page.getByText('Pages Linking Here')).toBeVisible();
     await expect(page.getByText('(2)')).toBeVisible();
-    
+
     // Check backlink items
     await expect(page.getByRole('link', { name: 'Linking Page 1' })).toBeVisible();
     await expect(page.getByRole('link', { name: 'Linking Page 2' })).toBeVisible();
@@ -235,11 +235,11 @@ test.describe('Backlinks', () => {
     });
 
     await page.goto('/pages/test-page-id');
-    
+
     // Click on backlink
     const backlink = page.getByRole('link', { name: 'Linking Page 1' });
     await backlink.click();
-    
+
     // Should navigate to linking page
     await expect(page).toHaveURL(/\/pages\/linker-1-id/);
     await expect(page.getByText('Linking Page 1')).toBeVisible();
@@ -262,7 +262,7 @@ test.describe('Backlinks', () => {
     });
 
     await page.goto('/pages/test-page-id');
-    
+
     // Backlinks should not be visible
     const backlinks = page.locator('nav[aria-label*="Pages linking here" i]');
     await expect(backlinks).not.toBeVisible();
@@ -289,7 +289,7 @@ test.describe('Backlinks', () => {
     });
 
     await page.goto('/pages/test-page-id');
-    
+
     // Check count is correct
     await expect(page.getByText('(3)')).toBeVisible();
   });

@@ -119,7 +119,7 @@ describe('SearchPage', () => {
     });
 
     renderSearchPage();
-    
+
     await waitFor(() => {
       expect(screen.getByText('Test Page')).toBeInTheDocument();
     });

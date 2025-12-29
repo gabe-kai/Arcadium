@@ -104,4 +104,3 @@ pytest
 - [Auth Service Specification](../../docs/services/auth-service.md)
 - [Auth Service API](../../docs/api/auth-api.md)
 - [Implementation Guide](../../docs/auth-service-implementation-guide.md)
-

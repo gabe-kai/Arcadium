@@ -9,7 +9,7 @@ import { markdownToHtml } from '../../utils/markdown';
 
 /**
  * Tiptap Editor Component
- * 
+ *
  * Features:
  * - Rich text editing with formatting toolbar
  * - Markdown import/export
@@ -19,7 +19,7 @@ import { markdownToHtml } from '../../utils/markdown';
 export const Editor = forwardRef(({ content, onChange, placeholder = 'Start writing...', onEditorReady }, ref) => {
   // Convert markdown to HTML for initial content
   const initialContent = content ? markdownToHtml(content) : '';
-  
+
   const [isReady, setIsReady] = useState(false);
 
   const editor = useEditor({
@@ -104,7 +104,7 @@ export const Editor = forwardRef(({ content, onChange, placeholder = 'Start writ
     if (editor && content !== undefined) {
       const currentHtml = editor.getHTML();
       const newHtml = markdownToHtml(content);
-      
+
       // Only update if content actually changed (avoid infinite loops)
       if (currentHtml !== newHtml) {
         editor.commands.setContent(newHtml);

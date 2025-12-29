@@ -97,7 +97,7 @@ The Wiki Service uses **PostgreSQL** for development and production. Tests use S
 #### Table of Contents
 - **Per-page TOC**: Auto-generated from page headings - no manual override
 - **Heading Levels**: Includes H2, H3, H4, H5, H6 (H1 excluded, it's the page title)
-- **Anchor Generation**: 
+- **Anchor Generation**:
   - Extract heading text, convert to lowercase
   - Replace spaces with hyphens, remove special characters
   - Result: `## Combat Mechanics` becomes anchor `#combat-mechanics`
@@ -107,7 +107,7 @@ The Wiki Service uses **PostgreSQL** for development and production. Tests use S
 
 #### Editor
 - **WYSIWYG Editor**: Tiptap (modern, extensible rich text editor)
-- **Formatting options**: 
+- **Formatting options**:
   - Headings (H1-H6)
   - Bold, italic, underline
   - Lists (ordered, unordered)
@@ -117,11 +117,11 @@ The Wiki Service uses **PostgreSQL** for development and production. Tests use S
   - Tables
 - **Markdown support**: Underlying storage in Markdown with YAML frontmatter, but editing is visual
 - **Editor choice**: Tiptap selected for modern features, extensibility, and React support
-- **Section extraction**: 
+- **Section extraction**:
   - Select text/sections and extract to new page
   - Extract selected headings and their content to new page
   - Replace extracted content with link to new page
-- **TOC section promotion**: 
+- **TOC section promotion**:
   - Button on each TOC entry to promote section to new child or sibling page
   - Automatically extracts section content and creates new page
 
@@ -366,4 +366,3 @@ data/
 - Page tags/categories
 - Watchlist for page changes
 - Page approval workflow (for writers)
-

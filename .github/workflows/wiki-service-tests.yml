@@ -63,6 +63,14 @@ jobs:
             pip install -r requirements.txt
           fi
 
+      - name: Install pre-commit
+        run: |
+          pip install pre-commit
+
+      - name: Run pre-commit checks
+        run: |
+          pre-commit run --all-files
+
       - name: Install PostgreSQL client
         run: |
           sudo apt-get update
@@ -90,4 +98,3 @@ jobs:
           TEST_DATABASE_URL: postgresql://postgres:Le555ecure@localhost:5432/arcadium_testing_wiki
         run: |
           pytest
-

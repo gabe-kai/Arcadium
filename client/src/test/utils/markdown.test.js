@@ -175,7 +175,7 @@ describe('markdown utilities', () => {
       const originalHtml = '<table><thead><tr><th>Header 1</th><th>Header 2</th></tr></thead><tbody><tr><td>Cell 1</td><td>Cell 2</td></tr><tr><td>Cell 3</td><td>Cell 4</td></tr></tbody></table>';
       const markdown = htmlToMarkdown(originalHtml);
       const convertedHtml = markdownToHtml(markdown);
-      
+
       // Should contain table structure
       expect(convertedHtml).toContain('<table>');
       expect(convertedHtml).toContain('Header 1');
@@ -331,7 +331,7 @@ category: documentation
       };
       const markdown = '# Content here';
       const result = addFrontmatter(metadata, markdown);
-      
+
       expect(result).toContain('---');
       expect(result).toContain('title: Test Page');
       expect(result).toContain('slug: test-page');
@@ -355,9 +355,9 @@ author: AI Assistant
 category: documentation
 ---
 # Content`;
-      
+
       const result = addFrontmatter(metadata, markdown, originalContent);
-      
+
       // Should update standard fields
       expect(result).toContain('title: Updated Title');
       expect(result).toContain('status: published');
@@ -375,7 +375,7 @@ category: documentation
       };
       const markdown = '# Content';
       const result = addFrontmatter(metadata, markdown);
-      
+
       expect(result).toContain('title: Test Page');
       expect(result).toContain('slug: test-page');
       expect(result).toContain('status: draft');
@@ -397,9 +397,9 @@ section: Old Section
 status: published
 ---
 # Content`;
-      
+
       const result = addFrontmatter(metadata, markdown, originalContent);
-      
+
       // Section should be removed
       expect(result).not.toContain('section:');
     });
@@ -413,7 +413,7 @@ status: published
       };
       const markdown = '# Content';
       const result = addFrontmatter(metadata, markdown);
-      
+
       expect(result).toContain('order: 5');
     });
 
@@ -421,7 +421,7 @@ status: published
       const metadata = {};
       const markdown = '# Content';
       const result = addFrontmatter(metadata, markdown);
-      
+
       expect(result).toBe('# Content');
       expect(result).not.toContain('---');
     });
@@ -433,7 +433,7 @@ status: published
       };
       const markdown = '# Content';
       const result = addFrontmatter(metadata, markdown, null);
-      
+
       expect(result).toContain('title: Test Page');
       expect(result).toContain('# Content');
     });

@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 
 /**
  * PageNavigation component displays previous/next page navigation buttons
- * 
+ *
  * @param {Object} navigation - { previous: { id, title, slug } | null, next: { id, title, slug } | null }
  */
 export function PageNavigation({ navigation }) {

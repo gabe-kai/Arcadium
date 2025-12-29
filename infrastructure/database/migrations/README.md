@@ -15,4 +15,3 @@ Migrations should be named with timestamps:
 - `001_initial_schema.sql`
 - `002_add_users_table.sql`
 - etc.
-

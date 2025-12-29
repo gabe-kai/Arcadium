@@ -158,7 +158,7 @@ describe('PageNavigation', () => {
     const prevLink = screen.getByRole('link', { name: /Previous/i });
     expect(prevLink).toBeInTheDocument();
     expect(prevLink).toHaveAttribute('href', '/pages/page-1');
-    
+
     // Should still render even with missing fields
     // For next, check that the link exists (title may be undefined but link should render)
     const nextLink = screen.getByRole('link', { name: /Next/i });
@@ -213,11 +213,11 @@ describe('PageNavigation', () => {
     // Previous label should be visible (title will be empty string, but label shows)
     const previousLabels = screen.getAllByText(/Previous/i);
     expect(previousLabels.length).toBeGreaterThan(0);
-    
+
     // Next label should be visible (may appear multiple times - label and title)
     const nextLabels = screen.getAllByText(/Next/i);
     expect(nextLabels.length).toBeGreaterThan(0);
-    
+
     // Navigation should still be functional
     expect(screen.getByRole('link', { name: /Next/i })).toBeInTheDocument();
   });

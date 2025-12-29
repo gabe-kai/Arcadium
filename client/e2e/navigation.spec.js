@@ -35,11 +35,11 @@ test.describe('Navigation', () => {
     });
 
     await page.goto('/pages/child-page-id');
-    
+
     // Check breadcrumb is visible
     const breadcrumb = page.locator('nav[aria-label*="breadcrumb" i], nav[aria-label*="Breadcrumb" i]');
     await expect(breadcrumb).toBeVisible();
-    
+
     // Check breadcrumb items
     await expect(page.getByText('Home')).toBeVisible();
     await expect(page.getByText('Parent')).toBeVisible();
@@ -75,11 +75,11 @@ test.describe('Navigation', () => {
     });
 
     await page.goto('/pages/child-page-id');
-    
+
     // Click on parent in breadcrumb
     const parentLink = page.getByRole('link', { name: 'Parent' });
     await parentLink.click();
-    
+
     // Should navigate to parent page
     await expect(page).toHaveURL(/\/pages\/parent-id/);
     await expect(page.getByText('Parent')).toBeVisible();
@@ -114,11 +114,11 @@ test.describe('Navigation', () => {
     });
 
     await page.goto('/pages/current-page-id');
-    
+
     // Check navigation buttons are visible
     const prevButton = page.getByRole('link', { name: /previous/i });
     const nextButton = page.getByRole('link', { name: /next/i });
-    
+
     await expect(prevButton).toBeVisible();
     await expect(nextButton).toBeVisible();
   });
@@ -167,11 +167,11 @@ test.describe('Navigation', () => {
     });
 
     await page.goto('/pages/current-page-id');
-    
+
     // Click next button
     const nextButton = page.getByRole('link', { name: /next/i });
     await nextButton.click();
-    
+
     // Should navigate to next page
     await expect(page).toHaveURL(/\/pages\/next-page-id/);
     await expect(page.getByText('Next Page')).toBeVisible();
@@ -204,13 +204,13 @@ test.describe('Navigation', () => {
     });
 
     await page.goto('/pages/first-page-id');
-    
+
     // Previous button should be disabled or not present
     const prevButton = page.getByRole('link', { name: /previous/i });
     const isDisabled = await prevButton.evaluate((el) => {
       return el.hasAttribute('disabled') || el.classList.contains('disabled') || el.getAttribute('aria-disabled') === 'true';
     });
-    
+
     // Either button is disabled or not clickable
     expect(isDisabled || !(await prevButton.isVisible())).toBeTruthy();
   });
@@ -242,19 +242,19 @@ test.describe('Navigation', () => {
     });
 
     await page.goto('/');
-    
+
     // Check navigation tree is visible
     const navTree = page.locator('nav[aria-label*="navigation" i], nav[aria-label*="Page navigation" i]');
     await expect(navTree).toBeVisible();
-    
+
     // Check root node is visible
     await expect(page.getByText('Home')).toBeVisible();
-    
+
     // Expand node
     const expandButton = page.getByLabel(/expand/i).first();
     if (await expandButton.isVisible()) {
       await expandButton.click();
-      
+
       // Child should now be visible
       await expect(page.getByText('Child Page')).toBeVisible();
     }
@@ -293,11 +293,11 @@ test.describe('Navigation', () => {
     });
 
     await page.goto('/');
-    
+
     // Find search input
     const searchInput = page.getByPlaceholderText(/Search pages/i);
     await searchInput.fill('Child Page 1');
-    
+
     // Only matching page should be visible
     await expect(page.getByText('Child Page 1')).toBeVisible();
     // Other page might still be visible if parent matches, but filtered child should not

@@ -30,7 +30,7 @@ describe('Backlinks', () => {
     ];
 
     renderBacklinks(backlinks);
-    
+
     expect(screen.getByText('Pages Linking Here')).toBeInTheDocument();
     expect(screen.getByText('(3)')).toBeInTheDocument();
     expect(screen.getByText('Linking Page 1')).toBeInTheDocument();
@@ -44,7 +44,7 @@ describe('Backlinks', () => {
     ];
 
     renderBacklinks(backlinks);
-    
+
     expect(screen.getByText('(1)')).toBeInTheDocument();
   });
 
@@ -55,7 +55,7 @@ describe('Backlinks', () => {
     ];
 
     renderBacklinks(backlinks);
-    
+
     const links = screen.getAllByRole('link');
     expect(links[0]).toHaveAttribute('href', '/pages/page-1');
     expect(links[1]).toHaveAttribute('href', '/pages/page-2');
@@ -67,7 +67,7 @@ describe('Backlinks', () => {
     ];
 
     renderBacklinks(backlinks);
-    
+
     const nav = screen.getByRole('navigation', { name: 'Pages linking here' });
     expect(nav).toBeInTheDocument();
   });
@@ -78,7 +78,7 @@ describe('Backlinks', () => {
     ];
 
     renderBacklinks(backlinks);
-    
+
     expect(screen.getByText('Pages Linking Here')).toBeInTheDocument();
     expect(screen.getByText('(1)')).toBeInTheDocument();
     expect(screen.getByText('Only Linking Page')).toBeInTheDocument();
@@ -91,7 +91,7 @@ describe('Backlinks', () => {
     }));
 
     renderBacklinks(backlinks);
-    
+
     expect(screen.getByText('(10)')).toBeInTheDocument();
     expect(screen.getByText('Linking Page 1')).toBeInTheDocument();
     expect(screen.getByText('Linking Page 10')).toBeInTheDocument();
@@ -103,14 +103,14 @@ describe('Backlinks', () => {
     ];
 
     renderBacklinks(backlinks);
-    
+
     const list = screen.getByRole('list');
     expect(list).toBeInTheDocument();
     expect(list.children.length).toBe(1);
-    
+
     const listItem = screen.getByRole('listitem');
     expect(listItem).toBeInTheDocument();
-    
+
     const link = screen.getByRole('link');
     expect(link).toBeInTheDocument();
     expect(link.textContent).toBe('Linking Page 1');
@@ -134,7 +134,7 @@ describe('Backlinks', () => {
     ];
 
     renderBacklinks(backlinks);
-    
+
     expect(screen.getByText(longTitle)).toBeInTheDocument();
   });
 
@@ -144,7 +144,7 @@ describe('Backlinks', () => {
     ];
 
     renderBacklinks(backlinks);
-    
+
     expect(screen.getByText('Page & < > " \' Special')).toBeInTheDocument();
   });
 
@@ -155,7 +155,7 @@ describe('Backlinks', () => {
     ];
 
     renderBacklinks(backlinks);
-    
+
     expect(screen.getByText('First Link')).toBeInTheDocument();
     expect(screen.getByText('Second Link')).toBeInTheDocument();
     expect(screen.getByText('(2)')).toBeInTheDocument();
@@ -167,7 +167,7 @@ describe('Backlinks', () => {
     ];
 
     renderBacklinks(backlinks);
-    
+
     // Should still render structure
     expect(screen.getByText('Pages Linking Here')).toBeInTheDocument();
   });
@@ -192,7 +192,7 @@ describe('Backlinks', () => {
     ];
 
     renderBacklinks(backlinks);
-    
+
     expect(screen.getByText('Linking Page')).toBeInTheDocument();
     expect(screen.getByText(/This page links to the current page/i)).toBeInTheDocument();
   });
@@ -203,7 +203,7 @@ describe('Backlinks', () => {
     ];
 
     renderBacklinks(backlinks);
-    
+
     expect(screen.getByText('Linking Page')).toBeInTheDocument();
     const contextElements = screen.queryAllByText(/context/i);
     expect(contextElements.length).toBe(0);
@@ -220,7 +220,7 @@ describe('Backlinks', () => {
     ];
 
     renderBacklinks(backlinks);
-    
+
     expect(screen.getByText('Page with Context')).toBeInTheDocument();
     expect(screen.getByText('Context snippet here')).toBeInTheDocument();
     expect(screen.getByText('Page without Context')).toBeInTheDocument();
@@ -236,7 +236,7 @@ describe('Backlinks', () => {
     ];
 
     renderBacklinks(backlinks);
-    
+
     const contextElement = screen.getByText('Context snippet');
     expect(contextElement).toHaveClass('arc-backlinks-context');
   });

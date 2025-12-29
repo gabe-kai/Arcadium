@@ -29,7 +29,7 @@ describe('LinkDialog', () => {
         onInsert={mockOnInsert}
       />
     );
-    
+
     expect(screen.queryByText('Insert Link')).not.toBeInTheDocument();
   });
 
@@ -41,7 +41,7 @@ describe('LinkDialog', () => {
         onInsert={mockOnInsert}
       />
     );
-    
+
     // Dialog should be visible - check for heading (h3) to avoid multiple matches
     expect(screen.getByRole('heading', { name: 'Insert Link' })).toBeInTheDocument();
   });
@@ -55,10 +55,10 @@ describe('LinkDialog', () => {
         onInsert={mockOnInsert}
       />
     );
-    
+
     const closeButton = screen.getByLabelText('Close');
     await user.click(closeButton);
-    
+
     expect(mockOnClose).toHaveBeenCalledTimes(1);
   });
 
@@ -70,10 +70,10 @@ describe('LinkDialog', () => {
         onInsert={mockOnInsert}
       />
     );
-    
+
     const overlay = document.querySelector('.arc-link-dialog-overlay');
     fireEvent.mouseDown(overlay);
-    
+
     expect(mockOnClose).toHaveBeenCalled();
   });
 
@@ -85,7 +85,7 @@ describe('LinkDialog', () => {
         onInsert={mockOnInsert}
       />
     );
-    
+
     expect(screen.getByLabelText(/URL:/i)).toBeInTheDocument();
     expect(screen.getByPlaceholderText(/https:\/\/example.com/i)).toBeInTheDocument();
   });
@@ -99,10 +99,10 @@ describe('LinkDialog', () => {
         onInsert={mockOnInsert}
       />
     );
-    
+
     const internalRadio = screen.getByLabelText(/Internal Page/i);
     await user.click(internalRadio);
-    
+
     expect(screen.getByLabelText(/Search for page:/i)).toBeInTheDocument();
   });
 
@@ -119,13 +119,13 @@ describe('LinkDialog', () => {
         onInsert={mockOnInsert}
       />
     );
-    
+
     const internalRadio = screen.getByLabelText(/Internal Page/i);
     await user.click(internalRadio);
-    
+
     const searchInput = screen.getByPlaceholderText(/Type to search pages/i);
     await user.type(searchInput, 'test');
-    
+
     await waitFor(() => {
       expect(pagesApi.searchPages).toHaveBeenCalledWith('test');
     }, { timeout: 1000 });
@@ -145,13 +145,13 @@ describe('LinkDialog', () => {
         onInsert={mockOnInsert}
       />
     );
-    
+
     const internalRadio = screen.getByLabelText(/Internal Page/i);
     await user.click(internalRadio);
-    
+
     const searchInput = screen.getByPlaceholderText(/Type to search pages/i);
     await user.type(searchInput, 'test');
-    
+
     await waitFor(() => {
       expect(screen.getByText('Test Page')).toBeInTheDocument();
       expect(screen.getByText('Another Page')).toBeInTheDocument();
@@ -171,20 +171,20 @@ describe('LinkDialog', () => {
         onInsert={mockOnInsert}
       />
     );
-    
+
     const internalRadio = screen.getByLabelText(/Internal Page/i);
     await user.click(internalRadio);
-    
+
     const searchInput = screen.getByPlaceholderText(/Type to search pages/i);
     await user.type(searchInput, 'test');
-    
+
     await waitFor(() => {
       expect(screen.getByText('Test Page')).toBeInTheDocument();
     });
-    
+
     const resultItem = screen.getByText('Test Page').closest('button');
     await user.click(resultItem);
-    
+
     const urlInput = screen.getByPlaceholderText(/\/pages\/page-id/i);
     expect(urlInput).toHaveValue('/pages/page-1');
   });
@@ -200,13 +200,13 @@ describe('LinkDialog', () => {
         onInsert={mockOnInsert}
       />
     );
-    
+
     const internalRadio = screen.getByLabelText(/Internal Page/i);
     await user.click(internalRadio);
-    
+
     const searchInput = screen.getByPlaceholderText(/Type to search pages/i);
     await user.type(searchInput, 'nonexistent');
-    
+
     await waitFor(() => {
       expect(screen.getByText('No pages found')).toBeInTheDocument();
     });
@@ -221,13 +221,13 @@ describe('LinkDialog', () => {
         onInsert={mockOnInsert}
       />
     );
-    
+
     const urlInput = screen.getByPlaceholderText(/https:\/\/example.com/i);
     await user.type(urlInput, 'https://example.com');
-    
+
     const insertButton = screen.getByRole('button', { name: 'Insert Link' });
     await user.click(insertButton);
-    
+
     expect(mockOnInsert).toHaveBeenCalledWith('https://example.com');
     expect(mockOnClose).toHaveBeenCalled();
   });
@@ -241,16 +241,16 @@ describe('LinkDialog', () => {
         onInsert={mockOnInsert}
       />
     );
-    
+
     const internalRadio = screen.getByLabelText(/Internal Page/i);
     await user.click(internalRadio);
-    
+
     const urlInput = screen.getByPlaceholderText(/\/pages\/page-id/i);
     await user.type(urlInput, '/pages/page-1');
-    
+
     const insertButton = screen.getByRole('button', { name: 'Insert Link' });
     await user.click(insertButton);
-    
+
     expect(mockOnInsert).toHaveBeenCalledWith('/pages/page-1');
     expect(mockOnClose).toHaveBeenCalled();
   });
@@ -263,7 +263,7 @@ describe('LinkDialog', () => {
         onInsert={mockOnInsert}
       />
     );
-    
+
     // "Insert Link" appears in header (h3) and button - get the submit button specifically
     const submitButton = screen.getByRole('button', { name: 'Insert Link' });
     expect(submitButton).toBeDisabled();
@@ -278,7 +278,7 @@ describe('LinkDialog', () => {
         initialUrl="https://example.com"
       />
     );
-    
+
     const urlInput = screen.getByPlaceholderText(/https:\/\/example.com/i);
     expect(urlInput).toHaveValue('https://example.com');
   });
@@ -294,18 +294,18 @@ describe('LinkDialog', () => {
         onInsert={mockOnInsert}
       />
     );
-    
+
     const internalRadio = screen.getByLabelText(/Internal Page/i);
     await user.click(internalRadio);
-    
+
     const searchInput = screen.getByPlaceholderText(/Type to search pages/i);
     await user.type(searchInput, 'test', { delay: 50 });
-    
+
     // Should debounce, so not called immediately
     await waitFor(() => {
       expect(pagesApi.searchPages).toHaveBeenCalled();
     }, { timeout: 500 });
-    
+
     // Should only be called once after debounce
     expect(pagesApi.searchPages).toHaveBeenCalledTimes(1);
   });
@@ -322,21 +322,21 @@ describe('LinkDialog', () => {
         onInsert={mockOnInsert}
       />
     );
-    
+
     const internalRadio = screen.getByLabelText(/Internal Page/i);
     await user.click(internalRadio);
-    
+
     const searchInput = screen.getByPlaceholderText(/Type to search pages/i);
     await user.type(searchInput, 'test');
-    
+
     // Should not crash on error - wait for search to be called
     await waitFor(() => {
       expect(pagesApi.searchPages).toHaveBeenCalled();
     }, { timeout: 1000 });
-    
+
     // Error should be logged but component should still be functional
     expect(consoleErrorSpy).toHaveBeenCalled();
-    
+
     consoleErrorSpy.mockRestore();
   });
 
@@ -349,10 +349,10 @@ describe('LinkDialog', () => {
         onInsert={mockOnInsert}
       />
     );
-    
+
     const urlInput = screen.getByPlaceholderText(/https:\/\/example.com/i);
     await user.type(urlInput, 'https://test.com');
-    
+
     // Close dialog
     rerender(
       <LinkDialog
@@ -361,7 +361,7 @@ describe('LinkDialog', () => {
         onInsert={mockOnInsert}
       />
     );
-    
+
     // Reopen dialog
     rerender(
       <LinkDialog
@@ -370,7 +370,7 @@ describe('LinkDialog', () => {
         onInsert={mockOnInsert}
       />
     );
-    
+
     // URL should be reset
     const newUrlInput = screen.getByPlaceholderText(/https:\/\/example.com/i);
     expect(newUrlInput).toHaveValue('');

@@ -174,7 +174,7 @@ describe('CommentsList', () => {
     }));
 
     renderCommentsList({ comments });
-    
+
     expect(screen.getByText(/Page 1 of 2/i)).toBeInTheDocument();
     expect(screen.getByText(/15 comment/i)).toBeInTheDocument();
   });
@@ -192,7 +192,7 @@ describe('CommentsList', () => {
     }));
 
     renderCommentsList({ comments });
-    
+
     expect(screen.queryByText(/Page 1 of/i)).not.toBeInTheDocument();
   });
 
@@ -209,7 +209,7 @@ describe('CommentsList', () => {
     }));
 
     renderCommentsList({ comments });
-    
+
     expect(screen.getByText('Comment 1')).toBeInTheDocument();
     expect(screen.getByText('Comment 10')).toBeInTheDocument();
     expect(screen.queryByText('Comment 11')).not.toBeInTheDocument();
@@ -229,10 +229,10 @@ describe('CommentsList', () => {
     }));
 
     renderCommentsList({ comments });
-    
+
     const nextButton = screen.getByLabelText('Next page');
     await user.click(nextButton);
-    
+
     await waitFor(() => {
       expect(screen.getByText('Comment 11')).toBeInTheDocument();
       expect(screen.getByText(/Page 2 of 2/i)).toBeInTheDocument();
@@ -253,19 +253,19 @@ describe('CommentsList', () => {
     }));
 
     renderCommentsList({ comments });
-    
+
     // Go to page 2
     const nextButton = screen.getByLabelText('Next page');
     await user.click(nextButton);
-    
+
     await waitFor(() => {
       expect(screen.getByText(/Page 2 of 2/i)).toBeInTheDocument();
     });
-    
+
     // Go back to page 1
     const prevButton = screen.getByLabelText('Previous page');
     await user.click(prevButton);
-    
+
     await waitFor(() => {
       expect(screen.getByText('Comment 1')).toBeInTheDocument();
       expect(screen.getByText(/Page 1 of 2/i)).toBeInTheDocument();
@@ -285,7 +285,7 @@ describe('CommentsList', () => {
     }));
 
     renderCommentsList({ comments });
-    
+
     const prevButton = screen.getByLabelText('Previous page');
     expect(prevButton).toBeDisabled();
   });
@@ -304,10 +304,10 @@ describe('CommentsList', () => {
     }));
 
     renderCommentsList({ comments });
-    
+
     const nextButton = screen.getByLabelText('Next page');
     await user.click(nextButton);
-    
+
     await waitFor(() => {
       const nextButtonAfter = screen.getByLabelText('Next page');
       expect(nextButtonAfter).toBeDisabled();
@@ -340,7 +340,7 @@ describe('CommentsList', () => {
     ];
 
     renderCommentsList({ comments });
-    
+
     expect(screen.getByText('Parent comment')).toBeInTheDocument();
     expect(screen.getByText('Reply comment')).toBeInTheDocument();
   });
@@ -369,7 +369,7 @@ describe('CommentsList', () => {
     }));
 
     renderCommentsList({ comments });
-    
+
     // Should not show pagination (only 5 top-level comments)
     expect(screen.queryByText(/Page 1 of/i)).not.toBeInTheDocument();
   });

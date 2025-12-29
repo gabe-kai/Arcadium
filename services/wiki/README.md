@@ -251,4 +251,3 @@ See [CI/CD Documentation](../../docs/ci-cd.md) for details.
 - `DELETE /api/pages/<page_id>/archive` - Unarchive a page (requires writer/admin role, writers can only unarchive own pages)
 
 **Note**: Archived pages are hidden from list views, search results, and index views. Only admins and writers (with permission) can view archived pages.
-

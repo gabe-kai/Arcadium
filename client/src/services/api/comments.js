@@ -34,7 +34,7 @@ export function createComment(pageId, commentData) {
  */
 export function useCreateComment(pageId) {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: (commentData) => createComment(pageId, commentData),
     onSuccess: () => {
@@ -56,7 +56,7 @@ export function updateComment(commentId, content) {
  */
 export function useUpdateComment(pageId) {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: ({ commentId, content }) => updateComment(commentId, content),
     onSuccess: () => {
@@ -78,7 +78,7 @@ export function deleteComment(commentId) {
  */
 export function useDeleteComment(pageId) {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: (commentId) => deleteComment(commentId),
     onSuccess: () => {

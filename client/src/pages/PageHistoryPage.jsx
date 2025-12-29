@@ -10,7 +10,7 @@ import { usePage, useVersionHistory } from '../services/api/pages';
 export function PageHistoryPage() {
   const { pageId } = useParams();
   const navigate = useNavigate();
-  
+
   const { data: page, isLoading: isLoadingPage } = usePage(pageId);
   const { data: versions, isLoading: isLoadingVersions } = useVersionHistory(pageId);
 

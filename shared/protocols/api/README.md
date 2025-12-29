@@ -7,4 +7,3 @@ REST API schemas and definitions.
 - OpenAPI/Swagger specifications
 - Request/response schemas
 - API versioning definitions
-

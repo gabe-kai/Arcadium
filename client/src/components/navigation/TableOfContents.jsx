@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 
 /**
  * TableOfContents component displays page headings as a navigation menu
- * 
+ *
  * Features:
  * - Auto-generated from page headings (H2-H6)
  * - Click to scroll to section (smooth scroll)
@@ -16,7 +16,7 @@ export function TableOfContents({ toc, contentRef }) {
   const [activeSection, setActiveSection] = useState(null);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const tocRef = useRef(null);
-  
+
   // Determine if page is "short" (fewer than 5 TOC items)
   const isShortPage = toc && toc.length < 5;
 

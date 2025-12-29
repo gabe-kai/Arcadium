@@ -102,7 +102,7 @@ describe('Layout Components', () => {
           </Layout>
         </MemoryRouter>
       );
-      
+
       const main = container.querySelector('.arc-main');
       expect(main).toHaveClass('arc-main-with-right-sidebar');
     });
@@ -115,7 +115,7 @@ describe('Layout Components', () => {
           </Layout>
         </MemoryRouter>
       );
-      
+
       const main = container.querySelector('.arc-main');
       expect(main).not.toHaveClass('arc-main-with-right-sidebar');
     });
@@ -150,7 +150,7 @@ describe('Layout Components', () => {
           </Layout>
         </MemoryRouter>
       );
-      
+
       const logos = screen.getAllByText(/Arcadium Wiki/i);
       expect(logos.length).toBeGreaterThan(0);
     });

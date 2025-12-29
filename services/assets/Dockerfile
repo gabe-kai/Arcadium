@@ -17,4 +17,3 @@ EXPOSE 8004
 
 # Run the application
 CMD ["flask", "run", "--host", "0.0.0.0", "--port", "8004"]
-

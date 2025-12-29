@@ -1,5 +1,6 @@
 """Test size calculator"""
-from app.utils.size_calculator import calculate_word_count, calculate_content_size_kb
+
+from app.utils.size_calculator import calculate_content_size_kb, calculate_word_count
 
 
 def test_word_count_basic():
@@ -46,12 +47,11 @@ def test_content_size_excludes_images():
     content_with_image = "Text " + "![Image](url.png) " * 10
     # Create equivalent content without images (just the text)
     content_without = "Text " * 10
-    
+
     # Sizes should be similar since image syntax is removed
     size_with = calculate_content_size_kb(content_with_image)
     size_without = calculate_content_size_kb(content_without)
-    
+
     # Image syntax removal means sizes should be very close
     # Allow for some variance due to whitespace differences
     assert abs(size_with - size_without) < 0.1  # Within 0.1 KB
-

@@ -97,8 +97,8 @@ python scripts/setup_database.py --db-name arcadium_wiki
 To see all Arcadium databases:
 
 ```sql
-SELECT datname FROM pg_database 
-WHERE datname LIKE 'arcadium_%' 
+SELECT datname FROM pg_database
+WHERE datname LIKE 'arcadium_%'
 ORDER BY datname;
 ```
 

@@ -75,53 +75,53 @@ export function searchPages(query) {
 // Validate slug uniqueness (for new pages or when slug changes)
 export function validateSlug(slug, excludePageId = null) {
   const trimmedSlug = slug ? slug.trim() : '';
-  
+
   if (!trimmedSlug || trimmedSlug.length === 0) {
     return Promise.resolve({ valid: false, message: 'Slug is required' });
   }
-  
+
   // Basic validation
   if (!/^[a-z0-9-]+$/.test(trimmedSlug)) {
-    return Promise.resolve({ 
-      valid: false, 
-      message: 'Slug can only contain lowercase letters, numbers, and hyphens' 
+    return Promise.resolve({
+      valid: false,
+      message: 'Slug can only contain lowercase letters, numbers, and hyphens'
     });
   }
-  
+
   // Check uniqueness via API using slug filter
   return apiClient
     .get('/pages', { params: { slug: trimmedSlug } })
     .then((res) => {
       const pages = res.data.pages || [];
-      
+
       // If no pages found, slug is available
       if (pages.length === 0) {
         return { valid: true };
       }
-      
+
       // If excludePageId is provided, check if the found page is the one we're editing
       if (excludePageId) {
         const conflictingPage = pages.find(p => p.id !== excludePageId && p.id !== excludePageId?.toString());
-        
+
         if (conflictingPage) {
-          return { 
-            valid: false, 
-            message: `Slug "${trimmedSlug}" is already in use by another page` 
+          return {
+            valid: false,
+            message: `Slug "${trimmedSlug}" is already in use by another page`
           };
         }
-        
+
         // The only page with this slug is the one we're editing, so it's valid
         return { valid: true };
       }
-      
+
       // For new pages (no excludePageId), any existing page is a conflict
       if (pages.length > 0) {
-        return { 
-          valid: false, 
-          message: `Slug "${trimmedSlug}" is already in use by another page` 
+        return {
+          valid: false,
+          message: `Slug "${trimmedSlug}" is already in use by another page`
         };
       }
-      
+
       return { valid: true };
     })
     .catch((error) => {

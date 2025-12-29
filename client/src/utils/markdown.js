@@ -11,15 +11,15 @@ export function parseFrontmatter(content) {
   if (!content || !content.startsWith('---')) {
     return { frontmatter: {}, markdown: content || '' };
   }
-  
+
   const parts = content.split('---');
   if (parts.length < 3) {
     return { frontmatter: {}, markdown: content };
   }
-  
+
   const frontmatterStr = parts[1].trim();
   const markdown = parts.slice(2).join('---').trim();
-  
+
   let frontmatter = {};
   if (frontmatterStr) {
     try {
@@ -31,7 +31,7 @@ export function parseFrontmatter(content) {
           const key = match[1];
           let value = match[2].trim();
           // Remove quotes if present
-          if ((value.startsWith('"') && value.endsWith('"')) || 
+          if ((value.startsWith('"') && value.endsWith('"')) ||
               (value.startsWith("'") && value.endsWith("'"))) {
             value = value.slice(1, -1);
           }
@@ -42,7 +42,7 @@ export function parseFrontmatter(content) {
       console.warn('Failed to parse frontmatter:', e);
     }
   }
-  
+
   return { frontmatter, markdown };
 }
 
@@ -56,17 +56,17 @@ export function parseFrontmatter(content) {
  */
 export function addFrontmatter(metadata, markdown, originalContent = null) {
   if (!metadata) return markdown || '';
-  
+
   // Parse existing frontmatter to preserve custom fields (e.g., from AI system)
   let existingFrontmatter = {};
   if (originalContent) {
     const parsed = parseFrontmatter(originalContent);
     existingFrontmatter = parsed.frontmatter || {};
   }
-  
+
   // Start with existing frontmatter to preserve custom fields
   const frontmatter = { ...existingFrontmatter };
-  
+
   // Override with metadata form values (user-editable fields)
   if (metadata.title) frontmatter.title = metadata.title;
   if (metadata.slug) frontmatter.slug = metadata.slug;
@@ -85,7 +85,7 @@ export function addFrontmatter(metadata, markdown, originalContent = null) {
     // Remove order if cleared
     delete frontmatter.order;
   }
-  
+
   // Build YAML frontmatter string
   const frontmatterLines = [];
   // Sort keys: standard fields first, then custom fields
@@ -94,14 +94,14 @@ export function addFrontmatter(metadata, markdown, originalContent = null) {
     ...standardKeys.filter(k => k in frontmatter),
     ...Object.keys(frontmatter).filter(k => !standardKeys.includes(k)).sort()
   ];
-  
+
   for (const key of sortedKeys) {
     const value = frontmatter[key];
     if (value !== null && value !== undefined && value !== '') {
       // Escape values that need quotes
       const needsQuotes = typeof value === 'string' && (
-        value.includes(':') || 
-        value.includes('#') || 
+        value.includes(':') ||
+        value.includes('#') ||
         value.includes('|') ||
         value.includes('&') ||
         value.startsWith(' ') ||
@@ -111,11 +111,11 @@ export function addFrontmatter(metadata, markdown, originalContent = null) {
       frontmatterLines.push(`${key}: ${formattedValue}`);
     }
   }
-  
+
   if (frontmatterLines.length === 0) {
     return markdown || '';
   }
-  
+
   return `---\n${frontmatterLines.join('\n')}\n---\n${markdown || ''}`;
 }
 
@@ -125,16 +125,16 @@ export function addFrontmatter(metadata, markdown, originalContent = null) {
  */
 export function htmlToMarkdown(html) {
   if (!html) return '';
-  
+
   const turndownService = new TurndownService({
     headingStyle: 'atx', // Use # for headings
     codeBlockStyle: 'fenced', // Use ``` for code blocks
     bulletListMarker: '-', // Use - for bullet lists
   });
-  
+
   // Enable GFM features (tables, strikethrough, task lists)
   turndownService.use(gfm);
-  
+
   return turndownService.turndown(html);
 }
 
@@ -144,7 +144,7 @@ export function htmlToMarkdown(html) {
  */
 export function markdownToHtml(markdown) {
   if (!markdown) return '';
-  
+
   // Configure marked options
   marked.setOptions({
     breaks: true, // Convert line breaks to <br>
@@ -152,6 +152,6 @@ export function markdownToHtml(markdown) {
     headerIds: false, // Disable header IDs for cleaner HTML
     mangle: false, // Don't mangle email addresses
   });
-  
+
   return marked.parse(markdown);
 }

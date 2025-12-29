@@ -41,7 +41,12 @@ The project uses **GitHub Actions** for CI/CD. Currently, CI is configured for t
    - Creates `arcadium_testing_wiki` database
    - Waits for PostgreSQL to be ready
 
-4. **Runs tests:**
+4. **Runs code quality checks:**
+   - Installs and runs pre-commit hooks
+   - Validates code formatting (black, isort, ruff)
+   - Checks for common issues (trailing whitespace, merge conflicts, etc.)
+
+5. **Runs tests:**
    - Executes `pytest` from `services/wiki` directory
    - Uses PostgreSQL test database (avoids SQLite UUID issues)
    - Generates coverage reports
@@ -66,8 +71,8 @@ See `services/wiki/tests/conftest.py` for test database configuration.
 
 ### Client Tests (Frontend)
 
-**Status:** ✅ **CI/CD Configured**.  
-**Location:** `.github/workflows/client-tests.yml`  
+**Status:** ✅ **CI/CD Configured**.
+**Location:** `.github/workflows/client-tests.yml`
 **Test Location:** `client/`
 
 The Client uses **Vitest** and **React Testing Library** for unit/integration tests, and **Playwright** for E2E tests.
@@ -87,6 +92,7 @@ The workflow runs three jobs in parallel:
 1. **Unit & Integration Tests:**
    - Sets up Node.js 20
    - Installs dependencies with `npm ci`
+   - Runs linting and formatting checks (if configured)
    - Runs Vitest test suite (`npm test -- --run`)
    - Automatically discovers and runs all test files (including new auth tests)
    - Attempts to generate coverage report (optional)
@@ -186,11 +192,11 @@ To verify tests will pass in CI before pushing, replicate the CI environment loc
    -- Connect to PostgreSQL as postgres user
    CREATE DATABASE wiki_test;
    ```
-   
+
    Or let the test setup create it automatically (see `services/wiki/tests/conftest.py`).
 
 3. **Run tests with CI environment variables:**
-   
+
    **Windows (PowerShell):**
    ```powershell
    $env:FLASK_ENV = "testing"
@@ -200,7 +206,7 @@ To verify tests will pass in CI before pushing, replicate the CI environment loc
    cd services/wiki
    pytest
    ```
-   
+
    **Linux/Mac (Bash):**
    ```bash
    export FLASK_ENV=testing
@@ -310,10 +316,11 @@ If tests fail with PostgreSQL connection errors:
   - ✅ Client tests (frontend)
   - [ ] Game Server tests (when implemented)
 
-- [ ] **Code quality checks:**
-  - Linting (flake8, pylint, or ruff)
-  - Type checking (mypy)
-  - Code formatting (black)
+- [x] **Code quality checks:**
+  - ✅ Linting (ruff)
+  - ✅ Code formatting (black, isort)
+  - ✅ Pre-commit hooks (trailing whitespace, merge conflicts, YAML/JSON validation)
+  - [ ] Type checking (mypy) - Optional future enhancement
 
 - [ ] **Coverage reporting:**
   - Upload coverage reports to Codecov or similar

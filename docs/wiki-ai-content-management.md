@@ -14,7 +14,7 @@
    - `status`: "published" or "draft" (default: "published")
    - `created_by: "admin"` and `updated_by: "admin"` (always use "admin")
 3. **File location:** Mirror hierarchy in filesystem (e.g., `section-name/page.md`)
-4. **After writing:** 
+4. **After writing:**
    - **Option A (Automatic):** If file watcher is running (`python -m app.sync watch`), files sync automatically
    - **Option B (Manual):** Run `python -m app.sync sync-all` to sync to database
 
@@ -580,9 +580,8 @@ wiki-watch-debounce:
 
 **Why**: Simplest for AI, most reliable, no dependencies
 
-**Implementation**: 
+**Implementation**:
 - AI writes markdown files with YAML frontmatter
 - Sync utility updates database
 - Admin user assignment automatic
 - All wiki features work normally
-

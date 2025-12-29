@@ -9,7 +9,7 @@ const COMMENTS_PER_PAGE = 10;
 
 /**
  * CommentsList component - Displays all comments for a page with threading
- * 
+ *
  * Features:
  * - Threaded comments display
  * - Pagination for long threads
@@ -21,19 +21,19 @@ export function CommentsList({ pageId, comments = [] }) {
   const createCommentMutation = useCreateComment(pageId);
   const updateCommentMutation = useUpdateComment(pageId);
   const deleteCommentMutation = useDeleteComment(pageId);
-  
+
   // Paginate top-level comments only (replies are always shown)
   const topLevelComments = useMemo(() => {
     return comments.filter((comment) => !comment.parent_comment_id);
   }, [comments]);
-  
+
   const totalPages = Math.ceil(topLevelComments.length / COMMENTS_PER_PAGE);
   const paginatedComments = useMemo(() => {
     const startIndex = (currentPage - 1) * COMMENTS_PER_PAGE;
     const endIndex = startIndex + COMMENTS_PER_PAGE;
     return topLevelComments.slice(startIndex, endIndex);
   }, [topLevelComments, currentPage]);
-  
+
   // Reset to page 1 when comments change (e.g., after new comment)
   React.useEffect(() => {
     setCurrentPage(1);
@@ -62,7 +62,7 @@ export function CommentsList({ pageId, comments = [] }) {
   return (
     <section className="arc-comments-section" aria-label="Comments">
       <h2 className="arc-comments-title">Comments</h2>
-      
+
       {!isAuthenticated && (
         <div className="arc-comments-signin-prompt">
           <p>Please sign in to view and leave comments.</p>
@@ -97,7 +97,7 @@ export function CommentsList({ pageId, comments = [] }) {
               />
             ))}
           </div>
-          
+
           {totalPages > 1 && (
             <div className="arc-comments-pagination">
               <button
@@ -109,11 +109,11 @@ export function CommentsList({ pageId, comments = [] }) {
               >
                 Previous
               </button>
-              
+
               <span className="arc-comments-pagination-info">
                 Page {currentPage} of {totalPages} ({topLevelComments.length} comment{topLevelComments.length !== 1 ? 's' : ''})
               </span>
-              
+
               <button
                 type="button"
                 className="arc-comments-pagination-button"

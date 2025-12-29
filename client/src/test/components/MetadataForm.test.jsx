@@ -28,7 +28,7 @@ describe('MetadataForm', () => {
 
   it('renders all form fields', () => {
     render(<MetadataForm />);
-    
+
     expect(screen.getByLabelText(/Title/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/Slug/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/Parent Page/i)).toBeInTheDocument();
@@ -42,12 +42,12 @@ describe('MetadataForm', () => {
 
   it('displays required indicators', () => {
     render(<MetadataForm />);
-    
+
     // Check that required asterisks are present in the labels
     // Title label should contain asterisk
     const titleLabel = screen.getByText(/Title/i);
     expect(titleLabel.textContent).toMatch(/Title\s*\*/);
-    
+
     // Slug label - use getAllByText since Slug might appear multiple times
     const slugLabels = screen.getAllByText(/Slug/i);
     // Find the label element that contains the asterisk
@@ -73,7 +73,7 @@ describe('MetadataForm', () => {
     };
 
     render(<MetadataForm initialData={initialData} />);
-    
+
     expect(screen.getByDisplayValue('Test Page')).toBeInTheDocument();
     expect(screen.getByDisplayValue('test-page')).toBeInTheDocument();
     expect(screen.getByDisplayValue('Test Section')).toBeInTheDocument();
@@ -83,23 +83,23 @@ describe('MetadataForm', () => {
 
   it('auto-generates slug from title for new pages', () => {
     slugUtils.generateSlug.mockReturnValue('test-page');
-    
+
     render(<MetadataForm isNewPage={true} />);
-    
+
     const titleInput = screen.getByLabelText(/Title/i);
     fireEvent.change(titleInput, { target: { value: 'Test Page' } });
-    
+
     expect(slugUtils.generateSlug).toHaveBeenCalledWith('Test Page');
   });
 
   it('calls onChange when form values change', async () => {
     const onChange = vi.fn();
-    
+
     render(<MetadataForm onChange={onChange} />);
-    
+
     const titleInput = screen.getByLabelText(/Title/i);
     fireEvent.change(titleInput, { target: { value: 'New Title' } });
-    
+
     await waitFor(() => {
       expect(onChange).toHaveBeenCalled();
     });
@@ -107,28 +107,28 @@ describe('MetadataForm', () => {
 
   it('validates slug when it changes', async () => {
     pagesApi.validateSlug.mockResolvedValue({ valid: true });
-    
+
     render(<MetadataForm />);
-    
+
     const slugInput = screen.getByLabelText(/Slug/i);
     fireEvent.change(slugInput, { target: { value: 'test-slug' } });
-    
+
     await waitFor(() => {
       expect(pagesApi.validateSlug).toHaveBeenCalledWith('test-slug', null);
     }, { timeout: 1000 });
   });
 
   it('shows validation error for invalid slug', async () => {
-    pagesApi.validateSlug.mockResolvedValue({ 
-      valid: false, 
-      message: 'Slug already in use' 
+    pagesApi.validateSlug.mockResolvedValue({
+      valid: false,
+      message: 'Slug already in use'
     });
-    
+
     render(<MetadataForm />);
-    
+
     const slugInput = screen.getByLabelText(/Slug/i);
     fireEvent.change(slugInput, { target: { value: 'existing-slug' } });
-    
+
     await waitFor(() => {
       // Error message may appear multiple times, use getAllByText and check at least one exists
       const errorMessages = screen.getAllByText(/Slug already in use/i);
@@ -138,12 +138,12 @@ describe('MetadataForm', () => {
 
   it('shows validation success for valid slug', async () => {
     pagesApi.validateSlug.mockResolvedValue({ valid: true });
-    
+
     render(<MetadataForm />);
-    
+
     const slugInput = screen.getByLabelText(/Slug/i);
     fireEvent.change(slugInput, { target: { value: 'valid-slug' } });
-    
+
     await waitFor(() => {
       expect(screen.getByText(/Available/i)).toBeInTheDocument();
     }, { timeout: 1000 });
@@ -155,12 +155,12 @@ describe('MetadataForm', () => {
       { id: 'page-2', title: 'Parent Page 2', section: 'Section 2' },
     ];
     pagesApi.searchPages.mockResolvedValue(mockPages);
-    
+
     render(<MetadataForm />);
-    
+
     const parentInput = screen.getByPlaceholderText(/Search for parent page/i);
     fireEvent.change(parentInput, { target: { value: 'Parent' } });
-    
+
     await waitFor(() => {
       expect(pagesApi.searchPages).toHaveBeenCalledWith('Parent');
     }, { timeout: 1000 });
@@ -171,12 +171,12 @@ describe('MetadataForm', () => {
       { id: 'page-1', title: 'Parent Page 1', section: 'Section 1' },
     ];
     pagesApi.searchPages.mockResolvedValue(mockPages);
-    
+
     render(<MetadataForm />);
-    
+
     const parentInput = screen.getByPlaceholderText(/Search for parent page/i);
     fireEvent.change(parentInput, { target: { value: 'Parent' } });
-    
+
     await waitFor(() => {
       expect(screen.getByText('Parent Page 1')).toBeInTheDocument();
     }, { timeout: 1000 });
@@ -187,19 +187,19 @@ describe('MetadataForm', () => {
       { id: 'page-1', title: 'Parent Page 1', section: 'Section 1' },
     ];
     pagesApi.searchPages.mockResolvedValue(mockPages);
-    
+
     render(<MetadataForm />);
-    
+
     const parentInput = screen.getByPlaceholderText(/Search for parent page/i);
     fireEvent.change(parentInput, { target: { value: 'Parent' } });
-    
+
     await waitFor(() => {
       expect(screen.getByText('Parent Page 1')).toBeInTheDocument();
     });
-    
+
     const parentOption = screen.getByText('Parent Page 1');
     fireEvent.click(parentOption);
-    
+
     expect(parentInput).toHaveValue('Parent Page 1');
   });
 
@@ -208,58 +208,58 @@ describe('MetadataForm', () => {
       { id: 'page-1', title: 'Parent Page 1', section: 'Section 1' },
     ];
     pagesApi.searchPages.mockResolvedValue(mockPages);
-    
+
     render(<MetadataForm initialData={{ parent_id: 'page-1' }} />);
-    
+
     const parentInput = screen.getByPlaceholderText(/Search for parent page/i);
     fireEvent.change(parentInput, { target: { value: 'Parent' } });
-    
+
     await waitFor(() => {
       expect(screen.getByText('Parent Page 1')).toBeInTheDocument();
     });
-    
+
     const clearButton = screen.getByTitle(/Clear parent/i);
     fireEvent.click(clearButton);
-    
+
     expect(parentInput).toHaveValue('');
   });
 
   it('handles section input', () => {
     render(<MetadataForm />);
-    
+
     const sectionInput = screen.getByLabelText(/Section/i);
     fireEvent.change(sectionInput, { target: { value: 'Game Rules' } });
-    
+
     expect(sectionInput).toHaveValue('Game Rules');
   });
 
   it('handles order input with valid numbers', () => {
     render(<MetadataForm />);
-    
+
     const orderInput = screen.getByLabelText(/Order/i);
     fireEvent.change(orderInput, { target: { value: '10' } });
-    
+
     expect(orderInput).toHaveValue(10);
   });
 
   it('rejects negative order values', () => {
     render(<MetadataForm />);
-    
+
     const orderInput = screen.getByLabelText(/Order/i);
     fireEvent.change(orderInput, { target: { value: '-5' } });
-    
+
     // Should not accept negative values
     expect(orderInput).not.toHaveValue(-5);
   });
 
   it('handles status toggle', () => {
     render(<MetadataForm initialData={{ status: 'draft' }} />);
-    
+
     expect(screen.getByLabelText(/Draft/i)).toBeChecked();
     expect(screen.getByLabelText(/Published/i)).not.toBeChecked();
-    
+
     fireEvent.click(screen.getByLabelText(/Published/i));
-    
+
     expect(screen.getByLabelText(/Published/i)).toBeChecked();
     expect(screen.getByLabelText(/Draft/i)).not.toBeChecked();
   });
@@ -275,7 +275,7 @@ describe('MetadataForm', () => {
     };
 
     render(<MetadataForm errors={errors} />);
-    
+
     expect(screen.getByText('Title is required')).toBeInTheDocument();
     expect(screen.getByText('Slug is invalid')).toBeInTheDocument();
     expect(screen.getByText('Parent not found')).toBeInTheDocument();
@@ -290,19 +290,19 @@ describe('MetadataForm', () => {
     };
 
     render(<MetadataForm errors={errors} />);
-    
+
     const titleInput = screen.getByLabelText(/Title/i);
     expect(titleInput).toHaveClass('arc-metadata-form-input-error');
   });
 
   it('handles empty search results', async () => {
     pagesApi.searchPages.mockResolvedValue([]);
-    
+
     render(<MetadataForm />);
-    
+
     const parentInput = screen.getByPlaceholderText(/Search for parent page/i);
     fireEvent.change(parentInput, { target: { value: 'Nonexistent' } });
-    
+
     await waitFor(() => {
       expect(screen.getByText(/No pages found/i)).toBeInTheDocument();
     }, { timeout: 1000 });
@@ -313,19 +313,19 @@ describe('MetadataForm', () => {
       { id: 'page-1', title: 'Parent Page 1' },
     ];
     pagesApi.searchPages.mockResolvedValue(mockPages);
-    
+
     render(<MetadataForm />);
-    
+
     const parentInput = screen.getByPlaceholderText(/Search for parent page/i);
     fireEvent.change(parentInput, { target: { value: 'Parent' } });
-    
+
     await waitFor(() => {
       expect(screen.getByText('Parent Page 1')).toBeInTheDocument();
     });
-    
+
     // Click outside
     fireEvent.mouseDown(document.body);
-    
+
     await waitFor(() => {
       expect(screen.queryByText('Parent Page 1')).not.toBeInTheDocument();
     });
@@ -333,12 +333,12 @@ describe('MetadataForm', () => {
 
   it('debounces slug validation', async () => {
     pagesApi.validateSlug.mockResolvedValue({ valid: true });
-    
+
     render(<MetadataForm />);
-    
+
     const slugInput = screen.getByLabelText(/Slug/i);
     fireEvent.change(slugInput, { target: { value: 'test' } });
-    
+
     // Wait for debounce delay plus a bit
     await waitFor(() => {
       // Should call validateSlug after debounce
@@ -348,12 +348,12 @@ describe('MetadataForm', () => {
 
   it('debounces parent search', async () => {
     pagesApi.searchPages.mockResolvedValue([]);
-    
+
     render(<MetadataForm />);
-    
+
     const parentInput = screen.getByPlaceholderText(/Search for parent page/i);
     fireEvent.change(parentInput, { target: { value: 'Parent' } });
-    
+
     // Wait for debounce delay plus a bit
     await waitFor(() => {
       // Should call searchPages after debounce
@@ -363,12 +363,12 @@ describe('MetadataForm', () => {
 
   it('excludes current page from slug validation', async () => {
     pagesApi.validateSlug.mockResolvedValue({ valid: true });
-    
+
     render(<MetadataForm excludePageId="current-page-id" />);
-    
+
     const slugInput = screen.getByLabelText(/Slug/i);
     fireEvent.change(slugInput, { target: { value: 'test-slug' } });
-    
+
     await waitFor(() => {
       expect(pagesApi.validateSlug).toHaveBeenCalledWith('test-slug', 'current-page-id');
     }, { timeout: 1000 });
@@ -376,45 +376,45 @@ describe('MetadataForm', () => {
 
   it('updates form when initialData changes', () => {
     const { rerender } = render(<MetadataForm initialData={{ title: 'Initial' }} />);
-    
+
     expect(screen.getByDisplayValue('Initial')).toBeInTheDocument();
-    
+
     rerender(<MetadataForm initialData={{ title: 'Updated' }} />);
-    
+
     expect(screen.getByDisplayValue('Updated')).toBeInTheDocument();
   });
 
   it('handles null/undefined initial data gracefully', () => {
     render(<MetadataForm initialData={null} />);
-    
+
     expect(screen.getByLabelText(/Title/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/Slug/i)).toBeInTheDocument();
-    
+
     // Form should render without errors
     expect(screen.getByTestId).toBeDefined();
   });
 
   it('handles undefined initial data', () => {
     render(<MetadataForm initialData={undefined} />);
-    
+
     expect(screen.getByLabelText(/Title/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/Slug/i)).toBeInTheDocument();
   });
 
   it('shows help text for order field', () => {
     render(<MetadataForm />);
-    
+
     expect(screen.getByText(/Lower numbers appear first/i)).toBeInTheDocument();
   });
 
   it('handles API errors gracefully', async () => {
     pagesApi.validateSlug.mockRejectedValue(new Error('Network error'));
-    
+
     render(<MetadataForm />);
-    
+
     const slugInput = screen.getByLabelText(/Slug/i);
     fireEvent.change(slugInput, { target: { value: 'test' } });
-    
+
     // Should not crash on error
     await waitFor(() => {
       expect(screen.getByLabelText(/Slug/i)).toBeInTheDocument();
@@ -431,7 +431,7 @@ describe('MetadataForm', () => {
 
     // Set title - should auto-generate slug
     fireEvent.change(titleInput, { target: { value: 'New Title' } });
-    
+
     // Wait for slug to be generated
     await waitFor(() => {
       expect(slugInput).toHaveValue('auto-generated-slug');
@@ -464,12 +464,12 @@ describe('MetadataForm', () => {
 
   it('handles very long section names', () => {
     const longSection = 'A'.repeat(200);
-    
+
     render(<MetadataForm />);
-    
+
     const sectionInput = screen.getByLabelText(/Section/i);
     fireEvent.change(sectionInput, { target: { value: longSection } });
-    
+
     expect(sectionInput).toHaveValue(longSection);
   });
 
@@ -480,12 +480,12 @@ describe('MetadataForm', () => {
       { id: 'page-3', title: 'Page 3', section: 'Section 2' },
     ];
     pagesApi.searchPages.mockResolvedValue(mockPages);
-    
+
     render(<MetadataForm />);
-    
+
     const parentInput = screen.getByPlaceholderText(/Search for parent page/i);
     fireEvent.change(parentInput, { target: { value: 'Page' } });
-    
+
     await waitFor(() => {
       expect(screen.getByText('Page 1')).toBeInTheDocument();
       expect(screen.getByText('Page 2')).toBeInTheDocument();
@@ -498,12 +498,12 @@ describe('MetadataForm', () => {
       { id: 'page-1', title: 'Page Without Section' },
     ];
     pagesApi.searchPages.mockResolvedValue(mockPages);
-    
+
     render(<MetadataForm />);
-    
+
     const parentInput = screen.getByPlaceholderText(/Search for parent page/i);
     fireEvent.change(parentInput, { target: { value: 'Page' } });
-    
+
     await waitFor(() => {
       expect(screen.getByText('Page Without Section')).toBeInTheDocument();
     }, { timeout: 2000 });
@@ -511,18 +511,18 @@ describe('MetadataForm', () => {
 
   it('handles status change from draft to published', () => {
     render(<MetadataForm initialData={{ status: 'draft' }} />);
-    
+
     expect(screen.getByLabelText(/Draft/i)).toBeChecked();
-    
+
     fireEvent.click(screen.getByLabelText(/Published/i));
-    
+
     expect(screen.getByLabelText(/Published/i)).toBeChecked();
     expect(screen.getByLabelText(/Draft/i)).not.toBeChecked();
   });
 
   it('handles order value of zero', () => {
     render(<MetadataForm initialData={{ order: 0 }} />);
-    
+
     const orderInput = screen.getByLabelText(/Order/i);
     expect(orderInput).toHaveValue(0);
   });
@@ -541,38 +541,38 @@ describe('MetadataForm', () => {
 
   it('prevents negative order values', () => {
     render(<MetadataForm />);
-    
+
     const orderInput = screen.getByLabelText(/Order/i);
     fireEvent.change(orderInput, { target: { value: '-5' } });
-    
+
     // Should not accept negative values
     expect(orderInput).not.toHaveValue(-5);
   });
 
   it('handles slug with only numbers', async () => {
     pagesApi.validateSlug.mockResolvedValue({ valid: true });
-    
+
     render(<MetadataForm />);
-    
+
     const slugInput = screen.getByLabelText(/Slug/i);
     fireEvent.change(slugInput, { target: { value: '123' } });
-    
+
     await waitFor(() => {
       expect(pagesApi.validateSlug).toHaveBeenCalledWith('123', null);
     }, { timeout: 2000 });
   });
 
   it('handles slug with only hyphens', async () => {
-    pagesApi.validateSlug.mockResolvedValue({ 
-      valid: false, 
-      message: 'Slug can only contain lowercase letters, numbers, and hyphens' 
+    pagesApi.validateSlug.mockResolvedValue({
+      valid: false,
+      message: 'Slug can only contain lowercase letters, numbers, and hyphens'
     });
-    
+
     render(<MetadataForm />);
-    
+
     const slugInput = screen.getByLabelText(/Slug/i);
     fireEvent.change(slugInput, { target: { value: '---' } });
-    
+
     await waitFor(() => {
       expect(pagesApi.validateSlug).toHaveBeenCalled();
     }, { timeout: 2000 });

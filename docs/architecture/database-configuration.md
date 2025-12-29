@@ -48,7 +48,7 @@ DATABASE_URL=postgresql://arcadium:your-secure-password@localhost:5432/arcadium_
 
 - **Production/Development databases**: `arcadium_<service_name>`
   - Examples: `arcadium_wiki`, `arcadium_auth`, `arcadium_game_server`
-  
+
 - **Test databases**: `arcadium_testing_<service_name>`
   - Examples: `arcadium_testing_wiki`, `arcadium_testing_auth`, `arcadium_testing_game_server`
 
@@ -159,4 +159,3 @@ When adding new services:
 - Consider using SSL/TLS for database connections in production
 - The `arcadium_user` has full database permissions - use strong passwords
 - Store `arcadium_user` and `arcadium_pass` securely (environment variables, secrets management)
-

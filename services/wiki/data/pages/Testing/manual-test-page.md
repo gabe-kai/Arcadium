@@ -20,29 +20,29 @@ An [external link](https://www.google.com) and an [internal link](/pages/bea4e8a
 Bullet List:
 
 -   bullet 1
-    
+
 -   bullet 2
-    
+
 -   bullet 3
-    
+
     -   sub bullet 1
-        
+
         -   sub sub bullet 2
-            
+
             -   sub sub sub bullet 3
 
 Numbered List:
 
 1.  number 1
-    
+
 2.  number 2
-    
+
 3.  number 3
-    
+
     1.  sub number 1
-        
+
         1.  sub sub number 2
-            
+
             1.  sub sub sub number 3
 
 ### Image Formatting

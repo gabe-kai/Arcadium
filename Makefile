@@ -31,4 +31,3 @@ migrate: ## Run database migrations
 test: ## Run tests for all services
 	@echo "Running tests..."
 	@echo "TODO: Implement test commands for each service"
-

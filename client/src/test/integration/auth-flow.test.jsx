@@ -170,7 +170,7 @@ describe('Auth Flow Integration', () => {
   describe('Sign Out Flow', () => {
     it('signs out user and clears token', async () => {
       const user = userEvent.setup();
-      
+
       // Start authenticated
       getToken.mockReturnValue('existing-token');
       const mockUser = {

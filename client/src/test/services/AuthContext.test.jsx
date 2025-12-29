@@ -269,11 +269,11 @@ describe('AuthContext', () => {
       await act(async () => {
         screen.getByTestId('sign-in').click();
       });
-      
+
       await act(async () => {
         screen.getByTestId('sign-out').click();
       });
-      
+
       await act(async () => {
         screen.getByTestId('sign-in').click();
       });
@@ -288,7 +288,7 @@ describe('AuthContext', () => {
       // tokenStorage.setToken already handles errors internally with try-catch
       // So we just verify the component works normally
       setToken.mockImplementation(() => {});
-      
+
       const { container } = render(
         <AuthProvider>
           <TestComponent />
@@ -297,12 +297,12 @@ describe('AuthContext', () => {
 
       // Component should render
       expect(container).toBeTruthy();
-      
+
       // Sign in should work
       await act(async () => {
         screen.getByTestId('sign-in').click();
       });
-      
+
       // Component should still be functional
       expect(screen.getByTestId('token')).toHaveTextContent('test-token');
     });

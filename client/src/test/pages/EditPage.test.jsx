@@ -55,12 +55,12 @@ vi.mock('../../components/editor/Editor', () => ({
         onEditorReady(mockEditor);
       }
     }, []);
-    
+
     React.useImperativeHandle(ref, () => ({
       getHTML: () => content || '<p>Editor content</p>',
       editor: { commands: { setContent: vi.fn() } },
     }));
-    
+
     return <div data-testid="editor">Editor</div>;
   }),
 }));
@@ -102,26 +102,26 @@ describe('EditPage', () => {
         mutations: { retry: false },
       },
     });
-    
+
     mockNavigate = vi.fn();
     mockQueryClient = {
       invalidateQueries: vi.fn(),
     };
-    
+
     vi.mocked(useNavigate).mockReturnValue(mockNavigate);
     vi.mocked(useParams).mockReturnValue({ pageId: 'new' });
-    
+
     pagesApi.usePage.mockReturnValue({
       data: null,
       isLoading: false,
       isError: false,
     });
-    
+
     pagesApi.createPage.mockResolvedValue({
       id: 'new-page-id',
       title: 'New Page',
     });
-    
+
     pagesApi.updatePage.mockResolvedValue({
       id: 'existing-page-id',
       title: 'Updated Page',
@@ -132,7 +132,7 @@ describe('EditPage', () => {
       isLoading: false,
       isError: false,
     });
-    
+
     // Mock QueryClient methods
     queryClient.invalidateQueries = vi.fn();
   });
@@ -155,7 +155,7 @@ describe('EditPage', () => {
 
   it('renders edit page for new page', () => {
     renderEditPage('new');
-    
+
     expect(screen.getByText('Create New Page')).toBeInTheDocument();
     expect(screen.getByTestId('metadata-form')).toBeInTheDocument();
     expect(screen.getByTestId('editor')).toBeInTheDocument();
@@ -177,9 +177,9 @@ describe('EditPage', () => {
       isLoading: false,
       isError: false,
     });
-    
+
     renderEditPage('existing-page-id');
-    
+
     expect(screen.getByText('Edit Page')).toBeInTheDocument();
     expect(screen.getByTestId('metadata-form')).toBeInTheDocument();
     expect(screen.getByText('Save Changes')).toBeInTheDocument();
@@ -191,9 +191,9 @@ describe('EditPage', () => {
       isLoading: true,
       isError: false,
     });
-    
+
     renderEditPage('existing-page-id');
-    
+
     expect(screen.getByText('Loading page...')).toBeInTheDocument();
   });
 
@@ -213,9 +213,9 @@ describe('EditPage', () => {
       isLoading: false,
       isError: false,
     });
-    
+
     renderEditPage('existing-page-id');
-    
+
     await waitFor(() => {
       expect(markdownUtils.markdownToHtml).toHaveBeenCalledWith(pageContent);
       expect(screen.getByTestId('metadata-form')).toBeInTheDocument();
@@ -224,10 +224,10 @@ describe('EditPage', () => {
 
   it('shows unsaved changes indicator when content changes', async () => {
     renderEditPage('new');
-    
+
     const titleInput = screen.getByPlaceholderText('Page Title');
     fireEvent.change(titleInput, { target: { value: 'New Title' } });
-    
+
     await waitFor(() => {
       expect(screen.getByText('Unsaved changes')).toBeInTheDocument();
     });
@@ -235,7 +235,7 @@ describe('EditPage', () => {
 
   it('disables save button when metadata is incomplete', async () => {
     renderEditPage('new');
-    
+
     await waitFor(() => {
       const saveButton = screen.getByText('Create Page');
       // Button should be disabled if title or slug is missing
@@ -245,14 +245,14 @@ describe('EditPage', () => {
 
   it('includes metadata in save request', async () => {
     renderEditPage('new');
-    
+
     await waitFor(() => {
       expect(screen.getByTestId('metadata-form')).toBeInTheDocument();
     });
-    
+
     const saveButton = screen.getByText('Create Page');
     fireEvent.click(saveButton);
-    
+
     await waitFor(() => {
       expect(pagesApi.createPage).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -266,15 +266,15 @@ describe('EditPage', () => {
 
   it('creates new page with all metadata when save is clicked', async () => {
     renderEditPage('new');
-    
+
     // Wait for MetadataForm to call onChange
     await waitFor(() => {
       expect(screen.getByTestId('metadata-form')).toBeInTheDocument();
     });
-    
+
     const saveButton = screen.getByText('Create Page');
     fireEvent.click(saveButton);
-    
+
     await waitFor(() => {
       expect(pagesApi.createPage).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -289,13 +289,13 @@ describe('EditPage', () => {
 
   it('validates slug before saving', async () => {
     renderEditPage('new');
-    
+
     await waitFor(() => {
       expect(screen.getByTestId('metadata-form')).toBeInTheDocument();
     });
-    
+
     const saveButton = screen.getByText('Create Page');
-    
+
     // Button should be disabled if slug is missing
     expect(saveButton).toBeDisabled();
   });
@@ -315,16 +315,16 @@ describe('EditPage', () => {
       isLoading: false,
       isError: false,
     });
-    
+
     renderEditPage('existing-page-id');
-    
+
     await waitFor(() => {
       expect(screen.getByTestId('metadata-form')).toBeInTheDocument();
     });
-    
+
     const saveButton = screen.getByText('Save Changes');
     fireEvent.click(saveButton);
-    
+
     await waitFor(() => {
       expect(pagesApi.updatePage).toHaveBeenCalledWith(
         'existing-page-id',
@@ -342,15 +342,15 @@ describe('EditPage', () => {
       id: 'new-page-id',
       title: 'New Page',
     });
-    
+
     renderEditPage('new');
-    
+
     const titleInput = screen.getByPlaceholderText('Page Title');
     fireEvent.change(titleInput, { target: { value: 'New Page' } });
-    
+
     const saveButton = screen.getByText('Create Page');
     fireEvent.click(saveButton);
-    
+
     await waitFor(() => {
       expect(mockNavigate).toHaveBeenCalledWith('/pages/new-page-id');
     });
@@ -366,12 +366,12 @@ describe('EditPage', () => {
       isLoading: false,
       isError: false,
     });
-    
+
     renderEditPage('existing-page-id');
-    
+
     const saveButton = screen.getByText('Save Changes');
     fireEvent.click(saveButton);
-    
+
     await waitFor(() => {
       expect(mockNavigate).toHaveBeenCalledWith('/pages/existing-page-id');
     });
@@ -379,27 +379,27 @@ describe('EditPage', () => {
 
   it('shows confirmation when canceling with unsaved changes', () => {
     const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(false);
-    
+
     renderEditPage('new');
-    
+
     const titleInput = screen.getByPlaceholderText('Page Title');
     fireEvent.change(titleInput, { target: { value: 'Test' } });
-    
+
     const cancelButton = screen.getByText('Cancel');
     fireEvent.click(cancelButton);
-    
+
     expect(confirmSpy).toHaveBeenCalled();
     expect(mockNavigate).not.toHaveBeenCalled();
-    
+
     confirmSpy.mockRestore();
   });
 
   it('navigates when canceling without unsaved changes', () => {
     renderEditPage('new');
-    
+
     const cancelButton = screen.getByText('Cancel');
     fireEvent.click(cancelButton);
-    
+
     expect(mockNavigate).toHaveBeenCalledWith('/');
   });
 
@@ -413,33 +413,33 @@ describe('EditPage', () => {
       isLoading: false,
       isError: false,
     });
-    
+
     renderEditPage('existing-page-id');
-    
+
     const cancelButton = screen.getByText('Cancel');
     fireEvent.click(cancelButton);
-    
+
     expect(mockNavigate).toHaveBeenCalledWith('/pages/existing-page-id');
   });
 
   it('auto-saves draft to localStorage', async () => {
     vi.useFakeTimers();
-    
+
     renderEditPage('new');
-    
+
     const titleInput = screen.getByPlaceholderText('Page Title');
     fireEvent.change(titleInput, { target: { value: 'Draft Title' } });
-    
+
     // Fast-forward time
     vi.advanceTimersByTime(2500);
-    
+
     await waitFor(() => {
       const draft = localStorage.getItem('arcadium_draft_new');
       expect(draft).toBeTruthy();
       const parsed = JSON.parse(draft);
       expect(parsed.title).toBe('Draft Title');
     });
-    
+
     vi.useRealTimers();
   });
 
@@ -450,9 +450,9 @@ describe('EditPage', () => {
       timestamp: Date.now(),
     };
     localStorage.setItem('arcadium_draft_new', JSON.stringify(draft));
-    
+
     renderEditPage('new');
-    
+
     expect(screen.getByDisplayValue('Draft Title')).toBeInTheDocument();
     expect(screen.getByText('Unsaved changes')).toBeInTheDocument();
   });
@@ -464,12 +464,12 @@ describe('EditPage', () => {
       timestamp: Date.now(),
     };
     localStorage.setItem('arcadium_draft_new', JSON.stringify(draft));
-    
+
     renderEditPage('new');
-    
+
     const saveButton = screen.getByText('Create Page');
     fireEvent.click(saveButton);
-    
+
     await waitFor(() => {
       expect(localStorage.getItem('arcadium_draft_new')).toBeNull();
     });
@@ -478,51 +478,51 @@ describe('EditPage', () => {
   it('handles save error gracefully', async () => {
     const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     pagesApi.createPage.mockRejectedValue(new Error('Save failed'));
-    
+
     renderEditPage('new');
-    
+
     const titleInput = screen.getByPlaceholderText('Page Title');
     fireEvent.change(titleInput, { target: { value: 'Test' } });
-    
+
     const saveButton = screen.getByText('Create Page');
     fireEvent.click(saveButton);
-    
+
     await waitFor(() => {
       expect(pagesApi.createPage).toHaveBeenCalled();
     });
-    
+
     // Should not navigate on error
     expect(mockNavigate).not.toHaveBeenCalled();
-    
+
     consoleErrorSpy.mockRestore();
   });
 
   it('shows saving state during save operation', async () => {
     pagesApi.createPage.mockImplementation(() => new Promise(resolve => setTimeout(resolve, 100)));
-    
+
     renderEditPage('new');
-    
+
     const titleInput = screen.getByPlaceholderText('Page Title');
     fireEvent.change(titleInput, { target: { value: 'Test' } });
-    
+
     const saveButton = screen.getByText('Create Page');
     fireEvent.click(saveButton);
-    
+
     expect(screen.getByText('Saving...')).toBeInTheDocument();
     expect(saveButton).toBeDisabled();
   });
 
   it('converts HTML to markdown before saving', async () => {
     markdownUtils.htmlToMarkdown.mockReturnValue('# Markdown content');
-    
+
     renderEditPage('new');
-    
+
     const titleInput = screen.getByPlaceholderText('Page Title');
     fireEvent.change(titleInput, { target: { value: 'Test' } });
-    
+
     const saveButton = screen.getByText('Create Page');
     fireEvent.click(saveButton);
-    
+
     await waitFor(() => {
       expect(markdownUtils.htmlToMarkdown).toHaveBeenCalled();
     });
@@ -530,13 +530,13 @@ describe('EditPage', () => {
 
   it('trims title before saving', async () => {
     renderEditPage('new');
-    
+
     const titleInput = screen.getByPlaceholderText('Page Title');
     fireEvent.change(titleInput, { target: { value: '  Trimmed Title  ' } });
-    
+
     const saveButton = screen.getByText('Create Page');
     fireEvent.click(saveButton);
-    
+
     await waitFor(() => {
       expect(pagesApi.createPage).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -556,9 +556,9 @@ describe('EditPage', () => {
       isLoading: false,
       isError: false,
     });
-    
+
     renderEditPage('existing-page-id');
-    
+
     expect(screen.getByDisplayValue('Page Without Content')).toBeInTheDocument();
     expect(screen.getByTestId('editor')).toBeInTheDocument();
   });
@@ -569,16 +569,16 @@ describe('EditPage', () => {
       isLoading: false,
       isError: true,
     });
-    
+
     renderEditPage('existing-page-id');
-    
+
     // Should still render the editor (graceful degradation)
     expect(screen.getByTestId('editor')).toBeInTheDocument();
   });
 
   it('displays preview toggle button', () => {
     renderEditPage('new');
-    
+
     const previewToggle = screen.getByLabelText(/Show preview/i);
     expect(previewToggle).toBeInTheDocument();
   });
@@ -586,10 +586,10 @@ describe('EditPage', () => {
   it('switches to preview mode when toggle is clicked', async () => {
     const user = userEvent.setup();
     renderEditPage('new');
-    
+
     const previewToggle = screen.getByLabelText(/Show preview/i);
     await user.click(previewToggle);
-    
+
     // Should show preview instead of editor
     expect(screen.queryByTestId('editor')).not.toBeInTheDocument();
     const preview = document.querySelector('.arc-edit-page-preview');
@@ -599,13 +599,13 @@ describe('EditPage', () => {
   it('switches back to editor mode when toggle is clicked again', async () => {
     const user = userEvent.setup();
     renderEditPage('new');
-    
+
     const previewToggle = screen.getByLabelText(/Show preview/i);
     await user.click(previewToggle);
-    
+
     const editToggle = screen.getByLabelText(/Show editor/i);
     await user.click(editToggle);
-    
+
     expect(screen.getByTestId('editor')).toBeInTheDocument();
     const preview = document.querySelector('.arc-edit-page-preview');
     expect(preview).not.toBeInTheDocument();
@@ -614,12 +614,12 @@ describe('EditPage', () => {
   it('displays preview with rendered markdown content', async () => {
     const user = userEvent.setup();
     markdownUtils.markdownToHtml.mockReturnValue('<h1>Rendered Content</h1>');
-    
+
     renderEditPage('new');
-    
+
     const previewToggle = screen.getByLabelText(/Show preview/i);
     await user.click(previewToggle);
-    
+
     await waitFor(() => {
       const preview = document.querySelector('.arc-edit-page-preview');
       expect(preview).toBeInTheDocument();
@@ -630,25 +630,25 @@ describe('EditPage', () => {
   it('updates preview when editor content changes', async () => {
     const user = userEvent.setup();
     markdownUtils.markdownToHtml.mockReturnValue('<p>Updated Content</p>');
-    
+
     renderEditPage('new');
-    
+
     // Switch to preview
     const previewToggle = screen.getByLabelText(/Show preview/i);
     await user.click(previewToggle);
-    
+
     // Switch back to editor and make changes
     const editToggle = screen.getByLabelText(/Show editor/i);
     await user.click(editToggle);
-    
+
     // Simulate editor content change
     const editor = screen.getByTestId('editor');
     const mockOnChange = vi.fn();
     // The editor mock should trigger onChange
-    
+
     // Switch back to preview
     await user.click(previewToggle);
-    
+
     // Preview should reflect changes
     await waitFor(() => {
       expect(markdownUtils.markdownToHtml).toHaveBeenCalled();

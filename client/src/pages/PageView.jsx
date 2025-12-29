@@ -25,7 +25,7 @@ export function PageView() {
   const { data: navigation } = usePageNavigation(pageId);
   const { data: comments } = useComments(pageId);
   const contentRef = useRef(null);
-  
+
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showArchiveDialog, setShowArchiveDialog] = useState(false);
   const [showUnarchiveDialog, setShowUnarchiveDialog] = useState(false);
@@ -94,17 +94,17 @@ export function PageView() {
   const prevAuthRef = useRef(isAuthenticated);
   useEffect(() => {
     if (!pageId) return;
-    
+
     const authChanged = prevAuthRef.current !== isAuthenticated;
-    
+
     // Check if we just signed in (flag set by SignInPage)
     const justSignedIn = sessionStorage.getItem('justSignedIn') === 'true';
-    
+
     // Refetch if:
     // 1. Authentication state changed (user signed in/out while on this page), OR
     // 2. We just signed in (flag is set, meaning we navigated here after sign-in)
     const shouldRefetch = authChanged || justSignedIn;
-    
+
     if (shouldRefetch) {
       // Force refetch of all page-related queries to get updated permissions
       // Use refetchQueries to ensure immediate refetch regardless of staleTime
@@ -112,13 +112,13 @@ export function PageView() {
       queryClient.refetchQueries({ queryKey: ['breadcrumb', pageId] });
       queryClient.refetchQueries({ queryKey: ['pageNavigation', pageId] });
       queryClient.refetchQueries({ queryKey: ['comments', pageId] });
-      
+
       // Clear the flag after refetching
       if (justSignedIn) {
         sessionStorage.removeItem('justSignedIn');
       }
     }
-    
+
     // Update ref to track current auth state
     prevAuthRef.current = isAuthenticated;
   }, [isAuthenticated, pageId, queryClient]);
@@ -147,7 +147,7 @@ export function PageView() {
     content = (
       <>
         {breadcrumb && <Breadcrumb breadcrumb={breadcrumb} currentPageId={pageId} />}
-        
+
         <header className="arc-page-header">
           <div className="arc-page-header-top">
             <h1>{page.title}</h1>
@@ -245,7 +245,7 @@ export function PageView() {
       <Layout sidebar={<Sidebar />} rightSidebar={rightSidebar}>
         {content}
       </Layout>
-      
+
       {showDeleteDialog && (
         <DeleteArchiveDialog
           isOpen={showDeleteDialog}
@@ -256,7 +256,7 @@ export function PageView() {
           isProcessing={deleteMutation.isPending}
         />
       )}
-      
+
       {showArchiveDialog && (
         <DeleteArchiveDialog
           isOpen={showArchiveDialog}
@@ -267,7 +267,7 @@ export function PageView() {
           isProcessing={archiveMutation.isPending}
         />
       )}
-      
+
       {showUnarchiveDialog && (
         <DeleteArchiveDialog
           isOpen={showUnarchiveDialog}

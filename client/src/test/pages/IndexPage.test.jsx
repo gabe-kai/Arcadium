@@ -149,15 +149,15 @@ describe('IndexPage', () => {
     });
 
     renderIndexPage();
-    
+
     // Check that page counts are displayed
     const letterButtons = screen.getAllByText(/^[AB]$/);
     expect(letterButtons.length).toBeGreaterThan(0);
-    
+
     // Check for count indicators (they should be in the button text or title)
     const aButton = screen.getByText('A').closest('button');
     expect(aButton).toHaveAttribute('title', '3 pages');
-    
+
     const bButton = screen.getByText('B').closest('button');
     expect(bButton).toHaveAttribute('title', '1 page');
   });

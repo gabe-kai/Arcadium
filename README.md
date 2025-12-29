@@ -48,6 +48,34 @@ pip install psycopg2-binary --only-binary :all:
 
 **See [Requirements Structure](docs/requirements-structure.md) for details on the hierarchical requirements system.**
 
+### Pre-commit Hooks
+
+This project uses [pre-commit](https://pre-commit.com/) to ensure code quality and consistency. The hooks run automatically on git commits and can also be run manually.
+
+**Setup:**
+```bash
+# Install pre-commit (if not already installed)
+pip install pre-commit
+
+# Install git hooks
+pre-commit install
+
+# Run hooks on all files (optional, for initial setup)
+pre-commit run --all-files
+```
+
+**Hooks included:**
+- **Trailing whitespace** - Removes trailing whitespace
+- **End of file fixer** - Ensures files end with newline
+- **Mixed line ending** - Normalizes line endings
+- **Merge conflict** - Detects merge conflict markers
+- **YAML/JSON/TOML** - Validates configuration files
+- **Ruff** - Python linter and formatter
+- **Black** - Python code formatter
+- **isort** - Python import sorter
+
+The hooks will run automatically on `git commit`. To skip hooks (not recommended), use `git commit --no-verify`.
+
 ### Database Setup
 
 Each service uses its own PostgreSQL database. See [Database Configuration](docs/architecture/database-configuration.md) for details.
@@ -143,5 +171,6 @@ The web client is a React-based SPA located in `client/`. See [Client README](cl
 
 1. Create a feature branch
 2. Make your changes
-3. Ensure all tests pass
-4. Submit a pull request
+3. Ensure pre-commit hooks pass (run `pre-commit run --all-files` if needed)
+4. Ensure all tests pass
+5. Submit a pull request

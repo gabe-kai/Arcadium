@@ -35,7 +35,7 @@ describe('TableOfContents', () => {
     ];
 
     render(<TableOfContents toc={toc} contentRef={contentRef} />);
-    
+
     expect(screen.getByText('Contents')).toBeInTheDocument();
     expect(screen.getByText('Section 1')).toBeInTheDocument();
     expect(screen.getByText('Section 2')).toBeInTheDocument();
@@ -50,12 +50,12 @@ describe('TableOfContents', () => {
     ];
 
     render(<TableOfContents toc={toc} contentRef={contentRef} />);
-    
+
     const items = screen.getAllByRole('button');
     const section1 = items.find(item => item.textContent === 'Section 1');
     const subsection = items.find(item => item.textContent === 'Subsection');
     const subsubsection = items.find(item => item.textContent === 'Subsubsection');
-    
+
     expect(section1.closest('li')).toHaveClass('arc-toc-item-level-2');
     expect(subsection.closest('li')).toHaveClass('arc-toc-item-level-3');
     expect(subsubsection.closest('li')).toHaveClass('arc-toc-item-level-4');
@@ -76,7 +76,7 @@ describe('TableOfContents', () => {
     mockElement.scrollIntoView = vi.fn();
 
     render(<TableOfContents toc={toc} contentRef={contentRef} />);
-    
+
     const button = screen.getByRole('button', { name: 'Section 1' });
     fireEvent.click(button);
 
@@ -119,7 +119,7 @@ describe('TableOfContents', () => {
     mockElement.scrollIntoView = vi.fn();
 
     render(<TableOfContents toc={toc} contentRef={contentRef} />);
-    
+
     const button = screen.getByRole('button', { name: 'Section 1' });
     fireEvent.click(button);
 
@@ -134,7 +134,7 @@ describe('TableOfContents', () => {
     ];
 
     render(<TableOfContents toc={toc} contentRef={contentRef} />);
-    
+
     const nav = screen.getByRole('navigation', { name: 'Table of contents' });
     expect(nav).toBeInTheDocument();
   });
@@ -146,7 +146,7 @@ describe('TableOfContents', () => {
     ];
 
     render(<TableOfContents toc={toc} contentRef={contentRef} />);
-    
+
     expect(screen.getByText('Section 1')).toBeInTheDocument();
     expect(screen.getByText('Section 1 Duplicate')).toBeInTheDocument();
   });
@@ -170,7 +170,7 @@ describe('TableOfContents', () => {
     ];
 
     render(<TableOfContents toc={toc} contentRef={contentRef} />);
-    
+
     expect(screen.getByText(longTitle)).toBeInTheDocument();
   });
 
@@ -180,7 +180,7 @@ describe('TableOfContents', () => {
     ];
 
     render(<TableOfContents toc={toc} contentRef={contentRef} />);
-    
+
     expect(screen.getByText('Section & < > " \' Special')).toBeInTheDocument();
   });
 
@@ -194,7 +194,7 @@ describe('TableOfContents', () => {
     ];
 
     render(<TableOfContents toc={toc} contentRef={contentRef} />);
-    
+
     expect(screen.getByText('H2')).toBeInTheDocument();
     expect(screen.getByText('H3')).toBeInTheDocument();
     expect(screen.getByText('H4')).toBeInTheDocument();
@@ -227,19 +227,19 @@ describe('TableOfContents', () => {
     container.appendChild(mockElement);
 
     const { unmount } = render(<TableOfContents toc={toc} contentRef={contentRef} />);
-    
+
     // Wait for scroll listener to be added
     await waitFor(() => {
       expect(addEventListenerSpy).toHaveBeenCalledWith('scroll', expect.any(Function), { passive: true });
     });
-    
+
     // Get the handler function that was added
     const scrollHandler = addEventListenerSpy.mock.calls.find(
       call => call[0] === 'scroll'
     )?.[1];
-    
+
     unmount();
-    
+
     // Cleanup should be called with the same handler function
     if (scrollHandler) {
       expect(removeEventListenerSpy).toHaveBeenCalledWith('scroll', scrollHandler);
@@ -247,7 +247,7 @@ describe('TableOfContents', () => {
       // If we can't find the exact handler, at least verify cleanup was attempted
       expect(removeEventListenerSpy).toHaveBeenCalled();
     }
-    
+
     addEventListenerSpy.mockRestore();
     removeEventListenerSpy.mockRestore();
   });
@@ -258,10 +258,10 @@ describe('TableOfContents', () => {
     ];
 
     const { rerender } = render(<TableOfContents toc={toc} contentRef={contentRef} />);
-    
+
     // Change contentRef to null
     rerender(<TableOfContents toc={toc} contentRef={{ current: null }} />);
-    
+
     // Should not crash
     expect(screen.getByText('Section 1')).toBeInTheDocument();
   });
@@ -273,7 +273,7 @@ describe('TableOfContents', () => {
     ];
 
     render(<TableOfContents toc={shortToc} contentRef={contentRef} />);
-    
+
     const toggleButton = screen.getByLabelText(/Collapse table of contents/i);
     expect(toggleButton).toBeInTheDocument();
   });
@@ -288,7 +288,7 @@ describe('TableOfContents', () => {
     ];
 
     render(<TableOfContents toc={longToc} contentRef={contentRef} />);
-    
+
     const toggleButton = screen.queryByLabelText(/Collapse table of contents/i);
     expect(toggleButton).not.toBeInTheDocument();
   });
@@ -300,12 +300,12 @@ describe('TableOfContents', () => {
     ];
 
     render(<TableOfContents toc={shortToc} contentRef={contentRef} />);
-    
+
     const toggleButton = screen.getByLabelText(/Collapse table of contents/i);
     expect(screen.getByText('Section 1')).toBeInTheDocument();
-    
+
     await user.click(toggleButton);
-    
+
     expect(screen.queryByText('Section 1')).not.toBeInTheDocument();
     expect(screen.getByLabelText(/Expand table of contents/i)).toBeInTheDocument();
   });
@@ -317,13 +317,13 @@ describe('TableOfContents', () => {
     ];
 
     render(<TableOfContents toc={shortToc} contentRef={contentRef} />);
-    
+
     const toggleButton = screen.getByLabelText(/Collapse table of contents/i);
     await user.click(toggleButton);
-    
+
     const expandButton = screen.getByLabelText(/Expand table of contents/i);
     await user.click(expandButton);
-    
+
     expect(screen.getByText('Section 1')).toBeInTheDocument();
   });
 });

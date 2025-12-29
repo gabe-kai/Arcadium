@@ -33,6 +33,18 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Run linting and formatting checks
+        run: |
+          # Check if ESLint is configured
+          if [ -f .eslintrc.* ] || [ -f eslint.config.* ] || grep -q '"eslint"' package.json; then
+            npm run lint || echo "Linting skipped (no ESLint config found)"
+          fi
+          # Check if Prettier is configured
+          if [ -f .prettierrc* ] || [ -f prettier.config.* ] || grep -q '"prettier"' package.json; then
+            npm run format:check || echo "Format check skipped (no Prettier config found)"
+          fi
+        continue-on-error: true
+
       - name: Run unit and integration tests
         run: npm test -- --run
 

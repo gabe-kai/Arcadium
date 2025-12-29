@@ -153,11 +153,11 @@ export function LinkDialog({ isOpen, onClose, onInsert, initialUrl = '' }) {
                 onChange={(e) => setSearchQuery(e.target.value)}
                 autoFocus
               />
-              
+
               {isSearching && (
                 <div className="arc-link-dialog-loading">Searching...</div>
               )}
-              
+
               {!isSearching && searchResults.length > 0 && (
                 <ul className="arc-link-dialog-results">
                   {searchResults.map((page) => (
@@ -176,7 +176,7 @@ export function LinkDialog({ isOpen, onClose, onInsert, initialUrl = '' }) {
                   ))}
                 </ul>
               )}
-              
+
               {!isSearching && searchQuery.trim() && searchResults.length === 0 && (
                 <div className="arc-link-dialog-no-results">No pages found</div>
               )}

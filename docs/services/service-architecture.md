@@ -206,4 +206,3 @@ GET /api/status
 - Load balancing
 - Service mesh for advanced routing
 - Auto-scaling based on metrics
-

@@ -25,4 +25,3 @@ COPY --from=builder /app/server .
 EXPOSE 8080 8081
 
 CMD ["./server"]
-

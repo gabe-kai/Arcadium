@@ -235,4 +235,3 @@ Section:     [Select section... ▼]
 - Fast section boundary detection
 - Minimal database queries
 - Optimize link updates
-

@@ -422,7 +422,7 @@ pytest tests/test_api/
 pytest tests/test_sync/
 ```
 
-**Note:** 
+**Note:**
 - **Recommended:** Use PostgreSQL for testing to match production behavior (especially important for UUID handling)
 - **Alternative:** SQLite in-memory can be used for faster unit tests, but may have limitations with UUID types
 - Set `TEST_DATABASE_URL` environment variable to use PostgreSQL: `postgresql://user:password@host:port/database`
@@ -547,9 +547,9 @@ def db_session(app):
     connection = db.engine.connect()
     transaction = connection.begin()
     session = db.session
-    
+
     yield session
-    
+
     session.close()
     transaction.rollback()
     connection.close()

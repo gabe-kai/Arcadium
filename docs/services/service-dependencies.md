@@ -309,4 +309,3 @@ Client → Auth Service (for login/registration)
 - [Notification Service API](api/notification-api.md)
 
 All services now have basic documentation with wiki-specific integration details included.
-

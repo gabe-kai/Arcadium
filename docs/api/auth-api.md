@@ -34,7 +34,7 @@ POST /api/auth/register
 }
 ```
 
-**Note:** 
+**Note:**
 - First user to register automatically receives `admin` role
 - Subsequent users default to `player` role
 - Email verification required for non-first users
@@ -442,4 +442,3 @@ Both services use shared authentication utilities from `shared/auth/`:
   "error": "Internal server error"
 }
 ```
-

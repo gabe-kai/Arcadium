@@ -13,4 +13,3 @@ Infrastructure as code for the Arcadium project.
 - `setup.sh` - Initial project setup
 - `migrate.sh` - Run database migrations
 - `deploy.sh` - Deploy services to production/staging
-

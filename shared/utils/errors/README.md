@@ -8,4 +8,3 @@ Shared error handling and error response formatting.
 - Error response formatting
 - Error codes
 - Error translation
-

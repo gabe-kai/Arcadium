@@ -40,7 +40,7 @@ describe('ImageUploadDialog', () => {
         onInsert={mockOnInsert}
       />
     );
-    
+
     expect(screen.queryByText('Insert Image')).not.toBeInTheDocument();
   });
 
@@ -52,7 +52,7 @@ describe('ImageUploadDialog', () => {
         onInsert={mockOnInsert}
       />
     );
-    
+
     // Dialog should be visible
     expect(screen.getByText('Insert Image')).toBeInTheDocument();
   });
@@ -66,10 +66,10 @@ describe('ImageUploadDialog', () => {
         onInsert={mockOnInsert}
       />
     );
-    
+
     const closeButton = screen.getByLabelText('Close');
     await user.click(closeButton);
-    
+
     expect(mockOnClose).toHaveBeenCalledTimes(1);
   });
 
@@ -81,10 +81,10 @@ describe('ImageUploadDialog', () => {
         onInsert={mockOnInsert}
       />
     );
-    
+
     const overlay = document.querySelector('.arc-image-dialog-overlay');
     fireEvent.mouseDown(overlay);
-    
+
     expect(mockOnClose).toHaveBeenCalled();
   });
 
@@ -96,7 +96,7 @@ describe('ImageUploadDialog', () => {
         onInsert={mockOnInsert}
       />
     );
-    
+
     expect(screen.getByLabelText(/Image URL:/i)).toBeInTheDocument();
   });
 
@@ -109,20 +109,20 @@ describe('ImageUploadDialog', () => {
         onInsert={mockOnInsert}
       />
     );
-    
+
     const uploadTab = screen.getByText('Upload');
     await user.click(uploadTab);
-    
+
     const fileInput = document.querySelector('input[type="file"]');
     const invalidFile = new File(['content'], 'test.txt', { type: 'text/plain' });
-    
+
     Object.defineProperty(fileInput, 'files', {
       value: [invalidFile],
       writable: false,
     });
-    
+
     fireEvent.change(fileInput);
-    
+
     await waitFor(() => {
       expect(screen.getByText(/Please select an image file/i)).toBeInTheDocument();
     });
@@ -137,21 +137,21 @@ describe('ImageUploadDialog', () => {
         onInsert={mockOnInsert}
       />
     );
-    
+
     const uploadTab = screen.getByText('Upload');
     await user.click(uploadTab);
-    
+
     const fileInput = document.querySelector('input[type="file"]');
     // Create a file larger than 10MB
     const largeFile = new File(['x'.repeat(11 * 1024 * 1024)], 'large.jpg', { type: 'image/jpeg' });
-    
+
     Object.defineProperty(fileInput, 'files', {
       value: [largeFile],
       writable: false,
     });
-    
+
     fireEvent.change(fileInput);
-    
+
     await waitFor(() => {
       expect(screen.getByText(/File is too large/i)).toBeInTheDocument();
     });
@@ -166,20 +166,20 @@ describe('ImageUploadDialog', () => {
         onInsert={mockOnInsert}
       />
     );
-    
+
     const uploadTab = screen.getByText('Upload');
     await user.click(uploadTab);
-    
+
     const fileInput = document.querySelector('input[type="file"]');
     const imageFile = new File(['image content'], 'test.jpg', { type: 'image/jpeg' });
-    
+
     Object.defineProperty(fileInput, 'files', {
       value: [imageFile],
       writable: false,
     });
-    
+
     fireEvent.change(fileInput);
-    
+
     await waitFor(() => {
       const preview = screen.getByAltText('Preview');
       expect(preview).toBeInTheDocument();
@@ -206,27 +206,27 @@ describe('ImageUploadDialog', () => {
         pageId="page-1"
       />
     );
-    
+
     const uploadTab = screen.getByText('Upload');
     await user.click(uploadTab);
-    
+
     const fileInput = document.querySelector('input[type="file"]');
     const imageFile = new File(['image content'], 'test.jpg', { type: 'image/jpeg' });
-    
+
     Object.defineProperty(fileInput, 'files', {
       value: [imageFile],
       writable: false,
     });
-    
+
     fireEvent.change(fileInput);
-    
+
     await waitFor(() => {
       expect(screen.getByText('Upload Image')).toBeInTheDocument();
     });
-    
+
     const uploadButton = screen.getByText('Upload Image');
     await user.click(uploadButton);
-    
+
     await waitFor(() => {
       expect(apiClient.post).toHaveBeenCalledWith(
         '/upload/image',
@@ -238,7 +238,7 @@ describe('ImageUploadDialog', () => {
         })
       );
     });
-    
+
     await waitFor(() => {
       expect(mockOnInsert).toHaveBeenCalledWith('/uploads/images/test-uuid.jpg');
       expect(mockOnClose).toHaveBeenCalled();
@@ -258,27 +258,27 @@ describe('ImageUploadDialog', () => {
         onInsert={mockOnInsert}
       />
     );
-    
+
     const uploadTab = screen.getByText('Upload');
     await user.click(uploadTab);
-    
+
     const fileInput = document.querySelector('input[type="file"]');
     const imageFile = new File(['image content'], 'test.jpg', { type: 'image/jpeg' });
-    
+
     Object.defineProperty(fileInput, 'files', {
       value: [imageFile],
       writable: false,
     });
-    
+
     fireEvent.change(fileInput);
-    
+
     await waitFor(() => {
       expect(screen.getByText('Upload Image')).toBeInTheDocument();
     });
-    
+
     const uploadButton = screen.getByText('Upload Image');
     await user.click(uploadButton);
-    
+
     await waitFor(() => {
       expect(screen.getByText('Upload failed')).toBeInTheDocument();
     });
@@ -293,13 +293,13 @@ describe('ImageUploadDialog', () => {
         onInsert={mockOnInsert}
       />
     );
-    
+
     const urlInput = screen.getByLabelText(/Image URL:/i);
     await user.type(urlInput, 'https://example.com/image.jpg');
-    
+
     const insertButton = screen.getByRole('button', { name: 'Insert Image' });
     await user.click(insertButton);
-    
+
     expect(mockOnInsert).toHaveBeenCalledWith('https://example.com/image.jpg');
     expect(mockOnClose).toHaveBeenCalled();
   });
@@ -313,10 +313,10 @@ describe('ImageUploadDialog', () => {
         onInsert={mockOnInsert}
       />
     );
-    
+
     const urlInput = screen.getByLabelText(/Image URL:/i);
     await user.type(urlInput, 'https://example.com/image.jpg');
-    
+
     // Wait for image to load (or fail)
     await waitFor(() => {
       const preview = screen.queryByAltText('Preview');
@@ -334,10 +334,10 @@ describe('ImageUploadDialog', () => {
         onInsert={mockOnInsert}
       />
     );
-    
+
     const urlInput = screen.getByLabelText(/Image URL:/i);
     await user.type(urlInput, 'https://test.com/image.jpg');
-    
+
     // Close dialog
     rerender(
       <ImageUploadDialog
@@ -346,7 +346,7 @@ describe('ImageUploadDialog', () => {
         onInsert={mockOnInsert}
       />
     );
-    
+
     // Reopen dialog
     rerender(
       <ImageUploadDialog
@@ -355,7 +355,7 @@ describe('ImageUploadDialog', () => {
         onInsert={mockOnInsert}
       />
     );
-    
+
     // URL should be reset
     const newUrlInput = screen.getByLabelText(/Image URL:/i);
     expect(newUrlInput).toHaveValue('');
@@ -375,27 +375,27 @@ describe('ImageUploadDialog', () => {
         pageId="page-123"
       />
     );
-    
+
     const uploadTab = screen.getByText('Upload');
     await user.click(uploadTab);
-    
+
     const fileInput = document.querySelector('input[type="file"]');
     const imageFile = new File(['image content'], 'test.jpg', { type: 'image/jpeg' });
-    
+
     Object.defineProperty(fileInput, 'files', {
       value: [imageFile],
       writable: false,
     });
-    
+
     fireEvent.change(fileInput);
-    
+
     await waitFor(() => {
       expect(screen.getByText('Upload Image')).toBeInTheDocument();
     });
-    
+
     const uploadButton = screen.getByText('Upload Image');
     await user.click(uploadButton);
-    
+
     await waitFor(() => {
       expect(apiClient.post).toHaveBeenCalled();
       const formData = apiClient.post.mock.calls[0][1];

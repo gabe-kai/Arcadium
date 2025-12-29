@@ -1,5 +1,5 @@
 # Auth Service - Service-Specific Dependencies
-# 
+#
 # This file contains ONLY dependencies specific to the Auth Service.
 # Shared dependencies (Flask, SQLAlchemy, etc.) are in the root requirements.txt
 #

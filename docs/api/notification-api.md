@@ -341,4 +341,3 @@ CREATE INDEX idx_notifications_type ON notifications(type);
   "error": "Internal server error"
 }
 ```
-

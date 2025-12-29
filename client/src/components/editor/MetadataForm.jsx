@@ -4,7 +4,7 @@ import { searchPages, validateSlug } from '../../services/api/pages';
 
 /**
  * MetadataForm component for editing page metadata
- * 
+ *
  * Fields:
  * - Title (required)
  * - Slug (auto-generated from title, editable)
@@ -13,12 +13,12 @@ import { searchPages, validateSlug } from '../../services/api/pages';
  * - Order (number input)
  * - Status (published/draft toggle)
  */
-export function MetadataForm({ 
-  initialData = {}, 
-  onChange, 
+export function MetadataForm({
+  initialData = {},
+  onChange,
   errors = {},
   isNewPage = false,
-  excludePageId = null 
+  excludePageId = null
 }) {
   const safeInitialData = initialData || {};
   const [title, setTitle] = useState(safeInitialData.title || '');
@@ -32,7 +32,7 @@ export function MetadataForm({
   const [slugValidation, setSlugValidation] = useState({ valid: true, message: '' });
   const [isValidatingSlug, setIsValidatingSlug] = useState(false);
   const [showParentDropdown, setShowParentDropdown] = useState(false);
-  
+
   const slugValidationTimerRef = useRef(null);
   const parentSearchTimerRef = useRef(null);
   const parentDropdownRef = useRef(null);
@@ -123,10 +123,10 @@ export function MetadataForm({
           order: order !== '' ? parseInt(order, 10) : null,
           status,
         };
-        
+
         // Store what we're sending to prevent feedback loops
         lastSyncedDataRef.current = newData;
-        
+
         onChange(newData);
       }, 150); // Slightly longer debounce to reduce flicker
 
@@ -137,16 +137,16 @@ export function MetadataForm({
   // Update form when initialData changes (only on mount or when external changes occur)
   // Use a ref to track the last synced values to prevent feedback loops
   const lastSyncedDataRef = useRef(null);
-  
+
   useEffect(() => {
     const safeData = initialData || {};
-    
+
     // Skip if this is the same data we just sent (prevent feedback loop)
-    if (lastSyncedDataRef.current && 
+    if (lastSyncedDataRef.current &&
         JSON.stringify(safeData) === JSON.stringify(lastSyncedDataRef.current)) {
       return;
     }
-    
+
     // Only update if values are actually different and not currently being edited
     if (safeData.title !== undefined && safeData.title !== title && safeData.title !== '') {
       setTitle(safeData.title || '');
@@ -166,7 +166,7 @@ export function MetadataForm({
     if (safeData.status !== undefined && safeData.status !== status) {
       setStatus(safeData.status || 'draft');
     }
-    
+
     // Store what we synced to prevent loops
     lastSyncedDataRef.current = safeData;
   }, [initialData]);
@@ -174,7 +174,7 @@ export function MetadataForm({
   const handleTitleChange = (e) => {
     const newTitle = e.target.value;
     setTitle(newTitle);
-    
+
     // Auto-generate slug only if it hasn't been manually edited
     if (!slugManuallyEditedRef.current) {
       const generated = generateSlug(newTitle);
@@ -212,7 +212,7 @@ export function MetadataForm({
   return (
     <div className="arc-metadata-form" data-testid="metadata-form">
       <h3 className="arc-metadata-form-title">Page Metadata</h3>
-      
+
       {/* Title */}
       <div className="arc-metadata-form-field">
         <label htmlFor="metadata-title" className="arc-metadata-form-label">

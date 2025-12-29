@@ -42,7 +42,7 @@ describe('API Client', () => {
   it('handles environment variable override for base URL', () => {
     // Test that baseURL can be configured via env var
     const originalEnv = import.meta.env.VITE_WIKI_API_BASE_URL;
-    
+
     // Note: In actual tests, you'd need to mock the env var differently
     // This test verifies the fallback behavior
     expect(apiClient.defaults.baseURL).toBeTruthy();

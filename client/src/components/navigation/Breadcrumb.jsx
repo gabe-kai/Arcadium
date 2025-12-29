@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 
 /**
  * Breadcrumb component displays navigation trail from root to current page
- * 
+ *
  * @param {Array} breadcrumb - Array of { id, title, slug } objects from root to current
  * @param {string} currentPageId - ID of the current page (to disable link on last item)
  */

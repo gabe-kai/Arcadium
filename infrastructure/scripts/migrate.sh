@@ -30,4 +30,3 @@ for migration in $(ls -1 $MIGRATIONS_DIR/*.sql 2>/dev/null | sort); do
 done
 
 echo "Migrations complete!"
-

@@ -29,11 +29,11 @@ describe('TableDialog', () => {
     render(
       <TableDialog isOpen={true} onClose={mockOnClose} onInsert={mockOnInsert} />
     );
-    
+
     const rowsInput = screen.getByLabelText(/Rows:/i);
     const colsInput = screen.getByLabelText(/Columns:/i);
     const headerCheckbox = screen.getByLabelText(/Header row/i);
-    
+
     expect(rowsInput).toHaveValue(3);
     expect(colsInput).toHaveValue(3);
     expect(headerCheckbox).toBeChecked();
@@ -43,10 +43,10 @@ describe('TableDialog', () => {
     render(
       <TableDialog isOpen={true} onClose={mockOnClose} onInsert={mockOnInsert} />
     );
-    
+
     const rowsInput = screen.getByLabelText(/Rows:/i);
     fireEvent.change(rowsInput, { target: { value: '5' } });
-    
+
     expect(rowsInput).toHaveValue(5);
   });
 
@@ -54,10 +54,10 @@ describe('TableDialog', () => {
     render(
       <TableDialog isOpen={true} onClose={mockOnClose} onInsert={mockOnInsert} />
     );
-    
+
     const colsInput = screen.getByLabelText(/Columns:/i);
     fireEvent.change(colsInput, { target: { value: '4' } });
-    
+
     expect(colsInput).toHaveValue(4);
   });
 
@@ -66,13 +66,13 @@ describe('TableDialog', () => {
     render(
       <TableDialog isOpen={true} onClose={mockOnClose} onInsert={mockOnInsert} />
     );
-    
+
     const headerCheckbox = screen.getByLabelText(/Header row/i);
     expect(headerCheckbox).toBeChecked();
-    
+
     await user.click(headerCheckbox);
     expect(headerCheckbox).not.toBeChecked();
-    
+
     await user.click(headerCheckbox);
     expect(headerCheckbox).toBeChecked();
   });
@@ -82,25 +82,25 @@ describe('TableDialog', () => {
     render(
       <TableDialog isOpen={true} onClose={mockOnClose} onInsert={mockOnInsert} />
     );
-    
+
     const rowsInput = screen.getByLabelText(/Rows:/i);
     const colsInput = screen.getByLabelText(/Columns:/i);
-    
+
     // Change rows using fireEvent for number inputs
     fireEvent.change(rowsInput, { target: { value: '4' } });
-    
+
     // Change columns
     fireEvent.change(colsInput, { target: { value: '5' } });
-    
+
     // Wait for values to update
     await waitFor(() => {
       expect(rowsInput).toHaveValue(4);
       expect(colsInput).toHaveValue(5);
     });
-    
+
     const insertButton = screen.getByRole('button', { name: /Insert Table/i });
     await user.click(insertButton);
-    
+
     expect(mockOnInsert).toHaveBeenCalledWith({
       rows: 4,
       cols: 5,
@@ -114,10 +114,10 @@ describe('TableDialog', () => {
     render(
       <TableDialog isOpen={true} onClose={mockOnClose} onInsert={mockOnInsert} />
     );
-    
+
     const cancelButton = screen.getByText('Cancel');
     await user.click(cancelButton);
-    
+
     expect(mockOnClose).toHaveBeenCalled();
     expect(mockOnInsert).not.toHaveBeenCalled();
   });
@@ -127,10 +127,10 @@ describe('TableDialog', () => {
     render(
       <TableDialog isOpen={true} onClose={mockOnClose} onInsert={mockOnInsert} />
     );
-    
+
     const closeButton = screen.getByLabelText(/Close/i);
     await user.click(closeButton);
-    
+
     expect(mockOnClose).toHaveBeenCalled();
   });
 
@@ -139,9 +139,9 @@ describe('TableDialog', () => {
     render(
       <TableDialog isOpen={true} onClose={mockOnClose} onInsert={mockOnInsert} />
     );
-    
+
     await user.keyboard('{Escape}');
-    
+
     expect(mockOnClose).toHaveBeenCalled();
   });
 
@@ -150,11 +150,11 @@ describe('TableDialog', () => {
     render(
       <TableDialog isOpen={true} onClose={mockOnClose} onInsert={mockOnInsert} />
     );
-    
+
     const rowsInput = screen.getByLabelText(/Rows:/i);
     await user.clear(rowsInput);
     await user.type(rowsInput, '0');
-    
+
     // Should not accept 0, but we can't easily test the min attribute behavior
     // Just verify the input exists and has min attribute
     expect(rowsInput).toHaveAttribute('min', '1');
@@ -164,7 +164,7 @@ describe('TableDialog', () => {
     render(
       <TableDialog isOpen={true} onClose={mockOnClose} onInsert={mockOnInsert} />
     );
-    
+
     const rowsInput = screen.getByLabelText(/Rows:/i);
     expect(rowsInput).toHaveAttribute('max', '20');
   });
@@ -173,7 +173,7 @@ describe('TableDialog', () => {
     render(
       <TableDialog isOpen={true} onClose={mockOnClose} onInsert={mockOnInsert} />
     );
-    
+
     const colsInput = screen.getByLabelText(/Columns:/i);
     expect(colsInput).toHaveAttribute('min', '1');
   });
@@ -182,7 +182,7 @@ describe('TableDialog', () => {
     render(
       <TableDialog isOpen={true} onClose={mockOnClose} onInsert={mockOnInsert} />
     );
-    
+
     const colsInput = screen.getByLabelText(/Columns:/i);
     expect(colsInput).toHaveAttribute('max', '20');
   });
@@ -192,24 +192,24 @@ describe('TableDialog', () => {
     const { rerender } = render(
       <TableDialog isOpen={true} onClose={mockOnClose} onInsert={mockOnInsert} />
     );
-    
+
     const rowsInput = screen.getByLabelText(/Rows:/i);
     const colsInput = screen.getByLabelText(/Columns:/i);
     await user.clear(rowsInput);
     await user.type(rowsInput, '10');
     await user.clear(colsInput);
     await user.type(colsInput, '8');
-    
+
     // Close dialog
     rerender(
       <TableDialog isOpen={false} onClose={mockOnClose} onInsert={mockOnInsert} />
     );
-    
+
     // Reopen dialog
     rerender(
       <TableDialog isOpen={true} onClose={mockOnClose} onInsert={mockOnInsert} />
     );
-    
+
     const newRowsInput = screen.getByLabelText(/Rows:/i);
     const newColsInput = screen.getByLabelText(/Columns:/i);
     expect(newRowsInput).toHaveValue(3);
@@ -221,13 +221,13 @@ describe('TableDialog', () => {
     render(
       <TableDialog isOpen={true} onClose={mockOnClose} onInsert={mockOnInsert} />
     );
-    
+
     const headerCheckbox = screen.getByLabelText(/Header row/i);
     await user.click(headerCheckbox);
-    
+
     const insertButton = screen.getByRole('button', { name: /Insert Table/i });
     await user.click(insertButton);
-    
+
     expect(mockOnInsert).toHaveBeenCalledWith({
       rows: 3,
       cols: 3,

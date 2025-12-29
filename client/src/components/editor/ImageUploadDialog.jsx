@@ -88,7 +88,7 @@ export function ImageUploadDialog({ isOpen, onClose, onInsert, pageId }) {
 
       const imageUrl = response.data.url;
       setUploadedUrl(imageUrl);
-      
+
       // Auto-insert if URL is available
       if (imageUrl) {
         onInsert(imageUrl);
@@ -96,8 +96,8 @@ export function ImageUploadDialog({ isOpen, onClose, onInsert, pageId }) {
       }
     } catch (err) {
       setError(
-        err.response?.data?.error || 
-        err.message || 
+        err.response?.data?.error ||
+        err.message ||
         'Failed to upload image'
       );
     } finally {

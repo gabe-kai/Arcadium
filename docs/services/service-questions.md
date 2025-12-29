@@ -216,4 +216,3 @@
 ## Summary
 
 These questions need answers to make the service documentation complete and actionable. Once answered, I'll update the documentation with the specifics.
-

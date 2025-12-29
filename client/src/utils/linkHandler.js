@@ -12,37 +12,37 @@
  */
 export function isInternalLink(href) {
   if (!href) return false;
-  
+
   // External links have protocols (http, https, mailto, etc.)
   if (/^https?:\/\//.test(href)) {
     return false;
   }
-  
+
   if (href.startsWith('mailto:') || href.startsWith('tel:')) {
     return false;
   }
-  
+
   // Anchors are internal
   if (href.startsWith('#')) {
     return true;
   }
-  
+
   // Internal links start with /pages/ or are relative
   if (href.startsWith('/pages/') || href.startsWith('./') || href.startsWith('../')) {
     return true;
   }
-  
+
   // Check if it's a UUID (page ID)
   const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
   if (uuidRegex.test(href)) {
     return true;
   }
-  
+
   // Relative paths without protocol are likely internal
   if (!href.includes('://')) {
     return true;
   }
-  
+
   return false;
 }
 
@@ -52,11 +52,11 @@ export function isInternalLink(href) {
  */
 export function processLinks(container) {
   if (!container) return;
-  
+
   const links = container.querySelectorAll('a');
   links.forEach((link) => {
     const href = link.getAttribute('href');
-    
+
     if (isInternalLink(href)) {
       link.classList.add('arc-link-internal');
       // Add external link icon for external links (opposite)
@@ -66,28 +66,28 @@ export function processLinks(container) {
       link.setAttribute('rel', 'noopener noreferrer');
     }
   });
-  
+
   // Process images - convert relative URLs to absolute
   const images = container.querySelectorAll('img');
   // VITE_WIKI_API_BASE_URL is typically http://localhost:5000/api (with /api)
   const baseURL = import.meta.env.VITE_WIKI_API_BASE_URL || 'http://localhost:5000/api';
   const baseWithoutApi = baseURL.endsWith('/api') ? baseURL.slice(0, -4) : baseURL.replace(/\/api$/, '');
-  
+
   images.forEach((img) => {
     const src = img.getAttribute('src');
     if (!src) return;
-    
+
     // Skip if already processed (prevents duplicate processing on re-renders)
     if (img.hasAttribute('data-processed')) {
       return;
     }
-    
+
     // Skip if already absolute (http:// or https://) - no processing needed
     if (src.startsWith('http://') || src.startsWith('https://')) {
       img.setAttribute('data-processed', 'true');
       return;
     }
-    
+
     // Calculate new src
     let newSrc = src;
     if (src.startsWith('/api/')) {
@@ -102,7 +102,7 @@ export function processLinks(container) {
       img.setAttribute('data-processed', 'true');
       return;
     }
-    
+
     // Only update if src actually changed (prevents aborting in-flight requests)
     if (newSrc !== src) {
       // Mark as processed BEFORE changing src to prevent re-processing
@@ -112,7 +112,7 @@ export function processLinks(container) {
       // Mark as processed even if src didn't change
       img.setAttribute('data-processed', 'true');
     }
-    
+
     // Add error handler to silently handle failed loads (prevents console noise)
     // Only add if not already set
     if (!img.hasAttribute('data-error-handler')) {
@@ -129,7 +129,7 @@ export function processLinks(container) {
         }, 100);
       };
     }
-    
+
     // Add loading="lazy" for better performance (browser will load when visible)
     // This also helps prevent unnecessary requests during navigation
     if (!img.hasAttribute('loading')) {

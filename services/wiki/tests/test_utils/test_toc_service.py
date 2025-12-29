@@ -1,4 +1,5 @@
 """Test TOC service"""
+
 from app.utils.toc_service import generate_toc
 
 
@@ -11,10 +12,10 @@ def test_toc_generation_basic():
 """
     toc = generate_toc(content)
     assert len(toc) == 3
-    assert toc[0]['level'] == 2
-    assert toc[0]['text'] == "Section One"
-    assert toc[1]['level'] == 3
-    assert toc[1]['text'] == "Subsection"
+    assert toc[0]["level"] == 2
+    assert toc[0]["text"] == "Section One"
+    assert toc[1]["level"] == 3
+    assert toc[1]["text"] == "Subsection"
 
 
 def test_toc_anchor_generation():
@@ -22,7 +23,7 @@ def test_toc_anchor_generation():
     content = "## My Heading Here"
     toc = generate_toc(content)
     assert len(toc) == 1
-    assert toc[0]['anchor'] == "my-heading-here"
+    assert toc[0]["anchor"] == "my-heading-here"
 
 
 def test_toc_excludes_h1():
@@ -33,7 +34,7 @@ def test_toc_excludes_h1():
 """
     toc = generate_toc(content)
     assert len(toc) == 2
-    assert all(entry['level'] >= 2 for entry in toc)
+    assert all(entry["level"] >= 2 for entry in toc)
 
 
 def test_toc_includes_h2_to_h6():
@@ -46,8 +47,8 @@ def test_toc_includes_h2_to_h6():
 """
     toc = generate_toc(content)
     assert len(toc) == 5
-    assert toc[0]['level'] == 2
-    assert toc[4]['level'] == 6
+    assert toc[0]["level"] == 2
+    assert toc[4]["level"] == 6
 
 
 def test_toc_with_frontmatter():
@@ -60,4 +61,3 @@ title: Test
 """
     toc = generate_toc(content)
     assert len(toc) == 2
-

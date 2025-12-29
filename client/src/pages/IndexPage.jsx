@@ -53,9 +53,9 @@ export function IndexPage() {
   const getFilteredIndex = () => {
     const flatIndex = getFlatIndex();
     if (flatIndex.length === 0) return [];
-    
+
     let filtered = flatIndex;
-    
+
     // Filter by letter
     if (letterFilter) {
       filtered = filtered.filter((entry) => {
@@ -63,19 +63,19 @@ export function IndexPage() {
         return firstLetter === letterFilter.toUpperCase();
       });
     }
-    
+
     // Filter by section
     if (sectionFilter) {
       filtered = filtered.filter((entry) => entry.section === sectionFilter);
     }
-    
+
     // Filter by search query
     if (localSearch) {
       filtered = filtered.filter((entry) =>
         entry.title?.toLowerCase().includes(localSearch)
       );
     }
-    
+
     return filtered.sort((a, b) => {
       const titleA = (a.title || '').toLowerCase();
       const titleB = (b.title || '').toLowerCase();
@@ -118,7 +118,7 @@ export function IndexPage() {
               onChange={handleSearchChange}
             />
           </div>
-          
+
           {sections.length > 0 && (
             <div className="arc-index-page-section-filter">
               <label htmlFor="section-filter">Filter by section:</label>

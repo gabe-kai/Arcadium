@@ -19,7 +19,7 @@ export function EditPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const isNewPage = !pageId || pageId === 'new';
-  
+
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [metadata, setMetadata] = useState({
@@ -40,7 +40,7 @@ export function EditPage() {
 
   // Load page if editing existing page
   const { data: page, isLoading: isLoadingPage } = usePage(isNewPage ? null : pageId);
-  
+
   // Get current version from page data (API includes version field)
   const currentVersion = page?.version;
 
@@ -66,12 +66,12 @@ export function EditPage() {
         });
         metadataLoadedRef.current = true;
       }
-      
+
       // Load content only if we haven't loaded it yet or there are no unsaved changes
       if (page.content && (!metadataLoadedRef.current || !hasUnsavedChanges)) {
         // Parse frontmatter to get markdown content (frontmatter should not be in editor)
         const { markdown: markdownContent } = parseFrontmatter(page.content);
-        
+
         // Convert markdown to HTML for editor (without frontmatter)
         const html = markdownToHtml(markdownContent);
         editor.commands.setContent(html);
@@ -79,7 +79,7 @@ export function EditPage() {
       }
     }
   }, [page, editor]);
-  
+
   // Reset metadata loaded flag when pageId changes
   useEffect(() => {
     metadataLoadedRef.current = false;
@@ -190,7 +190,7 @@ export function EditPage() {
 
     const html = content || editorRef.current.getHTML();
     const markdown = htmlToMarkdown(html);
-    
+
     // Reconstruct frontmatter from metadata and prepend to markdown
     // Preserve any existing frontmatter fields (e.g., custom fields from AI system)
     // Frontmatter is needed for AI content management system but hidden from editor
@@ -357,7 +357,7 @@ export function EditPage() {
             />
           )}
         </div>
-        
+
         {/* Process preview content after render */}
         {showPreview && (
           <PreviewProcessor contentRef={previewRef} />

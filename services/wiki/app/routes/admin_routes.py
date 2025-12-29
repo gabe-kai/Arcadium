@@ -1,19 +1,18 @@
 """Admin dashboard and configuration endpoints"""
+
 import uuid
 from datetime import datetime, timezone
 
-from flask import Blueprint, request, jsonify
-from sqlalchemy import func
-
 from app import db
-from app.models.page import Page
-from app.models.comment import Comment
-from app.models.wiki_config import WikiConfig
-from app.models.oversized_page_notification import OversizedPageNotification
 from app.middleware.auth import require_auth, require_role
-from app.services.size_monitoring_service import SizeMonitoringService
+from app.models.comment import Comment
+from app.models.oversized_page_notification import OversizedPageNotification
+from app.models.page import Page
+from app.models.wiki_config import WikiConfig
 from app.services.service_status_service import ServiceStatusService
-
+from app.services.size_monitoring_service import SizeMonitoringService
+from flask import Blueprint, jsonify, request
+from sqlalchemy import func
 
 admin_bp = Blueprint("admin", __name__)
 
@@ -41,7 +40,9 @@ def get_dashboard_stats():
 
         # Storage usage in MB (sum of content_size_kb)
         total_kb = (
-            db.session.query(func.coalesce(func.sum(Page.content_size_kb), 0.0)).scalar()
+            db.session.query(
+                func.coalesce(func.sum(Page.content_size_kb), 0.0)
+            ).scalar()
             or 0.0
         )
         storage_usage_mb = round(float(total_kb) / 1024.0, 2)
@@ -115,9 +116,9 @@ def configure_upload_size():
             "00000000-0000-0000-0000-000000000001"
         )
 
-        config = db.session.query(WikiConfig).filter_by(
-            key="upload_max_size_mb"
-        ).first()
+        config = (
+            db.session.query(WikiConfig).filter_by(key="upload_max_size_mb").first()
+        )
         if not config:
             config = WikiConfig(
                 key="upload_max_size_mb",
@@ -130,9 +131,11 @@ def configure_upload_size():
             config.updated_by = user_id
 
         # Track is_custom in a separate key
-        custom_cfg = db.session.query(WikiConfig).filter_by(
-            key="upload_max_size_is_custom"
-        ).first()
+        custom_cfg = (
+            db.session.query(WikiConfig)
+            .filter_by(key="upload_max_size_is_custom")
+            .first()
+        )
         if not custom_cfg:
             custom_cfg = WikiConfig(
                 key="upload_max_size_is_custom",
@@ -150,9 +153,9 @@ def configure_upload_size():
             jsonify(
                 {
                     "max_size_mb": max_size_mb_val,
-                    "updated_at": config.updated_at.isoformat()
-                    if config.updated_at
-                    else None,
+                    "updated_at": (
+                        config.updated_at.isoformat() if config.updated_at else None
+                    ),
                 }
             ),
             200,
@@ -189,17 +192,16 @@ def configure_page_size():
         try:
             datetime.fromisoformat(resolution_due_date.replace("Z", "+00:00"))
         except ValueError:
-            return jsonify(
-                {"error": "resolution_due_date must be ISO 8601 datetime"}
-            ), 400
+            return (
+                jsonify({"error": "resolution_due_date must be ISO 8601 datetime"}),
+                400,
+            )
 
         user_id = getattr(request, "user_id", None) or uuid.UUID(
             "00000000-0000-0000-0000-000000000001"
         )
 
-        config = db.session.query(WikiConfig).filter_by(
-            key="page_max_size_kb"
-        ).first()
+        config = db.session.query(WikiConfig).filter_by(key="page_max_size_kb").first()
         if not config:
             config = WikiConfig(
                 key="page_max_size_kb",
@@ -215,14 +217,15 @@ def configure_page_size():
 
         # Parse resolution due date
         try:
-            due_date = datetime.fromisoformat(resolution_due_date.replace("Z", "+00:00"))
+            due_date = datetime.fromisoformat(
+                resolution_due_date.replace("Z", "+00:00")
+            )
         except ValueError:
             due_date = datetime.fromisoformat(resolution_due_date)
 
         # Create oversized page notifications
         notifications = SizeMonitoringService.create_oversized_notifications(
-            max_size_kb=max_size_kb_val,
-            resolution_due_date=due_date
+            max_size_kb=max_size_kb_val, resolution_due_date=due_date
         )
 
         return (
@@ -232,9 +235,9 @@ def configure_page_size():
                     "resolution_due_date": resolution_due_date,
                     "oversized_pages_count": len(notifications),
                     "notifications_created": len(notifications),
-                    "updated_at": config.updated_at.isoformat()
-                    if config.updated_at
-                    else None,
+                    "updated_at": (
+                        config.updated_at.isoformat() if config.updated_at else None
+                    ),
                 }
             ),
             200,
@@ -254,10 +257,10 @@ def get_oversized_pages():
     """
     try:
         pages = SizeMonitoringService.get_oversized_pages_with_notifications()
-        
+
         # Add authors field (placeholder - no user model in this service)
         for page in pages:
-            page['authors'] = []
+            page["authors"] = []
 
         return jsonify({"pages": pages}), 200
     except Exception as e:  # pragma: no cover - defensive
@@ -325,9 +328,11 @@ def update_oversized_page_status(page_id):
                 {
                     "page_id": str(notif.page_id),
                     "status": status,
-                    "due_date": notif.resolution_due_date.isoformat()
-                    if notif.resolution_due_date
-                    else None,
+                    "due_date": (
+                        notif.resolution_due_date.isoformat()
+                        if notif.resolution_due_date
+                        else None
+                    ),
                     "resolved": notif.resolved,
                 }
             ),
@@ -349,10 +354,10 @@ def get_service_status():
     try:
         # Check all services
         status_data = ServiceStatusService.check_all_services()
-        
+
         # Get manual notes
         manual_notes = ServiceStatusService.get_manual_status_notes()
-        
+
         # Format response
         services = {}
         for service_id, service_info in ServiceStatusService.SERVICES.items():
@@ -364,13 +369,18 @@ def get_service_status():
                 "response_time_ms": health.get("response_time_ms", 0),
                 "error": health.get("error"),
                 "details": health.get("details", {}),
-                "manual_notes": manual_notes.get(service_id)
+                "manual_notes": manual_notes.get(service_id),
             }
-        
-        return jsonify({
-            "services": services,
-            "last_updated": datetime.now(timezone.utc).isoformat()
-        }), 200
+
+        return (
+            jsonify(
+                {
+                    "services": services,
+                    "last_updated": datetime.now(timezone.utc).isoformat(),
+                }
+            ),
+            200,
+        )
     except Exception as e:  # pragma: no cover - defensive
         return jsonify({"error": str(e)}), 500
 
@@ -387,26 +397,31 @@ def update_service_status():
         data = request.get_json() or {}
         service_id = data.get("service")
         notes_data = data.get("notes", {})
-        
+
         if not service_id:
             return jsonify({"error": "service is required"}), 400
-        
+
         if service_id not in ServiceStatusService.SERVICES:
             return jsonify({"error": f"Unknown service: {service_id}"}), 400
-        
+
         user_id = getattr(request, "user_id", None) or uuid.UUID(
             "00000000-0000-0000-0000-000000000001"
         )
-        
+
         # Set manual notes
         ServiceStatusService.set_manual_status_notes(service_id, notes_data, user_id)
-        
-        return jsonify({
-            "success": True,
-            "message": "Status updated",
-            "service": service_id,
-            "updated_at": datetime.now(timezone.utc).isoformat()
-        }), 200
+
+        return (
+            jsonify(
+                {
+                    "success": True,
+                    "message": "Status updated",
+                    "service": service_id,
+                    "updated_at": datetime.now(timezone.utc).isoformat(),
+                }
+            ),
+            200,
+        )
     except Exception as e:  # pragma: no cover - defensive
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
@@ -424,20 +439,25 @@ def refresh_service_status_page():
         user_id = getattr(request, "user_id", None) or uuid.UUID(
             "00000000-0000-0000-0000-000000000001"
         )
-        
+
         # Check all services
         status_data = ServiceStatusService.check_all_services()
-        
+
         # Create or update the status page
         page = ServiceStatusService.create_or_update_status_page(user_id, status_data)
-        
-        return jsonify({
-            "success": True,
-            "message": "Service status page updated",
-            "page_id": str(page.id),
-            "page_slug": page.slug,
-            "updated_at": datetime.now(timezone.utc).isoformat()
-        }), 200
+
+        return (
+            jsonify(
+                {
+                    "success": True,
+                    "message": "Service status page updated",
+                    "page_id": str(page.id),
+                    "page_slug": page.slug,
+                    "updated_at": datetime.now(timezone.utc).isoformat(),
+                }
+            ),
+            200,
+        )
     except Exception as e:  # pragma: no cover - defensive
         db.session.rollback()
         return jsonify({"error": str(e)}), 500

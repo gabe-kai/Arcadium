@@ -12,17 +12,17 @@ export function AuthProvider({ children }) {
   // Restore user info from token on mount
   useEffect(() => {
     let isMounted = true;
-    
+
     const restoreAuth = async () => {
       const storedToken = getToken();
       if (storedToken) {
         try {
           // Verify token and get user info
           const result = await authApi.verifyToken(storedToken);
-          
+
           // Only update state if component is still mounted
           if (!isMounted) return;
-          
+
           if (result.valid && result.user) {
             setTokenState(storedToken);
             // Normalize user object format
@@ -43,13 +43,13 @@ export function AuthProvider({ children }) {
           if (error.code === 'ECONNABORTED' || error.message === 'Request aborted') {
             return;
           }
-          
+
           // Token verification failed, clear it
           console.warn('Token verification failed on mount:', error);
-          
+
           // Only update state if component is still mounted
           if (!isMounted) return;
-          
+
           clearToken();
           setTokenState(null);
           setUser(null);
@@ -59,14 +59,14 @@ export function AuthProvider({ children }) {
         setTokenState(null);
         setUser(null);
       }
-      
+
       if (isMounted) {
         setIsLoading(false);
       }
     };
 
     restoreAuth();
-    
+
     // Cleanup function to prevent state updates after unmount
     return () => {
       isMounted = false;

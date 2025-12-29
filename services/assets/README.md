@@ -22,4 +22,3 @@ flask run --port 8004
 - `GET /api/assets/<asset_id>` - Get asset metadata
 - `POST /api/assets` - Upload a new asset
 - `GET /api/assets/<asset_id>/download` - Download an asset
-

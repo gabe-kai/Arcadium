@@ -21,7 +21,7 @@ test.describe('Page Viewing', () => {
     });
 
     await page.goto('/pages/test-page-id');
-    
+
     // Check for loading indicator
     const loadingText = page.getByText(/Loading page…/i);
     await expect(loadingText).toBeVisible({ timeout: 5000 });
@@ -38,7 +38,7 @@ test.describe('Page Viewing', () => {
     });
 
     await page.goto('/pages/invalid-page-id');
-    
+
     // Check for error message
     await expect(page.getByText(/Unable to load page/i)).toBeVisible();
   });
@@ -49,7 +49,7 @@ test.describe('Page Viewing', () => {
     await page.route('**/api/pages/*', async (route) => {
       const url = route.request().url();
       const pageId = url.split('/pages/')[1]?.split('?')[0];
-      
+
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
@@ -66,7 +66,7 @@ test.describe('Page Viewing', () => {
     });
 
     await page.goto('/pages/test-page-id');
-    
+
     // Check that page content is displayed
     await expect(page.getByText('Test Page')).toBeVisible();
     await expect(page.getByText('This is test page content')).toBeVisible();
@@ -90,7 +90,7 @@ test.describe('Page Viewing', () => {
     });
 
     await page.goto('/pages/test-page-id');
-    
+
     // Check metadata display
     await expect(page.getByText(/Last updated/i)).toBeVisible();
     await expect(page.getByText(/100 words/i)).toBeVisible();
@@ -100,7 +100,7 @@ test.describe('Page Viewing', () => {
 
   test('applies syntax highlighting to code blocks', async ({ page }) => {
     const codeContent = 'function test() { return "hello"; }';
-    
+
     await page.route('**/api/pages/*', async (route) => {
       await route.fulfill({
         status: 200,
@@ -118,20 +118,20 @@ test.describe('Page Viewing', () => {
     });
 
     await page.goto('/pages/test-page-id');
-    
+
     // Wait for syntax highlighting to be applied
     await page.waitForTimeout(500);
-    
+
     // Check that code block exists
     const codeBlock = page.locator('pre code.language-javascript');
     await expect(codeBlock).toBeVisible();
-    
+
     // Check that Prism.js has applied highlighting classes
     // Prism adds classes like 'token', 'keyword', etc.
     const hasHighlighting = await codeBlock.evaluate((el) => {
       return el.classList.length > 1 || el.querySelector('.token') !== null;
     });
-    
+
     // Syntax highlighting should be applied (either via classes or tokens)
     expect(hasHighlighting || codeBlock.textContent()).toContain(codeContent);
   });
@@ -156,22 +156,22 @@ test.describe('Page Viewing', () => {
     });
 
     await page.goto('/pages/test-page-id');
-    
+
     // Wait for link processing
     await page.waitForTimeout(200);
-    
+
     // Check internal link
     const internalLink = page.getByRole('link', { name: 'Internal Link' });
     await expect(internalLink).toBeVisible();
     await expect(internalLink).toHaveClass(/arc-link-internal/);
-    
+
     // Check external link
     const externalLink = page.getByRole('link', { name: 'External Link' });
     await expect(externalLink).toBeVisible();
     await expect(externalLink).toHaveClass(/arc-link-external/);
     await expect(externalLink).toHaveAttribute('target', '_blank');
     await expect(externalLink).toHaveAttribute('rel', 'noopener noreferrer');
-    
+
     // Check anchor link
     const anchorLink = page.getByRole('link', { name: 'Anchor Link' });
     await expect(anchorLink).toBeVisible();
@@ -194,7 +194,7 @@ test.describe('Page Viewing', () => {
     });
 
     await page.goto('/pages/test-page-id');
-    
+
     // Page should still render with title
     await expect(page.getByText('Empty Page')).toBeVisible();
   });

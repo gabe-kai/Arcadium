@@ -233,4 +233,3 @@ If Notification Service is integrated into Chat Service:
 - Separate endpoints for notifications vs chat
 - Shared user inbox for messages and notifications
 - Unified notification center in UI
-

@@ -327,9 +327,9 @@ describe('Pages API Service', () => {
     it('returns invalid for slug with invalid characters', async () => {
       const { validateSlug } = await import('../../services/api/pages');
       const result = await validateSlug('invalid slug!');
-      expect(result).toEqual({ 
-        valid: false, 
-        message: 'Slug can only contain lowercase letters, numbers, and hyphens' 
+      expect(result).toEqual({
+        valid: false,
+        message: 'Slug can only contain lowercase letters, numbers, and hyphens'
       });
       expect(apiClient.get).not.toHaveBeenCalled();
     });
@@ -353,9 +353,9 @@ describe('Pages API Service', () => {
 
       const result = await validateSlug('test-slug');
 
-      expect(result).toEqual({ 
-        valid: false, 
-        message: 'Slug "test-slug" is already in use by another page' 
+      expect(result).toEqual({
+        valid: false,
+        message: 'Slug "test-slug" is already in use by another page'
       });
     });
 

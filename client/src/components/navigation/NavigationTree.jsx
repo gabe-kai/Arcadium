@@ -6,7 +6,7 @@ const EXPANDED_STATE_KEY = 'arcadium_nav_expanded';
 
 /**
  * NavigationTree component displays hierarchical page navigation
- * 
+ *
  * Features:
  * - Expandable/collapsible tree nodes
  * - Highlights current page
@@ -115,7 +115,7 @@ export function NavigationTree() {
         });
       };
       collectIds(filteredTree);
-      
+
       // Merge with existing expanded nodes
       if (autoExpandIds.size > 0) {
         setExpandedNodes((prev) => {

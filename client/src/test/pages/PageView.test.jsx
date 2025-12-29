@@ -60,7 +60,7 @@ vi.mock('../../components/navigation/Backlinks', () => ({
 
 // Mock DeleteArchiveDialog
 vi.mock('../../components/page/DeleteArchiveDialog', () => ({
-  DeleteArchiveDialog: ({ isOpen, pageTitle }) => 
+  DeleteArchiveDialog: ({ isOpen, pageTitle }) =>
     isOpen ? <div data-testid="delete-archive-dialog">{pageTitle}</div> : null,
 }));
 
@@ -184,7 +184,7 @@ describe('PageView', () => {
     });
 
     renderPageView('test-page-id');
-    
+
     expect(screen.getByText('Test Page Title')).toBeInTheDocument();
     expect(screen.getByText(/Test page content/i)).toBeInTheDocument();
   });
@@ -207,7 +207,7 @@ describe('PageView', () => {
     });
 
     renderPageView('test-page-id');
-    
+
     // Check for metadata elements
     expect(screen.getByText(/Last updated/i)).toBeInTheDocument();
     expect(screen.getByText(/150 words/i)).toBeInTheDocument();
@@ -230,7 +230,7 @@ describe('PageView', () => {
     });
 
     renderPageView('test-page-id');
-    
+
     // Page should still render
     expect(screen.getByText('Test Page')).toBeInTheDocument();
     expect(screen.getByText(/Content/i)).toBeInTheDocument();
@@ -245,7 +245,7 @@ describe('PageView', () => {
       isLoading: false,
       isError: false,
     });
-    
+
     render(
       <QueryClientProvider client={queryClient}>
         <MemoryRouter>
@@ -443,7 +443,7 @@ describe('PageView', () => {
     });
 
     renderPageView('test-page-id');
-    
+
     expect(screen.getByText('Minimal Page')).toBeInTheDocument();
     expect(screen.getByText(/Content/i)).toBeInTheDocument();
   });
@@ -462,7 +462,7 @@ describe('PageView', () => {
     });
 
     renderPageView('test-page-id');
-    
+
     expect(screen.getByText('Empty Content Page')).toBeInTheDocument();
   });
 
@@ -480,7 +480,7 @@ describe('PageView', () => {
     });
 
     renderPageView('test-page-id');
-    
+
     expect(screen.getByText('Null Content Page')).toBeInTheDocument();
   });
 
@@ -499,7 +499,7 @@ describe('PageView', () => {
     });
 
     renderPageView('test-page-id');
-    
+
     expect(screen.getByText(longTitle)).toBeInTheDocument();
   });
 
@@ -517,14 +517,14 @@ describe('PageView', () => {
     });
 
     renderPageView('test-page-id');
-    
+
     expect(screen.getByText('Page & < > " \' Special')).toBeInTheDocument();
   });
 
   it('calls highlightCodeBlocks after content renders', async () => {
     const { highlightCodeBlocks } = await import('../../utils/syntaxHighlight');
     vi.mocked(highlightCodeBlocks).mockClear();
-    
+
     const mockPage = {
       id: 'test-page-id',
       title: 'Test Page',
@@ -538,7 +538,7 @@ describe('PageView', () => {
     });
 
     renderPageView('test-page-id');
-    
+
     // Wait a bit for useEffect to run
     await waitFor(() => {
       expect(highlightCodeBlocks).toHaveBeenCalled();
@@ -559,7 +559,7 @@ describe('PageView', () => {
     });
 
     renderPageView('test-page-id');
-    
+
     // Check that code block is rendered
     const codeBlock = screen.getByText(/def hello\(\):/);
     expect(codeBlock).toBeInTheDocument();
@@ -581,11 +581,11 @@ describe('PageView', () => {
     });
 
     renderPageView('test-page-id');
-    
+
     // Check that both code blocks are rendered
     const codeBlocks = screen.getAllByRole('code', { hidden: true });
     expect(codeBlocks.length).toBeGreaterThanOrEqual(2);
-    
+
     // Check content
     expect(screen.getByText(/def hello\(\): pass/)).toBeInTheDocument();
     expect(screen.getByText(/const x = 1;/)).toBeInTheDocument();
@@ -605,11 +605,11 @@ describe('PageView', () => {
     });
 
     renderPageView('test-page-id');
-    
+
     // Check that code block content is present
     const codeBlock = screen.getByText(/def hello\(\):/);
     expect(codeBlock).toBeInTheDocument();
-    
+
     // The whitespace should be preserved in the HTML (CSS handles rendering)
     const preElement = codeBlock.closest('pre');
     expect(preElement).toBeInTheDocument();
@@ -629,7 +629,7 @@ describe('PageView', () => {
     });
 
     renderPageView('test-page-id');
-    
+
     // Check that all content is rendered
     expect(screen.getByText('Heading')).toBeInTheDocument();
     expect(screen.getByText('Text before code block.')).toBeInTheDocument();
@@ -640,7 +640,7 @@ describe('PageView', () => {
   it('calls processLinks after content renders', async () => {
     const { processLinks } = await import('../../utils/linkHandler');
     vi.mocked(processLinks).mockClear();
-    
+
     const mockPage = {
       id: 'test-page-id',
       title: 'Test Page',
@@ -654,7 +654,7 @@ describe('PageView', () => {
     });
 
     renderPageView('test-page-id');
-    
+
     // Wait a bit for useEffect to run
     await waitFor(() => {
       expect(processLinks).toHaveBeenCalled();
@@ -802,16 +802,16 @@ describe('PageView', () => {
     });
 
     renderPageView('test-page-id');
-    
+
     // Wait for the page to render and verify status
     await waitFor(() => {
       expect(screen.getByText('Test Page')).toBeInTheDocument();
     });
-    
+
     // Verify the page status is archived by checking for Unarchive button
     const unarchiveButton = await screen.findByRole('button', { name: /Unarchive/i });
     expect(unarchiveButton).toBeInTheDocument();
-    
+
     // Archive button should not be present when status is archived
     // Use a more specific query to avoid matching "Unarchive" text
     const archiveButtons = screen.queryAllByRole('button', { name: /^Archive this page$/i });
@@ -870,7 +870,7 @@ describe('PageView', () => {
       });
 
       renderPageView('test-page-id');
-      
+
       await waitFor(() => {
         expect(screen.getByText('Header 1')).toBeInTheDocument();
         expect(screen.getByText('Header 2')).toBeInTheDocument();
@@ -893,7 +893,7 @@ describe('PageView', () => {
       });
 
       renderPageView('test-page-id');
-      
+
       await waitFor(() => {
         expect(screen.getByText('Cell 1')).toBeInTheDocument();
         expect(screen.getByText('Cell 3')).toBeInTheDocument();
@@ -914,7 +914,7 @@ describe('PageView', () => {
       });
 
       renderPageView('test-page-id');
-      
+
       await waitFor(() => {
         expect(screen.getByText('Text before table.')).toBeInTheDocument();
         expect(screen.getByText('Header 1')).toBeInTheDocument();

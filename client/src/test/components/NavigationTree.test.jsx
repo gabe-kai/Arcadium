@@ -138,25 +138,25 @@ describe('NavigationTree', () => {
     });
 
     renderNavigationTree();
-    
+
     // Initially children should be hidden (Home's children)
     expect(screen.queryByText('Page 1.1')).not.toBeInTheDocument();
-    
+
     // Click expand button for Home (first expand button)
     const expandButtons = screen.getAllByLabelText(/Expand|Collapse/i);
     fireEvent.click(expandButtons[0]);
-    
+
     // Wait for state update
     await waitFor(() => {
       // Section 1 should now be visible (it's a child of Home)
       expect(screen.getByText('Section 1')).toBeInTheDocument();
     });
-    
+
     // Now expand Section 1 to see Page 1.1
     const section1Buttons = screen.getAllByLabelText(/Expand|Collapse/i);
     // Find the button for Section 1 (second expand button)
     fireEvent.click(section1Buttons[1]);
-    
+
     // Now Page 1.1 should be visible
     await waitFor(() => {
       expect(screen.getByText('Page 1.1')).toBeInTheDocument();
@@ -171,7 +171,7 @@ describe('NavigationTree', () => {
     });
 
     renderNavigationTree(['/pages/page-2']);
-    
+
     const currentLink = screen.getByText('Section 1').closest('a');
     expect(currentLink).toHaveClass('arc-nav-tree-link-current');
   });
@@ -184,10 +184,10 @@ describe('NavigationTree', () => {
     });
 
     renderNavigationTree();
-    
+
     const searchInput = screen.getByPlaceholderText(/Search pages/i);
     fireEvent.change(searchInput, { target: { value: 'Section 2' } });
-    
+
     // Section 2 should be visible
     expect(screen.getByText('Section 2')).toBeInTheDocument();
     // Section 1 should not be visible (doesn't match)
@@ -204,16 +204,16 @@ describe('NavigationTree', () => {
     });
 
     renderNavigationTree();
-    
+
     // Expand a node
     const expandButtons = screen.getAllByLabelText(/Expand|Collapse/i);
     fireEvent.click(expandButtons[0]);
-    
+
     // Wait for localStorage update
     await waitFor(() => {
       expect(global.localStorage.setItem).toHaveBeenCalled();
     });
-    
+
     // Check that expanded state was saved
     const setItemCalls = global.localStorage.setItem.mock.calls;
     const expandedStateCall = setItemCalls.find((call) =>
@@ -225,7 +225,7 @@ describe('NavigationTree', () => {
   it('loads expanded state from localStorage on mount', async () => {
     // Pre-populate localStorage with expanded state
     store['arcadium_nav_expanded'] = JSON.stringify(['page-1']);
-    
+
     pagesApi.useNavigationTree.mockReturnValue({
       data: mockTree,
       isLoading: false,
@@ -233,7 +233,7 @@ describe('NavigationTree', () => {
     });
 
     renderNavigationTree();
-    
+
     // Wait for state to load and tree to render
     await waitFor(() => {
       // Section 1 should be visible (parent is expanded)
@@ -259,7 +259,7 @@ describe('NavigationTree', () => {
     });
 
     renderNavigationTree();
-    
+
     const draftBadge = screen.getByTitle('Draft');
     expect(draftBadge).toBeInTheDocument();
     expect(draftBadge.textContent).toBe('D');
@@ -273,7 +273,7 @@ describe('NavigationTree', () => {
     });
 
     renderNavigationTree();
-    
+
     // Should render without errors
     expect(screen.getByPlaceholderText(/Search pages/i)).toBeInTheDocument();
   });
@@ -296,7 +296,7 @@ describe('NavigationTree', () => {
     });
 
     renderNavigationTree();
-    
+
     expect(screen.getByText('Page 1')).toBeInTheDocument();
     // No expand buttons should be present
     expect(screen.queryByLabelText(/Expand/i)).not.toBeInTheDocument();
@@ -319,7 +319,7 @@ describe('NavigationTree', () => {
     });
 
     renderNavigationTree();
-    
+
     expect(screen.getByText('Page 1')).toBeInTheDocument();
   });
 
@@ -365,9 +365,9 @@ describe('NavigationTree', () => {
     });
 
     renderNavigationTree();
-    
+
     expect(screen.getByText('Level 1')).toBeInTheDocument();
-    
+
     // Level 4 is nested deep, so we need to expand nodes to see it
     // Expand Level 1 to see Level 2
     const level1Toggle = screen.getByText('Level 1').closest('li')?.querySelector('button[aria-label*="Expand"]');
@@ -376,7 +376,7 @@ describe('NavigationTree', () => {
       await waitFor(() => {
         expect(screen.getByText('Level 2')).toBeInTheDocument();
       });
-      
+
       // Expand Level 2 to see Level 3
       const level2Toggle = screen.getByText('Level 2').closest('li')?.querySelector('button[aria-label*="Expand"]');
       if (level2Toggle) {
@@ -384,7 +384,7 @@ describe('NavigationTree', () => {
         await waitFor(() => {
           expect(screen.getByText('Level 3')).toBeInTheDocument();
         });
-        
+
         // Expand Level 3 to see Level 4
         const level3Toggle = screen.getByText('Level 3').closest('li')?.querySelector('button[aria-label*="Expand"]');
         if (level3Toggle) {
@@ -415,7 +415,7 @@ describe('NavigationTree', () => {
     });
 
     renderNavigationTree();
-    
+
     expect(screen.getByText('Page & < > " \' Special')).toBeInTheDocument();
   });
 
@@ -438,7 +438,7 @@ describe('NavigationTree', () => {
     });
 
     renderNavigationTree();
-    
+
     expect(screen.getByText(longTitle)).toBeInTheDocument();
   });
 
@@ -456,13 +456,13 @@ describe('NavigationTree', () => {
     });
 
     expect(() => renderNavigationTree()).not.toThrow();
-    
+
     global.localStorage.getItem = originalGetItem;
   });
 
   it('handles invalid JSON in localStorage', () => {
     store['arcadium_nav_expanded'] = 'invalid json';
-    
+
     pagesApi.useNavigationTree.mockReturnValue({
       data: mockTree,
       isLoading: false,
@@ -480,10 +480,10 @@ describe('NavigationTree', () => {
     });
 
     renderNavigationTree();
-    
+
     const searchInput = screen.getByPlaceholderText(/Search pages/i);
     fireEvent.change(searchInput, { target: { value: '.*+?^${}[]|()' } });
-    
+
     // Should not crash with regex special characters
     expect(searchInput).toHaveValue('.*+?^${}[]|()');
   });
@@ -496,11 +496,11 @@ describe('NavigationTree', () => {
     });
 
     renderNavigationTree();
-    
+
     const searchInput = screen.getByPlaceholderText(/Search pages/i);
     fireEvent.change(searchInput, { target: { value: 'Section' } });
     fireEvent.change(searchInput, { target: { value: '' } });
-    
+
     // Should show all items again
     expect(screen.getByText('Home')).toBeInTheDocument();
   });
@@ -513,13 +513,13 @@ describe('NavigationTree', () => {
     });
 
     renderNavigationTree();
-    
+
     const searchInput = screen.getByPlaceholderText(/Search pages/i);
     fireEvent.change(searchInput, { target: { value: 'S' } });
     fireEvent.change(searchInput, { target: { value: 'Se' } });
     fireEvent.change(searchInput, { target: { value: 'Sec' } });
     fireEvent.change(searchInput, { target: { value: 'Section' } });
-    
+
     // Should handle rapid changes without errors
     expect(searchInput).toHaveValue('Section');
   });
@@ -532,7 +532,7 @@ describe('NavigationTree', () => {
     });
 
     renderNavigationTree();
-    
+
     // Home has children, should show folder icon
     const homeLink = screen.getByText('Home').closest('a');
     expect(homeLink).toBeInTheDocument();
@@ -551,11 +551,11 @@ describe('NavigationTree', () => {
     });
 
     renderNavigationTree();
-    
+
     // Expand to see leaf nodes
     const expandButton = screen.getByLabelText(/expand/i);
     fireEvent.click(expandButton);
-    
+
     // Wait for children to render
     waitFor(() => {
       const pageLink = screen.getByText('Page 1.1').closest('a');
@@ -593,11 +593,11 @@ describe('NavigationTree', () => {
     });
 
     renderNavigationTree();
-    
+
     // Expand to see leaf nodes
     const expandButton = screen.getByLabelText(/expand/i);
     fireEvent.click(expandButton);
-    
+
     // Wait for children to render
     waitFor(() => {
       const pageLink = screen.getByText('Page 1.1').closest('a');

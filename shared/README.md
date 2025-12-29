@@ -11,4 +11,3 @@ Shared code and libraries used across all services.
 ## Usage
 
 Services can import shared code by mounting the shared directory or copying it into their build process.
-

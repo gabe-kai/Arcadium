@@ -4,10 +4,10 @@ import './DeleteArchiveDialog.css';
 /**
  * DeleteArchiveDialog component - Confirmation dialog for delete/archive actions
  */
-export function DeleteArchiveDialog({ 
-  isOpen, 
-  onClose, 
-  onConfirm, 
+export function DeleteArchiveDialog({
+  isOpen,
+  onClose,
+  onConfirm,
   action, // 'delete' or 'archive' or 'unarchive'
   pageTitle,
   isProcessing = false
@@ -60,8 +60,8 @@ export function DeleteArchiveDialog({
   };
 
   return (
-    <div 
-      className="arc-delete-archive-dialog-overlay" 
+    <div
+      className="arc-delete-archive-dialog-overlay"
       onClick={handleOverlayClick}
     >
       <div className="arc-delete-archive-dialog">

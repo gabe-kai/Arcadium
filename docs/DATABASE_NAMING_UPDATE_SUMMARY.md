@@ -105,8 +105,8 @@ flask db upgrade
 Check that databases were created:
 
 ```sql
-SELECT datname FROM pg_database 
-WHERE datname LIKE 'arcadium_%' 
+SELECT datname FROM pg_database
+WHERE datname LIKE 'arcadium_%'
 ORDER BY datname;
 ```
 

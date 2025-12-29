@@ -3,9 +3,11 @@
 Test script to verify token authentication flow between Wiki and Auth services.
 Run this after logging in to test if token verification works.
 """
-import requests
-import sys
+
 import json
+import sys
+
+import requests
 
 # Get token from user input
 print("Please paste your JWT token (from browser localStorage 'auth_token'):")
@@ -23,7 +25,7 @@ try:
         auth_url,
         json={"token": token},
         headers={"Content-Type": "application/json"},
-        timeout=5
+        timeout=5,
     )
     print(f"Status Code: {response.status_code}")
     print(f"Response: {json.dumps(response.json(), indent=2)}")
@@ -44,13 +46,13 @@ try:
         json={
             "title": "Test Page from Script",
             "content": "# Test Content",
-            "slug": "test-page-from-script"
+            "slug": "test-page-from-script",
         },
         headers={
             "Content-Type": "application/json",
-            "Authorization": f"Bearer {token}"
+            "Authorization": f"Bearer {token}",
         },
-        timeout=10
+        timeout=10,
     )
     print(f"Status Code: {response.status_code}")
     print(f"Response: {json.dumps(response.json(), indent=2)}")

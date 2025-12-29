@@ -33,4 +33,3 @@ Project documentation for Arcadium.
 ### Notification Service
 - [Notification Service Specification](services/notification-service.md) - Internal messaging and notifications
 - [Notification Service API](api/notification-api.md) - REST API endpoints
-

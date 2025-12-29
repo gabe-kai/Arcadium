@@ -279,4 +279,3 @@
 - Generous whitespace
 - Clear section separation
 - Comfortable padding in editor
-

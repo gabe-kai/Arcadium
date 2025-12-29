@@ -474,4 +474,3 @@ CREATE INDEX idx_page_images_image ON page_images(image_id);
 - Stateless service design (files can be on shared storage)
 - Load balancer ready
 - Consider CDN for static assets
-

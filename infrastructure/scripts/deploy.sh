@@ -27,4 +27,3 @@ echo "Deploying services..."
 docker-compose -f docker-compose.yml -f infrastructure/docker/docker-compose.prod.yml up -d
 
 echo "Deployment complete!"
-

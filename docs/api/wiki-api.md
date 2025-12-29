@@ -112,7 +112,7 @@ GET /api/pages/{page_id}
 }
 ```
 
-**Note:** 
+**Note:**
 - Draft pages return 404 for non-creators and non-admins.
 - Archived pages return 404 for viewers and writers without permission.
 - The response includes permission flags (`can_edit`, `can_delete`, `can_archive`) based on the authenticated user's role and relationship to the page.
@@ -387,7 +387,7 @@ GET /api/search
 }
 ```
 
-**Note:** 
+**Note:**
 - Uses PostgreSQL full-text search with relevance ranking
 - Draft pages excluded from results unless `include_drafts=true` and user has permission
 - Search indexes both full-text content and manually tagged keywords
@@ -952,4 +952,3 @@ All endpoints may return the following error responses:
   "error": "Internal server error"
 }
 ```
-

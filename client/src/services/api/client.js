@@ -35,29 +35,29 @@ apiClient.interceptors.response.use(
       console.error('API error:', error);
       return Promise.reject(error);
     }
-    
+
     // Handle 401 Unauthorized - token expired or invalid
     if (error.response?.status === 401) {
       const errorMessage = error.response?.data?.error || 'Authentication failed';
       console.warn('Authentication error (401):', errorMessage);
-      
+
       // Clear invalid token
       clearToken();
-      
+
       // Only redirect if we're not already on the sign-in page
       if (window.location.pathname !== '/signin' && !window.location.pathname.startsWith('/signin')) {
         // Store the current location to redirect back after login
         const currentPath = window.location.pathname + window.location.search;
         sessionStorage.setItem('redirectAfterLogin', currentPath);
-        
+
         // Show user-friendly message
         alert('Your session has expired. Please sign in again.');
-        
+
         // Redirect to sign-in page
         window.location.href = '/signin';
       }
     }
-    
+
     // Basic error logging; can be expanded later
     // Only log non-401, non-aborted errors
     if (error.response?.status !== 401 && error.code !== 'ECONNABORTED') {

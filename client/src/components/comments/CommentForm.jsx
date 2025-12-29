@@ -18,7 +18,7 @@ export function CommentForm({ pageId, parentCommentId = null, onSubmit, onCancel
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!isAuthenticated) {
       setError('You must be signed in to comment');
       return;
@@ -38,7 +38,7 @@ export function CommentForm({ pageId, parentCommentId = null, onSubmit, onCancel
         is_recommendation: isRecommendation,
         parent_comment_id: parentCommentId,
       });
-      
+
       // Reset form on success
       setContent('');
       setIsRecommendation(false);
@@ -69,7 +69,7 @@ export function CommentForm({ pageId, parentCommentId = null, onSubmit, onCancel
   return (
     <form className="arc-comment-form" onSubmit={handleSubmit}>
       {error && <div className="arc-comment-form-error">{error}</div>}
-      
+
       <div className="arc-comment-form-content">
         <textarea
           value={content}

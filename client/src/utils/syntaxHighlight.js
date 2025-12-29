@@ -44,7 +44,7 @@ export function initSyntaxHighlighting() {
   import('prismjs').then((PrismModule) => {
     window.Prism = PrismModule.default;
     PrismLoaded = true;
-    
+
     // Load common languages
     Promise.all([
       import('prismjs/components/prism-javascript'),
