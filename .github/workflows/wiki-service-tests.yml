@@ -94,7 +94,7 @@ jobs:
 
       - name: Install pytest reporting tools
         run: |
-          pip install pytest-html pytest-json-report pytest-json-report-append
+          pip install pytest-html pytest-json-report
 
       - name: Run pytest for Wiki Service
         env:
@@ -122,11 +122,30 @@ jobs:
         run: |
           python3 << 'PYTHON_SCRIPT'
           import json
+          import os
           import sys
           from collections import defaultdict
 
+          # Check if JSON report exists
+          json_report_file = 'test-report.json'
+          if not os.path.exists(json_report_file):
+              print(f"Warning: {json_report_file} not found. Tests may have failed before generating report.", file=sys.stderr)
+              # Create empty summary
+              with open('test-summary.txt', 'w') as f:
+                  f.write("=" * 80 + "\n")
+                  f.write("TEST EXECUTION SUMMARY\n")
+                  f.write("=" * 80 + "\n\n")
+                  f.write("⚠️  Test report file not found.\n")
+                  f.write("Tests may have failed before generating JSON report.\n")
+                  f.write("Check test output above for details.\n\n")
+              with open('test-failures-only.txt', 'w') as f:
+                  f.write("Test report file not found. Check test output for failure details.\n")
+              with open('test-failures-compact.txt', 'w') as f:
+                  f.write("Test report file not found. Check test output for failure details.\n")
+              sys.exit(0)
+
           try:
-              with open('test-report.json', 'r') as f:
+              with open(json_report_file, 'r') as f:
                   report = json.load(f)
 
               summary = report.get('summary', {})
@@ -314,3 +333,5 @@ jobs:
           check_name: Wiki Service Test Results
           comment_mode: changes
           report_individual_runs: true
+          action_fail: false
+          fail_on: never

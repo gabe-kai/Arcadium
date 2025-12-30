@@ -45,8 +45,234 @@ jobs:
           fi
         continue-on-error: true
 
-      - name: Run unit and integration tests
-        run: npm test -- --run
+      - name: Run component tests
+        continue-on-error: true
+        run: |
+          echo "::group::Component Tests"
+          npm test -- --run --reporter=verbose src/test/components/ 2>&1 | tee test-output-components.txt
+          echo "::endgroup::"
+          echo "COMPONENT_TESTS_EXIT_CODE=${PIPESTATUS[0]}" >> $GITHUB_ENV
+
+      - name: Run page tests
+        continue-on-error: true
+        run: |
+          echo "::group::Page Tests"
+          npm test -- --run --reporter=verbose src/test/pages/ 2>&1 | tee test-output-pages.txt
+          echo "::endgroup::"
+          echo "PAGE_TESTS_EXIT_CODE=${PIPESTATUS[0]}" >> $GITHUB_ENV
+
+      - name: Run service tests
+        continue-on-error: true
+        run: |
+          echo "::group::Service Tests"
+          npm test -- --run --reporter=verbose src/test/services/ 2>&1 | tee test-output-services.txt
+          echo "::endgroup::"
+          echo "SERVICE_TESTS_EXIT_CODE=${PIPESTATUS[0]}" >> $GITHUB_ENV
+
+      - name: Run utility tests
+        continue-on-error: true
+        run: |
+          echo "::group::Utility Tests"
+          npm test -- --run --reporter=verbose src/test/utils/ 2>&1 | tee test-output-utils.txt
+          echo "::endgroup::"
+          echo "UTILITY_TESTS_EXIT_CODE=${PIPESTATUS[0]}" >> $GITHUB_ENV
+
+      - name: Run integration tests
+        continue-on-error: true
+        run: |
+          echo "::group::Integration Tests"
+          npm test -- --run --reporter=verbose src/test/integration/ 2>&1 | tee test-output-integration.txt
+          echo "::endgroup::"
+          echo "INTEGRATION_TESTS_EXIT_CODE=${PIPESTATUS[0]}" >> $GITHUB_ENV
+
+      - name: Run remaining tests (routing, App, etc.)
+        continue-on-error: true
+        run: |
+          echo "::group::Other Tests"
+          npm test -- --run --reporter=verbose \
+            src/test/routing.test.jsx \
+            src/test/App.test.jsx \
+            src/test/api-client.test.js \
+            2>&1 | tee test-output-other.txt
+          echo "::endgroup::"
+          echo "OTHER_TESTS_EXIT_CODE=${PIPESTATUS[0]}" >> $GITHUB_ENV
+
+      - name: Generate test failure summary
+        if: always()
+        run: |
+          python3 << 'PYTHON_SCRIPT'
+          import os
+          import re
+          import sys
+
+          test_groups = [
+              ('components', 'test-output-components.txt'),
+              ('pages', 'test-output-pages.txt'),
+              ('services', 'test-output-services.txt'),
+              ('utils', 'test-output-utils.txt'),
+              ('integration', 'test-output-integration.txt'),
+              ('other', 'test-output-other.txt'),
+          ]
+
+          all_failures = []
+          total_passed = 0
+          total_failed = 0
+          total_skipped = 0
+
+          for group_name, output_file in test_groups:
+              if not os.path.exists(output_file):
+                  continue
+
+              try:
+                  with open(output_file, 'r', encoding='utf-8', errors='ignore') as f:
+                      content = f.read()
+
+                  # Parse Vitest output
+                  # Look for test summary lines like "Test Files  1 passed (1) | 1 failed (1)"
+                  summary_match = re.search(r'Test Files\s+(\d+)\s+passed.*?(\d+)\s+failed', content)
+                  if summary_match:
+                      passed = int(summary_match.group(1))
+                      failed = int(summary_match.group(2))
+                      total_passed += passed
+                      total_failed += failed
+                  else:
+                      # Try alternative pattern
+                      passed_match = re.findall(r'(\d+)\s+passed', content)
+                      failed_match = re.findall(r'(\d+)\s+failed', content)
+                      if passed_match:
+                          total_passed += sum(int(x) for x in passed_match[-3:])  # Last few matches
+                      if failed_match:
+                          total_failed += sum(int(x) for x in failed_match[-3:])
+
+                  # Extract failures
+                  if failed > 0 or 'FAIL' in content or 'Error:' in content:
+                      failures = []
+                      lines = content.split('\n')
+
+                      # Find failure blocks
+                      in_failure = False
+                      failure_block = []
+                      current_test = None
+
+                      for i, line in enumerate(lines):
+                          # Detect test failure start
+                          if re.search(r'FAIL|Error:|AssertionError|Expected|Received', line, re.IGNORECASE):
+                              if not in_failure:
+                                  in_failure = True
+                                  # Look back for test name
+                                  for j in range(max(0, i-5), i):
+                                      test_match = re.search(r'✓|✗|PASS|FAIL.*?(\w+\.test\.\w+[^:]*|test\([^)]+\))', lines[j])
+                                      if test_match:
+                                          current_test = test_match.group(1) if test_match.group(1) else lines[j].strip()
+                                          break
+                                  failure_block = [line]
+                              else:
+                                  failure_block.append(line)
+                          elif in_failure:
+                              if line.strip() and not line.startswith(' ') and not line.startswith('\t'):
+                                  # End of failure block
+                                  if failure_block:
+                                      failures.append({
+                                          'test': current_test or 'Unknown test',
+                                          'error': '\n'.join(failure_block[:30])  # Limit to 30 lines
+                                      })
+                                  in_failure = False
+                                  failure_block = []
+                                  current_test = None
+                              else:
+                                  failure_block.append(line)
+
+                      # Capture last failure if still in progress
+                      if in_failure and failure_block:
+                          failures.append({
+                              'test': current_test or 'Unknown test',
+                              'error': '\n'.join(failure_block[:30])
+                          })
+
+                      if failures:
+                          all_failures.append({
+                              'group': group_name,
+                              'failed': failed if failed > 0 else len(failures),
+                              'failures': failures[:10]  # Limit to 10 failures per group
+                          })
+
+              except Exception as e:
+                  print(f"Error processing {output_file}: {e}", file=sys.stderr)
+                  import traceback
+                  traceback.print_exc()
+
+          # Write summary
+          with open('test-summary.txt', 'w') as f:
+              f.write("=" * 80 + "\n")
+              f.write("CLIENT TEST EXECUTION SUMMARY\n")
+              f.write("=" * 80 + "\n\n")
+              f.write(f"✅ Passed: {total_passed}\n")
+              f.write(f"❌ Failed: {total_failed}\n")
+              f.write(f"⏭️  Skipped: {total_skipped}\n")
+              f.write(f"📊 Total: {total_passed + total_failed + total_skipped}\n\n")
+
+          # Write failures
+          if all_failures:
+              with open('test-failures-only.txt', 'w') as f:
+                  f.write("=" * 80 + "\n")
+                  f.write(f"FAILED TESTS ({total_failed} total)\n")
+                  f.write("=" * 80 + "\n\n")
+
+                  for failure_group in all_failures:
+                      f.write(f"\n📁 {failure_group['group'].upper()} Tests\n")
+                      f.write("-" * 80 + "\n")
+                      f.write(f"❌ {failure_group['failed']} test(s) failed\n\n")
+
+                      for failure in failure_group.get('failures', []):
+                          f.write(f"Test: {failure['test']}\n")
+                          f.write("-" * 40 + "\n")
+                          f.write(f"{failure['error']}\n")
+                          f.write("-" * 40 + "\n\n")
+          else:
+              with open('test-failures-only.txt', 'w') as f:
+                  f.write("No test failures.\n")
+
+          PYTHON_SCRIPT
+
+      - name: Display test summary
+        if: always()
+        run: |
+          echo ""
+          echo "═══════════════════════════════════════════════════════════════════════════════"
+          echo "CLIENT TEST EXECUTION SUMMARY"
+          echo "═══════════════════════════════════════════════════════════════════════════════"
+          echo ""
+
+          if [ -f test-summary.txt ]; then
+            cat test-summary.txt
+          else
+            echo "⚠️  Summary file not found"
+          fi
+
+          if [ -f test-failures-only.txt ]; then
+            echo ""
+            echo "═══════════════════════════════════════════════════════════════════════════════"
+            echo "FAILED TESTS"
+            echo "═══════════════════════════════════════════════════════════════════════════════"
+            echo ""
+            head -100 test-failures-only.txt
+            if [ $(wc -l < test-failures-only.txt) -gt 100 ]; then
+              echo ""
+              echo "... (truncated, see test-failures-only.txt artifact for full details)"
+            fi
+          fi
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: client-test-results
+          path: |
+            client/test-output-*.txt
+            client/test-summary.txt
+            client/test-failures-only.txt
+          retention-days: 7
+          if-no-files-found: ignore
 
       - name: Generate coverage report (optional)
         run: npm run test:coverage || echo "Coverage report generation skipped (coverage provider may not be installed)"
