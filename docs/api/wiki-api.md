@@ -884,6 +884,168 @@ GET /api/admin/oversized-pages
 ---
 
 #### Update Oversized Page Status
+
+### Service Management
+
+#### Get Service Status
+```
+GET /api/admin/service-status
+```
+
+Get real-time status of all Arcadium services.
+
+**Permissions:** Currently public (temporarily disabled for development), will require Admin
+
+**Response:**
+```json
+{
+  "services": {
+    "wiki": {
+      "name": "Wiki Service",
+      "description": "Core wiki service providing page management, search, navigation, and content APIs",
+      "status": "healthy",
+      "last_check": "2024-01-01T12:00:00Z",
+      "response_time_ms": 5.2,
+      "status_reason": null,
+      "error": null,
+      "process_info": {
+        "pid": 12345,
+        "uptime_seconds": 3600.5,
+        "cpu_percent": 2.5,
+        "memory_mb": 150.3,
+        "memory_percent": 1.2,
+        "threads": 8,
+        "open_files": 15
+      },
+      "version": "1.0.0",
+      "service_name": "wiki",
+      "details": {
+        "status": "healthy",
+        "service": "wiki"
+      },
+      "manual_notes": null,
+      "is_internal": false
+    },
+    "auth": {
+      "name": "Auth Service",
+      "description": "Authentication and user management service handling login, registration, and JWT tokens",
+      "status": "degraded",
+      "last_check": "2024-01-01T12:00:00Z",
+      "response_time_ms": 1107.3,
+      "status_reason": "Slow response time (1107ms exceeds 1500ms threshold)",
+      "error": null,
+      "process_info": {
+        "pid": 67890,
+        "uptime_seconds": 7200.0,
+        "cpu_percent": 0.5,
+        "memory_mb": 87.8,
+        "memory_percent": 0.6,
+        "threads": 5,
+        "open_files": 2
+      },
+      "version": "1.0.0",
+      "service_name": "auth",
+      "details": {
+        "status": "healthy",
+        "service": "auth"
+      },
+      "manual_notes": null,
+      "is_internal": false
+    }
+  },
+  "last_updated": "2024-01-01T12:00:00Z"
+}
+```
+
+**Status Values:**
+- `healthy`: Service is fully operational (response time < 1500ms)
+- `degraded`: Service is functional but slow (response time 1500-2000ms) or reports degraded status
+- `unhealthy`: Service is down or critically impaired (response time > 2000ms, timeout, or errors)
+
+**Status Reasons:**
+- `null` for healthy services
+- Descriptive text explaining why service is degraded or unhealthy (e.g., "Slow response time (Xms exceeds threshold)", "Request timed out", "Connection refused")
+
+#### Refresh Service Status
+```
+POST /api/admin/service-status/refresh
+```
+
+Trigger an immediate health check of all services.
+
+**Permissions:** Currently public (temporarily disabled for development), will require Admin
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Service status refreshed",
+  "last_updated": "2024-01-01T12:00:00Z"
+}
+```
+
+#### Get Service Logs (Wiki Service)
+```
+GET /api/admin/logs
+```
+
+Get recent log entries from the Wiki Service.
+
+**Query Parameters:**
+- `limit` (optional): Maximum number of log entries (default: 100, max: 500)
+- `level` (optional): Filter by log level (`ERROR`, `WARNING`, `INFO`, `DEBUG`)
+
+**Permissions:** Currently public (temporarily disabled for development), will require Admin
+
+**Response:**
+```json
+{
+  "logs": [
+    {
+      "timestamp": "2024-01-01T12:00:00.123456",
+      "level": "ERROR",
+      "message": "Database connection failed",
+      "raw_message": "Database connection failed",
+      "pathname": "/app/services/db.py",
+      "lineno": 42,
+      "funcName": "connect",
+      "process": 12345,
+      "thread": 140234567890,
+      "threadName": "MainThread"
+    }
+  ]
+}
+```
+
+#### Update Service Status Notes
+```
+PUT /api/admin/service-status
+```
+
+Update manual status notes for a service (for admin-added maintenance notes).
+
+**Permissions:** Admin
+
+**Request:**
+```json
+{
+  "service": "auth",
+  "notes": {
+    "notes": "Planned maintenance window - 2:00 PM to 3:00 PM",
+    "eta": "2024-01-01T15:00:00Z"
+  }
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Status notes updated",
+  "service": "auth",
+  "updated_at": "2024-01-01T12:00:00Z"
+}
+```
 ```
 PUT /api/admin/oversized-pages/{page_id}/status
 ```

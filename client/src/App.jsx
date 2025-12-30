@@ -10,6 +10,8 @@ import { PageVersionCompare } from './pages/PageVersionCompare';
 import { SearchPage } from './pages/SearchPage';
 import { IndexPage } from './pages/IndexPage';
 import { SignInPage } from './pages/SignInPage';
+import { ServiceManagementPage } from './pages/ServiceManagementPage';
+import { ProfilePage } from './pages/ProfilePage';
 
 export function App() {
   return (
@@ -30,6 +32,8 @@ export function App() {
           <Route path="/search" element={<SearchPage />} />
           <Route path="/index" element={<IndexPage />} />
           <Route path="/signin" element={<SignInPage />} />
+          <Route path="/services" element={<ServiceManagementPage />} />
+          <Route path="/profile" element={<ProfilePage />} />
           {/* Fallback */}
           <Route path="*" element={<HomePage />} />
         </Routes>

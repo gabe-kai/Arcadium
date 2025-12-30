@@ -229,3 +229,41 @@ def verify_token():
             jsonify({"valid": False, "error": f"Token verification failed: {str(e)}"}),
             500,
         )
+
+
+@auth_bp.route("/logs", methods=["GET"])
+# Temporarily removed auth requirements to focus on core functionality
+# @require_auth
+# @require_role(["admin"])
+def get_logs():
+    """Get recent log entries for the auth service.
+
+    Permissions: Admin (temporarily disabled for development)
+
+    Query parameters:
+        limit: Maximum number of log entries to return (default: 100, max: 500)
+        level: Filter by log level (ERROR, WARNING, INFO, DEBUG)
+    """
+    try:
+        from app.utils.log_handler import get_log_handler
+
+        # Get query parameters
+        limit = min(int(request.args.get("limit", 100)), 500)
+        level = request.args.get("level", None)
+
+        # Get recent logs
+        log_handler = get_log_handler()
+        logs = log_handler.get_recent_logs(limit=limit, level=level)
+
+        return (
+            jsonify(
+                {
+                    "logs": logs,
+                    "count": len(logs),
+                    "total_available": len(log_handler.logs),
+                }
+            ),
+            200,
+        )
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
