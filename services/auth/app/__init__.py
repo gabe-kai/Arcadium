@@ -76,97 +76,20 @@ def create_app(config_name=None):
 
     @app.route("/health")
     def health():
-        """Health check endpoint with process information - optimized for speed"""
-        import os
-        import time
+        """
+        Health check endpoint with process information.
 
-        # Try to import psutil for process info
-        try:
-            import psutil
+        Returns standardized health status including process metadata.
+        """
+        from app.utils.health_check import get_health_status
+        from flask import jsonify
 
-            PSUTIL_AVAILABLE = True
-        except ImportError:
-            PSUTIL_AVAILABLE = False
-            psutil = None
+        health_status = get_health_status(
+            service_name="auth",
+            version="1.0.0",
+            include_process_info=True,
+        )
 
-        health_status = {"status": "healthy", "service": "auth", "version": "1.0.0"}
-
-        # Add process information if psutil is available
-        # Use minimal operations to keep health check fast
-        if PSUTIL_AVAILABLE:
-            try:
-                process = psutil.Process()
-                # Use oneshot() for efficiency, but keep operations minimal
-                with process.oneshot():
-                    # Get essential info only - skip slow operations
-                    create_time = process.create_time()
-                    uptime_seconds = time.time() - create_time
-                    memory_info = process.memory_info()
-                    memory_mb = memory_info.rss / (1024 * 1024)
-
-                    # Get CPU percent (non-blocking)
-                    try:
-                        cpu_percent = process.cpu_percent(interval=None)
-                    except (psutil.NoSuchProcess, psutil.AccessDenied):
-                        cpu_percent = 0.0
-
-                    # Get memory percent (can be slow, but usually fast)
-                    try:
-                        memory_percent = process.memory_percent()
-                    except (psutil.NoSuchProcess, psutil.AccessDenied):
-                        memory_percent = 0.0
-
-                    # Get thread count (fast)
-                    try:
-                        threads = process.num_threads()
-                    except (psutil.NoSuchProcess, psutil.AccessDenied):
-                        threads = 0
-
-                    # Skip open_files() on Windows - it's extremely slow (can take 1+ seconds)
-                    # This is a known Windows/psutil issue
-                    import platform
-
-                    if platform.system() == "Windows":
-                        open_files = 0  # Skip on Windows
-                    else:
-                        try:
-                            open_files = len(process.open_files())
-                        except (psutil.NoSuchProcess, psutil.AccessDenied, Exception):
-                            open_files = 0
-
-                health_status["process_info"] = {
-                    "pid": process.pid,
-                    "uptime_seconds": round(uptime_seconds, 2),
-                    "cpu_percent": round(cpu_percent, 2),
-                    "memory_mb": round(memory_mb, 2),
-                    "memory_percent": round(memory_percent, 2),
-                    "threads": threads,
-                    "open_files": open_files,
-                }
-            except (psutil.NoSuchProcess, psutil.AccessDenied, AttributeError):
-                # Fallback if psutil fails
-                health_status["process_info"] = {
-                    "pid": os.getpid(),
-                    "uptime_seconds": 0.0,
-                    "cpu_percent": 0.0,
-                    "memory_mb": 0.0,
-                    "memory_percent": 0.0,
-                    "threads": 0,
-                    "open_files": 0,
-                }
-        else:
-            # Basic info without psutil
-            health_status["process_info"] = {
-                "pid": os.getpid(),
-                "uptime_seconds": 0.0,
-                "cpu_percent": 0.0,
-                "memory_mb": 0.0,
-                "memory_percent": 0.0,
-                "threads": 0,
-                "open_files": 0,
-                "note": "psutil not available",
-            }
-
-        return health_status, 200
+        return jsonify(health_status), 200
 
     return app

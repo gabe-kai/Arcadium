@@ -14,6 +14,53 @@ Authorization: Bearer <token>
 
 ## Endpoints
 
+### Health Check
+
+#### Get Health Status
+```
+GET /api/health
+```
+
+**Description:** Health check endpoint that returns service status and process metadata. Conforms to the [Health Endpoint Standard](../../services/health-endpoint-standard.md).
+
+**Authentication:** Not required
+
+**Response:**
+```json
+{
+  "status": "healthy",
+  "service": "wiki",
+  "version": "1.0.0",
+  "process_info": {
+    "pid": 12345,
+    "uptime_seconds": 3600.0,
+    "cpu_percent": 2.5,
+    "memory_mb": 150.0,
+    "memory_percent": 1.2,
+    "threads": 8,
+    "open_files": 5
+  },
+  "dependencies": {
+    "auth_service": {
+      "status": "reachable",
+      "url": "http://localhost:8000",
+      "response_code": 401
+    }
+  }
+}
+```
+
+**Response Fields:**
+- `status` (string, required): Service health status (`healthy`, `degraded`, or `unhealthy`)
+- `service` (string, required): Service identifier (`wiki`)
+- `version` (string, required): Service version
+- `process_info` (object, required): Process metadata including PID, uptime, CPU, memory, threads, and open files
+- `dependencies` (object, optional): Status of service dependencies (e.g., auth service reachability)
+
+**Note:** This endpoint is optimized for speed and does not block on external service checks. Response time is typically < 50ms.
+
+---
+
 ### Pages
 
 #### List Pages

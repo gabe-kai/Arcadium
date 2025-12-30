@@ -17,6 +17,7 @@ Internal messaging and notification system. See [Notification Service Specificat
 
 - [Service Dependencies](service-dependencies.md) - Cross-service dependencies and integration patterns
 - [Service Architecture](service-architecture.md) - Service communication, health checks, and deployment
+- [Health Endpoint Standard](health-endpoint-standard.md) - Standardized health check endpoint format and implementation guide
 
 ## Service Dependencies
 

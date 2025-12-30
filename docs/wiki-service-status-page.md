@@ -147,7 +147,8 @@ Services with logging enabled (Wiki Service, Auth Service) include a "📋 Logs"
    - Health endpoint: `GET /health`
    - Logs endpoint: `GET /api/logs`
    - Description: Authentication and user management service handling login, registration, and JWT tokens
-   - Process information: Retrieved from health endpoint
+   - Process information: Retrieved from standardized health endpoint response
+   - Standard compliance: ✅ Uses `health_check` utility, includes all required fields
 
 3. **File Watcher Service**
    - Health endpoint: Uses Wiki Service health endpoint
@@ -167,8 +168,10 @@ Services with logging enabled (Wiki Service, Auth Service) include a "📋 Logs"
    - Description: Core game server handling game logic, player sessions, and game state
 
 6. **Web Client**
-   - Health endpoint: `GET /health`
+   - Health endpoint: `GET /health` (Vite dev server middleware)
    - Description: Frontend React application providing the user interface for the wiki and platform
+   - Process information: Limited in browser context, but includes standard format structure
+   - Standard compliance: ✅ Includes all required fields (some values are placeholders in browser context)
 
 7. **Admin Service**
    - Health endpoint: `GET /health`
@@ -192,17 +195,26 @@ Services with logging enabled (Wiki Service, Auth Service) include a "📋 Logs"
 
 ## Implementation
 
+### Health Endpoint Standard
+
+All services implement a standardized health endpoint format as defined in [Health Endpoint Standard](../services/health-endpoint-standard.md). This ensures consistent metadata across all services:
+
+- **Required Fields**: `status`, `service`, `version`, `process_info`
+- **Process Info**: PID, uptime, CPU usage, memory usage, threads, open files
+- **Optional Fields**: `dependencies` (service dependency status), service-specific metadata
+
 ### Backend Service
 
 The `ServiceStatusService` (`services/wiki/app/services/service_status_service.py`) handles:
 
 - **Service Health Checks**: HTTP requests to each service's health endpoint
-- **Process Information**: Gathering PID, uptime, CPU, memory, threads using `psutil`
+- **Process Information**: Extracted from standardized health endpoint responses
 - **Connection Pooling**: Uses `requests.Session` for improved performance
 - **Timeout Management**: Optimized timeouts (0.5s for wiki, 1.0s for others)
 - **Status Determination**: Evaluates response time and health endpoint status
 - **Error Handling**: Graceful handling of timeouts, connection errors, and HTTP errors
 - **Status Reasons**: Provides descriptive reasons for non-healthy statuses
+- **Standard Compliance**: Validates and extracts process_info from standardized health responses
 
 ### API Endpoints
 

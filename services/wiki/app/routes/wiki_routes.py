@@ -48,17 +48,28 @@ def root():
 
 @wiki_bp.route("/health", methods=["GET"])
 def health_check():
-    """Health check endpoint - returns quickly without blocking on external services"""
-    import requests
-    from app.services.auth_service_client import get_auth_client
+    """
+    Health check endpoint with process information.
 
-    # Wiki service is healthy if it's responding (which it is, since we're here)
-    health_status = {"status": "healthy", "service": "wiki"}
+    Returns standardized health status including process metadata.
+    Does not block on external services to ensure quick response.
+    """
+    from app.utils.health_check import get_health_status
+
+    # Get standard health status with process info
+    health_status = get_health_status(
+        service_name="wiki",
+        version="1.0.0",
+        include_process_info=True,
+    )
 
     # Optionally check Auth Service connection (non-blocking, very short timeout)
     # This doesn't affect the wiki service's health status
-    auth_client = get_auth_client()
     try:
+        import requests
+        from app.services.auth_service_client import get_auth_client
+
+        auth_client = get_auth_client()
         # Use very short timeout to avoid blocking
         test_url = f"{auth_client.base_url}/api/auth/verify"
         response = requests.post(
@@ -68,16 +79,20 @@ def health_check():
             headers={"Content-Type": "application/json"},
         )
         # Any response (even 401) means the service is reachable
-        health_status["auth_service"] = {
-            "status": "reachable",
-            "url": auth_client.base_url,
-            "response_code": response.status_code,
+        health_status["dependencies"] = {
+            "auth_service": {
+                "status": "reachable",
+                "url": auth_client.base_url,
+                "response_code": response.status_code,
+            }
         }
     except (requests.exceptions.ConnectionError, requests.exceptions.Timeout):
         # Auth service unreachable - wiki is still healthy, just note the dependency
-        health_status["auth_service"] = {
-            "status": "unreachable",
-            "url": auth_client.base_url,
+        health_status["dependencies"] = {
+            "auth_service": {
+                "status": "unreachable",
+                "url": auth_client.base_url,
+            }
         }
         # Don't mark wiki as degraded - it's still functional
     except Exception:

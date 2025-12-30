@@ -201,3 +201,43 @@ export function useUpdateServiceStatusNotes() {
     },
   });
 }
+
+/**
+ * Control a service (start/stop/restart).
+ * @param {string} serviceId - The ID of the service.
+ * @param {string} action - Action to perform: 'start', 'stop', or 'restart'.
+ * @param {string} token - Optional auth token.
+ */
+export function controlService(serviceId, action, token = null) {
+  const config = {
+    timeout: 30000, // 30 seconds for service control
+  };
+
+  if (token) {
+    config.headers = {
+      Authorization: `Bearer ${token}`,
+    };
+  }
+
+  return apiClient
+    .post(`/admin/service-status/${serviceId}/control`, { action }, config)
+    .then((res) => res.data)
+    .catch((error) => {
+      console.error('Service control error:', error);
+      throw error;
+    });
+}
+
+/**
+ * Mutation hook for controlling services.
+ */
+export function useControlService() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ serviceId, action, token }) => controlService(serviceId, action, token),
+    onSuccess: () => {
+      // Invalidate and refetch service status after control action
+      queryClient.invalidateQueries({ queryKey: ['serviceStatus'] });
+    },
+  });
+}

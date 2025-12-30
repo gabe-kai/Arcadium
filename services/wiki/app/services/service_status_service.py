@@ -5,9 +5,12 @@ Checks health of all Arcadium services and manages the service status page.
 """
 
 import os
+import subprocess
+import sys
 import time
 import uuid
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import Dict, Optional
 
 import requests
@@ -739,3 +742,297 @@ class ServiceStatusService:
             db.session.add(config)
 
         db.session.commit()
+
+    @staticmethod
+    def get_service_process_info(service_id: str) -> Optional[Dict]:
+        """
+        Get process information for a service by finding its running process.
+
+        Args:
+            service_id: Service identifier (e.g., 'wiki', 'auth', 'web-client')
+
+        Returns:
+            Dictionary with process info if found, None otherwise
+        """
+        if not PSUTIL_AVAILABLE:
+            return None
+
+        service = ServiceStatusService.SERVICES.get(service_id)
+        if not service:
+            return None
+
+        # Define process search patterns for each service
+        # Use flexible matching - check for key identifiers in command line
+        search_patterns = {
+            "wiki": {
+                "required": ["flask", "run"],
+                "optional": ["wiki", "5000"],  # Port or service name
+            },
+            "auth": {
+                "required": ["flask", "run"],
+                "optional": ["8000", "auth"],  # Port or service name
+            },
+            "web-client": {
+                "required": ["vite", "dev"],
+                "optional": ["npm", "3000"],  # npm run dev or port
+            },
+            "file-watcher": {
+                "required": ["app.sync", "watch"],
+                "optional": ["python"],
+            },
+        }
+
+        patterns = search_patterns.get(service_id)
+        if not patterns:
+            return None
+
+        try:
+            current_pid = os.getpid()
+            for proc in psutil.process_iter(["pid", "name", "cmdline", "create_time"]):
+                try:
+                    proc_info = proc.info
+                    if proc_info["pid"] == current_pid:
+                        continue
+
+                    cmdline = proc_info.get("cmdline", [])
+                    if not cmdline:
+                        continue
+
+                    cmdline_str = " ".join(cmdline).lower()
+                    # Check if process matches service patterns
+                    # Must have all required patterns, and at least one optional
+                    required_match = all(
+                        pattern.lower() in cmdline_str
+                        for pattern in patterns["required"]
+                    )
+                    optional_match = any(
+                        pattern.lower() in cmdline_str
+                        for pattern in patterns["optional"]
+                    )
+
+                    if required_match and optional_match:
+                        create_time = proc_info.get("create_time", 0)
+                        uptime_seconds = (
+                            time.time() - create_time if create_time > 0 else 0
+                        )
+
+                        try:
+                            memory_info = proc.memory_info()
+                            memory_mb = memory_info.rss / (1024 * 1024)
+                            cpu_percent = proc.cpu_percent(interval=0.1)
+                            memory_percent = proc.memory_percent()
+                            threads = proc.num_threads()
+                        except (psutil.NoSuchProcess, psutil.AccessDenied):
+                            memory_mb = 0
+                            cpu_percent = 0
+                            memory_percent = 0
+                            threads = 0
+
+                        return {
+                            "pid": proc_info["pid"],
+                            "uptime_seconds": round(uptime_seconds, 2),
+                            "cpu_percent": round(cpu_percent, 2),
+                            "memory_mb": round(memory_mb, 2),
+                            "memory_percent": round(memory_percent, 2),
+                            "threads": threads,
+                            "command": " ".join(cmdline),
+                        }
+                except (
+                    psutil.NoSuchProcess,
+                    psutil.AccessDenied,
+                    psutil.ZombieProcess,
+                ):
+                    continue
+        except Exception:
+            pass
+
+        return None
+
+    @staticmethod
+    def stop_service(service_id: str) -> Dict:
+        """
+        Stop a service by terminating its process.
+
+        Args:
+            service_id: Service identifier
+
+        Returns:
+            Dictionary with result: {'success': bool, 'message': str}
+        """
+        if not PSUTIL_AVAILABLE:
+            return {
+                "success": False,
+                "message": "psutil not available - cannot control services",
+            }
+
+        process_info = ServiceStatusService.get_service_process_info(service_id)
+        if not process_info:
+            return {
+                "success": False,
+                "message": f"Service {service_id} is not running",
+            }
+
+        try:
+            pid = process_info["pid"]
+            proc = psutil.Process(pid)
+            proc.terminate()  # Graceful shutdown
+            # Wait up to 5 seconds for process to terminate
+            try:
+                proc.wait(timeout=5)
+            except psutil.TimeoutExpired:
+                # Force kill if graceful termination failed
+                proc.kill()
+                proc.wait(timeout=2)
+
+            return {
+                "success": True,
+                "message": f"Service {service_id} stopped successfully",
+                "pid": pid,
+            }
+        except psutil.NoSuchProcess:
+            return {
+                "success": False,
+                "message": f"Process for {service_id} no longer exists",
+            }
+        except psutil.AccessDenied:
+            return {
+                "success": False,
+                "message": f"Permission denied - cannot stop {service_id}",
+            }
+        except Exception as e:
+            return {
+                "success": False,
+                "message": f"Error stopping {service_id}: {str(e)}",
+            }
+
+    @staticmethod
+    def start_service(service_id: str) -> Dict:
+        """
+        Start a service by launching its process.
+
+        Args:
+            service_id: Service identifier
+
+        Returns:
+            Dictionary with result: {'success': bool, 'message': str, 'pid': int}
+        """
+        # Check if service is already running
+        process_info = ServiceStatusService.get_service_process_info(service_id)
+        if process_info:
+            return {
+                "success": False,
+                "message": f"Service {service_id} is already running (PID: {process_info['pid']})",
+            }
+
+        # Get project root directory (assume we're in services/wiki)
+        project_root = Path(__file__).parent.parent.parent.parent.resolve()
+
+        # Define service start commands
+        service_commands = {
+            "wiki": {
+                "cwd": project_root / "services" / "wiki",
+                "command": [sys.executable, "-m", "flask", "run"],
+                "env": os.environ.copy(),
+            },
+            "auth": {
+                "cwd": project_root / "services" / "auth",
+                "command": [sys.executable, "-m", "flask", "run", "--port", "8000"],
+                "env": os.environ.copy(),
+            },
+            "web-client": {
+                "cwd": project_root / "client",
+                "command": (
+                    ["npm", "run", "dev"]
+                    if os.name != "nt"
+                    else ["npm.cmd", "run", "dev"]
+                ),
+                "env": os.environ.copy(),
+            },
+            "file-watcher": {
+                "cwd": project_root / "services" / "wiki",
+                "command": [sys.executable, "-m", "app.sync", "watch"],
+                "env": os.environ.copy(),
+            },
+        }
+
+        service_config = service_commands.get(service_id)
+        if not service_config:
+            return {
+                "success": False,
+                "message": f"Service {service_id} cannot be started automatically",
+            }
+
+        try:
+            # Start process in background
+            if os.name == "nt":  # Windows
+                # Use CREATE_NEW_CONSOLE to detach from parent
+                process = subprocess.Popen(
+                    service_config["command"],
+                    cwd=str(service_config["cwd"]),
+                    env=service_config["env"],
+                    creationflags=subprocess.CREATE_NEW_CONSOLE
+                    | subprocess.DETACHED_PROCESS,
+                )
+            else:  # Linux/Mac
+                # Use nohup or start_new_session to detach
+                process = subprocess.Popen(
+                    service_config["command"],
+                    cwd=str(service_config["cwd"]),
+                    env=service_config["env"],
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                    start_new_session=True,
+                )
+
+            # Give it a moment to start
+            time.sleep(0.5)
+
+            # Verify it's still running
+            if process.poll() is None:
+                return {
+                    "success": True,
+                    "message": f"Service {service_id} started successfully",
+                    "pid": process.pid,
+                }
+            else:
+                return {
+                    "success": False,
+                    "message": f"Service {service_id} failed to start (exit code: {process.returncode})",
+                }
+        except FileNotFoundError:
+            return {
+                "success": False,
+                "message": f"Command not found - ensure {service_id} dependencies are installed",
+            }
+        except Exception as e:
+            return {
+                "success": False,
+                "message": f"Error starting {service_id}: {str(e)}",
+            }
+
+    @staticmethod
+    def restart_service(service_id: str) -> Dict:
+        """
+        Restart a service (stop then start).
+
+        Args:
+            service_id: Service identifier
+
+        Returns:
+            Dictionary with result: {'success': bool, 'message': str}
+        """
+        # Stop first
+        stop_result = ServiceStatusService.stop_service(service_id)
+        if (
+            not stop_result.get("success")
+            and "not running" not in stop_result.get("message", "").lower()
+        ):
+            # If stop failed for a reason other than "not running", return error
+            return stop_result
+
+        # Wait a moment for cleanup
+        time.sleep(1)
+
+        # Start
+        start_result = ServiceStatusService.start_service(service_id)
+        return start_result

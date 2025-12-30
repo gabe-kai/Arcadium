@@ -5,10 +5,132 @@ import {
   useServiceStatus,
   useRefreshServiceStatus,
   useServiceLogs,
+  useControlService,
 } from '../services/api/services';
 import { useAuth } from '../services/auth/AuthContext';
 import { useNotificationContext } from '../components/common/NotificationProvider';
 import { copyToClipboard } from '../utils/share';
+
+/**
+ * ServiceControlButton component - Button to control a service (start/stop/restart)
+ */
+function ServiceControlButton({ serviceId, service }) {
+  const [showControl, setShowControl] = React.useState(false);
+  const { token } = useAuth();
+  const { showSuccess, showError } = useNotificationContext();
+  const controlMutation = useControlService();
+
+  // Check if service can be controlled
+  const controllableServices = ['wiki', 'auth', 'web-client', 'file-watcher'];
+  const canControl = controllableServices.includes(serviceId);
+  const isRunning = service?.status === 'healthy' || service?.status === 'degraded';
+
+  const handleControl = async (action) => {
+    try {
+      const result = await controlMutation.mutateAsync({
+        serviceId,
+        action,
+        token,
+      });
+      if (result.success) {
+        showSuccess(result.message || `Service ${action}ed successfully`);
+        setShowControl(false);
+      } else {
+        showError(result.message || `Failed to ${action} service`);
+      }
+    } catch (error) {
+      showError(
+        error?.response?.data?.message ||
+          error?.response?.data?.error ||
+          `Failed to ${action} service: ${error.message}`
+      );
+    }
+  };
+
+  if (!canControl) {
+    return (
+      <button
+        type="button"
+        className="arc-service-card-action-button"
+        disabled
+        title="Service control not available for this service"
+      >
+        ⚙️ Control
+      </button>
+    );
+  }
+
+  return (
+    <>
+      <button
+        type="button"
+        className="arc-service-card-action-button"
+        onClick={() => setShowControl(!showControl)}
+        title="Control service (start/stop/restart)"
+      >
+        ⚙️ Control
+      </button>
+      {showControl && (
+        <div className="arc-service-control-modal">
+          <div className="arc-service-control-content">
+            <div className="arc-service-control-header">
+              <h3>Control {service.name}</h3>
+              <button
+                type="button"
+                className="arc-service-control-close"
+                onClick={() => setShowControl(false)}
+                title="Close control menu"
+              >
+                ×
+              </button>
+            </div>
+            <div className="arc-service-control-body">
+              <p>Current status: <strong>{service.status || 'unknown'}</strong></p>
+              <div className="arc-service-control-actions">
+                {!isRunning && (
+                  <button
+                    type="button"
+                    className="arc-service-control-action-button arc-service-control-start"
+                    onClick={() => handleControl('start')}
+                    disabled={controlMutation.isPending}
+                    title="Start the service"
+                  >
+                    ▶️ Start
+                  </button>
+                )}
+                {isRunning && (
+                  <>
+                    <button
+                      type="button"
+                      className="arc-service-control-action-button arc-service-control-stop"
+                      onClick={() => handleControl('stop')}
+                      disabled={controlMutation.isPending}
+                      title="Stop the service"
+                    >
+                      ⏹️ Stop
+                    </button>
+                    <button
+                      type="button"
+                      className="arc-service-control-action-button arc-service-control-restart"
+                      onClick={() => handleControl('restart')}
+                      disabled={controlMutation.isPending}
+                      title="Restart the service"
+                    >
+                      🔄 Restart
+                    </button>
+                  </>
+                )}
+              </div>
+              {controlMutation.isPending && (
+                <p className="arc-service-control-status">Processing...</p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
 
 /**
  * ServiceLogsButton component - Button to view logs for a service
@@ -696,15 +818,7 @@ export function ServiceManagementPage() {
                     >
                       📋 Copy
                     </button>
-                    {/* TODO: Implement service control (start/stop) - requires backend endpoint */}
-                    <button
-                      type="button"
-                      className="arc-service-card-action-button"
-                      disabled
-                      title="Service control coming soon"
-                    >
-                      ⚙️ Control
-                    </button>
+                    <ServiceControlButton serviceId={serviceId} service={service} />
                     <ServiceLogsButton serviceId={serviceId} service={service} />
                   </div>
                 </div>
