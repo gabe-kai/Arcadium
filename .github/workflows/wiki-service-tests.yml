@@ -334,4 +334,4 @@ jobs:
           comment_mode: changes
           report_individual_runs: true
           action_fail: false
-          fail_on: never
+          fail_on: nothing
