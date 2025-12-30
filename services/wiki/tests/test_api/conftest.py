@@ -64,6 +64,12 @@ def test_writer_id():
 
 
 @pytest.fixture
+def test_viewer_id():
+    """Create a test viewer user ID"""
+    return uuid.uuid4()
+
+
+@pytest.fixture
 def test_admin_id():
     """Create a test admin user ID"""
     return uuid.uuid4()

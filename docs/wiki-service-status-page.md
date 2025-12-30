@@ -16,8 +16,9 @@ The Service Management Page is an interactive web interface that provides real-t
 
 - **URL**: `/services` (in web client)
 - **Navigation**: Click the status indicator (🟢/🟡/🔴) in the header navigation bar
-- **View Access**: Currently available to all users (authentication requirements temporarily disabled for development)
-- **Future**: Will require admin role for full access
+- **Status Indicator**: Visible to everyone (authenticated or not) - shows overall system health
+- **Page Access**: Requires authentication (any role) - view-only mode for non-admin users
+- **Admin Features**: Control buttons (start/stop/restart) and Logs buttons require admin role
 
 ## Features
 
@@ -80,7 +81,9 @@ The File Watcher Service (AI Content Management) includes additional metadata:
 
 ### Logs Viewing
 
-Services with logging enabled (Wiki Service, Auth Service) include a "📋 Logs" button that opens a modal displaying:
+**Permissions:** Admin only
+
+Services with logging enabled (Wiki Service, Auth Service) include a "📋 Logs" button (visible only to admin users) that opens a modal displaying:
 - Recent log entries (up to 100 by default)
 - Log level (ERROR, WARNING, INFO, DEBUG)
 - Timestamp for each entry
@@ -90,9 +93,22 @@ Services with logging enabled (Wiki Service, Auth Service) include a "📋 Logs"
 
 ### Copy Functionality
 
+**Permissions:** All authenticated users
+
 - **Individual Service Copy**: "📋 Copy" button on each service card copies formatted service information to clipboard
 - **Copy All**: "📋 Copy All" button in header copies a comprehensive status report for all services
 - **Formatted Output**: Includes all service details in a readable text format suitable for reports or troubleshooting
+
+### Service Control
+
+**Permissions:** Admin only
+
+Services that support programmatic control (Wiki Service, Auth Service, Web Client, File Watcher) include a "⚙️ Control" button (visible only to admin users) that allows:
+- **Start**: Start a stopped service
+- **Stop**: Gracefully stop a running service
+- **Restart**: Stop and then start a service
+
+Control operations are restricted to admin users for security reasons.
 
 ## Status Indicators
 

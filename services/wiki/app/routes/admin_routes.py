@@ -344,13 +344,12 @@ def update_oversized_page_status(page_id):
 
 
 @admin_bp.route("/admin/service-status", methods=["GET"])
-# Temporarily removed auth requirements to focus on core functionality
-# @require_auth
-# @require_role(["admin"])
+@require_auth
 def get_service_status():
     """Get service status for all Arcadium services.
 
-    Permissions: Admin (temporarily disabled for development)
+    Permissions: Authenticated users (any role) - view-only access
+    Admin role required for control/logs features
     """
     try:
         # Check all services (with optimized timeouts)
@@ -515,13 +514,12 @@ def update_service_status():
 
 
 @admin_bp.route("/admin/logs", methods=["GET"])
-# Temporarily removed auth requirements to focus on core functionality
-# @require_auth
-# @require_role(["admin"])
+@require_auth
+@require_role(["admin"])
 def get_logs():
     """Get recent log entries for the wiki service.
 
-    Permissions: Admin (temporarily disabled for development)
+    Permissions: Admin
 
     Query parameters:
         limit: Maximum number of log entries to return (default: 100, max: 500)
@@ -554,11 +552,10 @@ def get_logs():
 
 @admin_bp.route("/admin/service-status/refresh", methods=["POST"])
 @require_auth
-@require_role(["admin"])
 def refresh_service_status_page():
     """Refresh the service status page with current health check data.
 
-    Permissions: Admin
+    Permissions: Authenticated users (any role) - view-only access
     """
     try:
         user_id = getattr(request, "user_id", None) or uuid.UUID(

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Layout } from '../components/layout/Layout';
 import { Sidebar } from '../components/layout/Sidebar';
 import {
@@ -13,12 +14,18 @@ import { copyToClipboard } from '../utils/share';
 
 /**
  * ServiceControlButton component - Button to control a service (start/stop/restart)
+ * Only visible and functional for admin users
  */
-function ServiceControlButton({ serviceId, service }) {
+function ServiceControlButton({ serviceId, service, isAdmin }) {
   const [showControl, setShowControl] = React.useState(false);
   const { token } = useAuth();
   const { showSuccess, showError } = useNotificationContext();
   const controlMutation = useControlService();
+
+  // Hide button if user is not admin
+  if (!isAdmin) {
+    return null;
+  }
 
   // Check if service can be controlled
   const controllableServices = ['wiki', 'auth', 'web-client', 'file-watcher'];
@@ -134,17 +141,23 @@ function ServiceControlButton({ serviceId, service }) {
 
 /**
  * ServiceLogsButton component - Button to view logs for a service
+ * Only visible and functional for admin users
  */
-function ServiceLogsButton({ serviceId, service }) {
+function ServiceLogsButton({ serviceId, service, isAdmin }) {
   const [showLogs, setShowLogs] = React.useState(false);
   const { token } = useAuth();
   const { data: logsData, isLoading: logsLoading, error: logsError } = useServiceLogs(
     serviceId,
-    showLogs, // Only fetch when logs are shown
+    showLogs && isAdmin, // Only fetch when logs are shown and user is admin
     100,
     null,
     token
   );
+
+  // Hide button if user is not admin
+  if (!isAdmin) {
+    return null;
+  }
 
   // Check if service has logs endpoint
   // Check both serviceId and service name to be more flexible
@@ -235,50 +248,55 @@ function ServiceLogsButton({ serviceId, service }) {
 
 /**
  * ServiceManagementPage component - Displays service status and management controls
+ * Accessible to all authenticated users, but control/logs features require admin role
  */
 export function ServiceManagementPage() {
   const { isAuthenticated, user, isLoading: authLoading, token } = useAuth();
   const { showSuccess, showError } = useNotificationContext();
+  const navigate = useNavigate();
 
-  // Temporarily removed auth requirements - fetch for everyone
-  // Check if user is admin (for future use)
+  // Check if user is admin (for control/logs features)
   const isAdmin = isAuthenticated && user?.role === 'admin';
 
-  // Fetch service status for everyone (temporarily), wait for auth to be ready
-  // Pass token directly to avoid localStorage timing issues
-  const { data: statusData, isLoading, isError, error, refetch } = useServiceStatus(!authLoading, !authLoading, token);
+  // Require authentication to view the page
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      navigate('/signin', { replace: true });
+    }
+  }, [authLoading, isAuthenticated, navigate]);
+
+  // Fetch service status - requires authentication
+  const { data: statusData, isLoading, isError, error, refetch } = useServiceStatus(
+    isAuthenticated && !authLoading,
+    isAuthenticated && !authLoading,
+    token
+  );
   const refreshMutation = useRefreshServiceStatus();
 
-  // Check if we got empty services (indicates 401/403 - no access)
-  const hasEmptyServices = statusData?.services && Object.keys(statusData.services).length === 0;
+  // Check if we got empty services (indicates 401/403 - no access or timeout)
+  const hasEmptyServices = statusData?.services && Object.keys(statusData.services || {}).length === 0;
 
-  // Debug logging
-  useEffect(() => {
-    console.log('ServiceManagementPage state:', {
-      isAdmin,
-      isAuthenticated,
-      userRole: user?.role,
-      hasEmptyServices,
-      isLoading,
-      isError,
-      statusData: statusData ? {
-        hasServices: !!statusData.services,
-        serviceCount: statusData.services ? Object.keys(statusData.services).length : 0,
-        authError: statusData.authError,
-        error: statusData.error
-      } : null,
-    });
+  // Show loading state while checking authentication
+  if (authLoading) {
+    return (
+      <Layout sidebar={<Sidebar />}>
+        <div className="arc-service-management-page">
+          <p>Loading...</p>
+        </div>
+      </Layout>
+    );
+  }
 
-    if (isError) {
-      console.error('ServiceManagementPage error:', error);
-      console.error('Error details:', {
-        status: error?.response?.status,
-        statusText: error?.response?.statusText,
-        data: error?.response?.data,
-        message: error?.message,
-      });
-    }
-  }, [isAdmin, isAuthenticated, user?.role, hasEmptyServices, isLoading, isError, error, statusData]);
+  // Redirect to signin if not authenticated (handled by useEffect, but show message while redirecting)
+  if (!isAuthenticated) {
+    return (
+      <Layout sidebar={<Sidebar />}>
+        <div className="arc-service-management-page">
+          <p>Redirecting to sign in...</p>
+        </div>
+      </Layout>
+    );
+  }
 
   const handleRefresh = async () => {
     try {
@@ -818,8 +836,8 @@ export function ServiceManagementPage() {
                     >
                       📋 Copy
                     </button>
-                    <ServiceControlButton serviceId={serviceId} service={service} />
-                    <ServiceLogsButton serviceId={serviceId} service={service} />
+                    <ServiceControlButton serviceId={serviceId} service={service} isAdmin={isAdmin} />
+                    <ServiceLogsButton serviceId={serviceId} service={service} isAdmin={isAdmin} />
                   </div>
                 </div>
               ))}

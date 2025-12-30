@@ -941,7 +941,7 @@ GET /api/admin/service-status
 
 Get real-time status of all Arcadium services.
 
-**Permissions:** Currently public (temporarily disabled for development), will require Admin
+**Permissions:** Authenticated users (any role) - view-only access
 
 **Response:**
 ```json
@@ -1020,7 +1020,7 @@ POST /api/admin/service-status/refresh
 
 Trigger an immediate health check of all services.
 
-**Permissions:** Currently public (temporarily disabled for development), will require Admin
+**Permissions:** Authenticated users (any role) - view-only access
 
 **Response:**
 ```json
@@ -1042,7 +1042,7 @@ Get recent log entries from the Wiki Service.
 - `limit` (optional): Maximum number of log entries (default: 100, max: 500)
 - `level` (optional): Filter by log level (`ERROR`, `WARNING`, `INFO`, `DEBUG`)
 
-**Permissions:** Currently public (temporarily disabled for development), will require Admin
+**Permissions:** Admin only
 
 **Response:**
 ```json
@@ -1093,6 +1093,50 @@ Update manual status notes for a service (for admin-added maintenance notes).
   "updated_at": "2024-01-01T12:00:00Z"
 }
 ```
+
+#### Control Service
+```
+POST /api/admin/service-status/<service_id>/control
+```
+
+Control a service (start, stop, or restart).
+
+**Permissions:** Admin only
+
+**Request Body:**
+```json
+{
+  "action": "start" | "stop" | "restart"
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Service wiki started successfully (PID: 12345).",
+  "pid": 12345
+}
+```
+
+**Error Response:**
+```json
+{
+  "success": false,
+  "message": "Service wiki is already running (PID: 12345)"
+}
+```
+
+**Supported Services:**
+- `wiki` - Wiki Service
+- `auth` - Auth Service
+- `web-client` - Web Client
+- `file-watcher` - File Watcher Service
+
+**Note:** Only services with defined start commands can be controlled. Other services will return an error.
+
+---
+
 ```
 PUT /api/admin/oversized-pages/{page_id}/status
 ```

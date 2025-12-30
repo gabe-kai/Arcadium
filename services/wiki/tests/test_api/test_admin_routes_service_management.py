@@ -9,11 +9,8 @@ from tests.test_api.conftest import auth_headers, mock_auth
 
 def test_get_service_logs_requires_auth(client):
     """Get service logs should require authentication"""
-    # Note: Auth is temporarily disabled for development, so this will return 200
-    # Once auth is re-enabled, this should return 401
     resp = client.get("/api/admin/logs")
-    # Currently returns 200 because auth is disabled, but test structure is ready
-    assert resp.status_code in (200, 401)
+    assert resp.status_code == 401
 
 
 @patch("app.utils.log_handler.get_log_handler")
@@ -174,6 +171,40 @@ def test_refresh_service_status_requires_auth(client):
     """Refresh service status should require authentication"""
     resp = client.post("/api/admin/service-status/refresh")
     assert resp.status_code == 401
+
+
+@patch("app.routes.admin_routes.ServiceStatusService.create_or_update_status_page")
+@patch("app.routes.admin_routes.ServiceStatusService.check_all_services")
+def test_refresh_service_status_allows_authenticated_users(
+    mock_check_all, mock_create_page, client, app, test_writer_id
+):
+    """Refresh service status should allow any authenticated user (not just admin)"""
+    import uuid
+    from unittest.mock import MagicMock
+
+    from app.models.page import Page
+
+    mock_check_all.return_value = {
+        "wiki": {
+            "status": "healthy",
+            "response_time_ms": 5.0,
+            "error": None,
+            "details": {},
+        }
+    }
+
+    mock_page = MagicMock(spec=Page)
+    mock_page.id = uuid.UUID("12345678-1234-1234-1234-123456789012")
+    mock_page.slug = "service-status"
+    mock_create_page.return_value = mock_page
+
+    # Writer (non-admin) should be able to refresh
+    with mock_auth(test_writer_id, "writer"):
+        headers = auth_headers(test_writer_id, "writer")
+        resp = client.post("/api/admin/service-status/refresh", headers=headers)
+        assert resp.status_code == 200
+        data = resp.get_json()
+        assert data["success"] is True
 
 
 @patch("app.routes.admin_routes.ServiceStatusService.check_all_services")
