@@ -96,6 +96,20 @@ class TestingConfig(Config):
     # Test database - uses PostgreSQL for accurate testing (matches production)
     # Can be set via TEST_DATABASE_URL or constructed from arcadium_user/arcadium_pass
     _test_db_url = os.environ.get("TEST_DATABASE_URL")
+
+    # Override engine options for testing - use same settings as development
+    # but with smaller pool to avoid connection issues
+    SQLALCHEMY_ENGINE_OPTIONS = {
+        "pool_size": 5,  # Small pool for tests
+        "max_overflow": 5,  # Limited overflow for tests
+        "pool_timeout": 10,  # Reasonable timeout for tests
+        "pool_pre_ping": True,
+        "connect_args": {
+            "connect_timeout": 10,  # Connection timeout in seconds
+            # Disable statement timeout for test DDL to avoid DROP/CREATE timeouts
+            "options": "-c statement_timeout=0",
+        },
+    }
     if not _test_db_url:
         db_user = os.environ.get("arcadium_user")
         db_pass = os.environ.get("arcadium_pass")

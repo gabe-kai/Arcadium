@@ -21,7 +21,7 @@ Project documentation for Arcadium.
 - [Wiki Admin Dashboard](wiki-admin-dashboard.md) - Admin configuration and monitoring
 - [Wiki Section Extraction](wiki-section-extraction.md) - Section extraction features
 - [Wiki AI Content Management](wiki-ai-content-management.md) - AI agent writing workflow
-- [Wiki Service Status Page](wiki-service-status-page.md) - Service health monitoring page
+- [Service Management Page](wiki-service-status-page.md) - Interactive service health monitoring and management dashboard
 - [Wiki Open Questions](wiki-open-questions.md) - All questions resolved
 
 ### Auth Service

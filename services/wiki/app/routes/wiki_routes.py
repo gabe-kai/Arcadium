@@ -48,23 +48,23 @@ def root():
 
 @wiki_bp.route("/health", methods=["GET"])
 def health_check():
-    """Health check endpoint"""
-
+    """Health check endpoint - returns quickly without blocking on external services"""
+    import requests
     from app.services.auth_service_client import get_auth_client
 
+    # Wiki service is healthy if it's responding (which it is, since we're here)
     health_status = {"status": "healthy", "service": "wiki"}
 
-    # Test Auth Service connection
+    # Optionally check Auth Service connection (non-blocking, very short timeout)
+    # This doesn't affect the wiki service's health status
     auth_client = get_auth_client()
     try:
-        # Try a simple connection test (this will fail but tells us if service is reachable)
-        import requests
-
+        # Use very short timeout to avoid blocking
         test_url = f"{auth_client.base_url}/api/auth/verify"
         response = requests.post(
             test_url,
             json={"token": "test"},
-            timeout=2,
+            timeout=0.3,  # Very short timeout - just a quick check
             headers={"Content-Type": "application/json"},
         )
         # Any response (even 401) means the service is reachable
@@ -73,30 +73,19 @@ def health_check():
             "url": auth_client.base_url,
             "response_code": response.status_code,
         }
-    except requests.exceptions.ConnectionError:
+    except (requests.exceptions.ConnectionError, requests.exceptions.Timeout):
+        # Auth service unreachable - wiki is still healthy, just note the dependency
         health_status["auth_service"] = {
             "status": "unreachable",
             "url": auth_client.base_url,
-            "error": "Connection refused - Auth Service may not be running",
         }
-        health_status["status"] = "degraded"
-    except requests.exceptions.Timeout:
-        health_status["auth_service"] = {
-            "status": "timeout",
-            "url": auth_client.base_url,
-            "error": "Request timed out",
-        }
-        health_status["status"] = "degraded"
-    except Exception as e:
-        health_status["auth_service"] = {
-            "status": "error",
-            "url": auth_client.base_url,
-            "error": str(e),
-        }
-        health_status["status"] = "degraded"
+        # Don't mark wiki as degraded - it's still functional
+    except Exception:
+        # Any other error - just skip the auth check
+        pass
 
-    status_code = 200 if health_status["status"] == "healthy" else 503
-    return jsonify(health_status), status_code
+    # Always return 200 - wiki service is healthy if it can respond
+    return jsonify(health_status), 200
 
 
 @wiki_bp.route("/admin/clear-cache", methods=["POST"])

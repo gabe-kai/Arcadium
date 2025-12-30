@@ -33,9 +33,10 @@ def test_get_status_display_name():
     assert ServiceStatusService.get_status_display_name("unknown") == "Unknown"
 
 
-@patch("app.services.service_status_service.requests.get")
-def test_check_service_health_healthy(mock_get):
+def test_check_service_health_healthy():
     """Test checking a healthy service"""
+    # Create a mock session and set it directly
+    mock_session = MagicMock()
     mock_response = MagicMock()
     mock_response.status_code = 200
     mock_response.json.return_value = {
@@ -43,19 +44,31 @@ def test_check_service_health_healthy(mock_get):
         "service": "wiki",
         "version": "1.0.0",
     }
-    mock_get.return_value = mock_response
+    mock_response.headers.get.return_value = "application/json"
+    mock_session.get.return_value = mock_response
 
-    result = ServiceStatusService.check_service_health("wiki")
+    # Set the session directly
+    original_session = ServiceStatusService._session
+    ServiceStatusService._session = mock_session
 
-    assert result["status"] == "healthy"
-    assert result["error"] is None
-    assert "response_time_ms" in result
-    assert result["details"]["service"] == "wiki"
+    try:
+        # Mock time to simulate fast response
+        with patch("app.services.service_status_service.time.time") as mock_time:
+            mock_time.side_effect = [0.0, 0.1]  # 100ms elapsed
+            result = ServiceStatusService.check_service_health("wiki", timeout=2.0)
+
+        assert result["status"] == "healthy"
+        assert result["error"] is None
+        assert "response_time_ms" in result
+        assert result["details"]["service"] == "wiki"
+    finally:
+        # Restore original session
+        ServiceStatusService._session = original_session
 
 
-@patch("app.services.service_status_service.requests.get")
-def test_check_service_health_degraded(mock_get):
+def test_check_service_health_degraded():
     """Test checking a degraded service"""
+    mock_session = MagicMock()
     mock_response = MagicMock()
     mock_response.status_code = 200
     mock_response.json.return_value = {
@@ -63,48 +76,77 @@ def test_check_service_health_degraded(mock_get):
         "service": "notification",
         "warnings": ["High latency"],
     }
-    mock_get.return_value = mock_response
+    mock_response.headers.get.return_value = "application/json"
+    mock_session.get.return_value = mock_response
 
-    result = ServiceStatusService.check_service_health("notification")
+    original_session = ServiceStatusService._session
+    ServiceStatusService._session = mock_session
 
-    assert result["status"] == "degraded"
-    assert result["error"] is None
+    try:
+        with patch("app.services.service_status_service.time.time") as mock_time:
+            mock_time.side_effect = [0.0, 0.1]
+            result = ServiceStatusService.check_service_health(
+                "notification", timeout=2.0
+            )
+
+        assert result["status"] == "degraded"
+        assert result["error"] is None
+    finally:
+        ServiceStatusService._session = original_session
 
 
-@patch("app.services.service_status_service.requests.get")
-def test_check_service_health_timeout(mock_get):
+def test_check_service_health_timeout():
     """Test checking a service that times out"""
-    mock_get.side_effect = requests.exceptions.Timeout()
+    mock_session = MagicMock()
+    mock_session.get.side_effect = requests.exceptions.Timeout()
 
-    result = ServiceStatusService.check_service_health("auth", timeout=1.0)
+    original_session = ServiceStatusService._session
+    ServiceStatusService._session = mock_session
 
-    assert result["status"] == "unhealthy"
-    assert result["error"] == "Request timeout"
-    assert result["response_time_ms"] == 1000.0  # timeout * 1000
+    try:
+        result = ServiceStatusService.check_service_health("auth", timeout=1.0)
+
+        assert result["status"] == "unhealthy"
+        assert result["error"] == "Request timeout"
+        assert result["response_time_ms"] == 1000.0  # timeout * 1000
+    finally:
+        ServiceStatusService._session = original_session
 
 
-@patch("app.services.service_status_service.requests.get")
-def test_check_service_health_connection_error(mock_get):
+def test_check_service_health_connection_error():
     """Test checking a service that can't connect"""
-    mock_get.side_effect = requests.exceptions.ConnectionError()
+    mock_session = MagicMock()
+    mock_session.get.side_effect = requests.exceptions.ConnectionError()
 
-    result = ServiceStatusService.check_service_health("game-server")
+    original_session = ServiceStatusService._session
+    ServiceStatusService._session = mock_session
 
-    assert result["status"] == "unhealthy"
-    assert result["error"] == "Connection refused"
+    try:
+        result = ServiceStatusService.check_service_health("game-server")
+
+        assert result["status"] == "unhealthy"
+        assert result["error"] == "Connection refused"
+    finally:
+        ServiceStatusService._session = original_session
 
 
-@patch("app.services.service_status_service.requests.get")
-def test_check_service_health_non_200(mock_get):
+def test_check_service_health_non_200():
     """Test checking a service that returns non-200"""
+    mock_session = MagicMock()
     mock_response = MagicMock()
     mock_response.status_code = 500
-    mock_get.return_value = mock_response
+    mock_session.get.return_value = mock_response
 
-    result = ServiceStatusService.check_service_health("auth")
+    original_session = ServiceStatusService._session
+    ServiceStatusService._session = mock_session
 
-    assert result["status"] == "unhealthy"
-    assert "HTTP 500" in result["error"]
+    try:
+        result = ServiceStatusService.check_service_health("auth")
+
+        assert result["status"] == "unhealthy"
+        assert "HTTP 500" in result["error"]
+    finally:
+        ServiceStatusService._session = original_session
 
 
 def test_check_service_health_unknown_service():

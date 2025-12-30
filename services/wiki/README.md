@@ -238,6 +238,51 @@ Tests run automatically on GitHub Actions for:
 
 See [CI/CD Documentation](../../docs/ci-cd.md) for details.
 
+## Service Management
+
+The Wiki Service includes a Service Management feature that provides real-time monitoring of all Arcadium services.
+
+### Service Status Dashboard
+
+Access the Service Management page at `/services` in the web client. The dashboard displays:
+
+- **Service Health Status**: Real-time status (🟢 healthy, 🟡 degraded, 🔴 unhealthy) for all services
+- **Process Information**: PID, uptime, CPU usage, memory usage, threads, open files
+- **Service Details**: Version, description, response times, error messages
+- **Service Logs**: View recent logs for Wiki Service and Auth Service
+- **Copy Functionality**: Copy individual service info or full status report
+
+### Status Indicator
+
+A status indicator in the navigation bar (visible to all users) shows overall system health:
+- 🟢 Green: All services healthy
+- 🟡 Amber: One or more services degraded
+- 🔴 Red: One or more services unhealthy
+- ⚪ Gray: Status unknown (loading or error)
+
+Clicking the status indicator opens the Service Management page.
+
+### Auto-Refresh
+
+Service status automatically refreshes every 15 seconds when the page is active.
+
+### Monitored Services
+
+The system monitors:
+- Wiki Service (self-monitoring with process info)
+- Auth Service (with logs)
+- File Watcher Service (AI Content Management)
+- Notification Service
+- Game Server
+- Web Client
+- Admin Service
+- Assets Service
+- Chat Service
+- Leaderboard Service
+- Presence Service
+
+For detailed documentation, see [Service Management Page](../../docs/wiki-service-status-page.md).
+
 ## API Endpoints
 
 ### Page Endpoints
@@ -251,3 +296,9 @@ See [CI/CD Documentation](../../docs/ci-cd.md) for details.
 - `DELETE /api/pages/<page_id>/archive` - Unarchive a page (requires writer/admin role, writers can only unarchive own pages)
 
 **Note**: Archived pages are hidden from list views, search results, and index views. Only admins and writers (with permission) can view archived pages.
+
+### Admin Endpoints
+- `GET /api/admin/service-status` - Get status of all Arcadium services
+- `POST /api/admin/service-status/refresh` - Trigger immediate status check of all services
+- `GET /api/admin/logs` - Get recent logs from Wiki Service (query params: `limit`, `level`)
+- `PUT /api/admin/service-status` - Update manual status notes for a service (admin only)

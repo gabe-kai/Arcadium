@@ -1,193 +1,208 @@
-# Wiki Service Status Page
+# Service Management Page
 
 ## Overview
 
-The Service Status Page is a static wiki page that displays the health status of all Arcadium services. It provides a centralized view of system health with visual indicators (red/yellow/green) and explanatory notes for any issues.
+The Service Management Page is an interactive web interface that provides real-time monitoring and management of all Arcadium services. It displays service health status, process information, resource usage, and recent logs in a user-friendly dashboard format.
 
 ## Purpose
 
-- **Visibility**: Provide a single location to check the status of all services
-- **Transparency**: Keep users informed about system health and any issues
-- **Operational**: Help administrators quickly identify and communicate service issues
-- **Documentation**: Maintain a record of service status and maintenance windows
+- **Real-time Monitoring**: Live status updates every 15 seconds for all services
+- **Visibility**: Centralized view of system health with visual indicators (🟢 healthy, 🟡 degraded, 🔴 unhealthy)
+- **Operational**: Help administrators quickly identify issues and view service details
+- **Transparency**: Status indicator in navigation bar visible to all users
+- **Debugging**: Access to service logs and process information for troubleshooting
 
-## Page Structure
+## Access
 
-### Location
-- **Slug**: `service-status` or `system/service-status`
-- **Type**: System page (`is_system_page = true`)
-- **Access**: Public (viewable by all users)
-- **Editing**: Admin only (status updates)
+- **URL**: `/services` (in web client)
+- **Navigation**: Click the status indicator (🟢/🟡/🔴) in the header navigation bar
+- **View Access**: Currently available to all users (authentication requirements temporarily disabled for development)
+- **Future**: Will require admin role for full access
 
-### Content Structure
+## Features
 
-```markdown
-# Arcadium Service Status
+### Service Status Dashboard
 
-*Last Updated: 2024-01-01 12:00:00 UTC*
+The main dashboard displays:
 
-## Services
+- **Service Cards**: Individual cards for each service showing:
+  - Service name and description
+  - Status indicator (🟢 healthy, 🟡 degraded, 🔴 unhealthy)
+  - Status reason (for non-healthy services)
+  - Response time
+  - Last check timestamp
+  - Process information (PID, uptime, CPU usage, memory usage, threads, open files)
+  - Service version
+  - Error messages (if any)
+  - Manual notes (admin-added notes)
 
-| Service | Status | Last Check | Response Time | Notes |
-|---------|--------|------------|---------------|-------|
-| Wiki Service | 🟢 Healthy | 2024-01-01 12:00:00 | 5ms | All systems operational |
-| Auth Service | 🟢 Healthy | 2024-01-01 12:00:00 | 12ms | - |
-| Notification Service | 🟡 Degraded | 2024-01-01 12:00:00 | 250ms | High latency, investigating |
-| Game Server | 🔴 Unhealthy | 2024-01-01 12:00:00 | N/A | Service restarting |
-| Web Client | 🟢 Healthy | 2024-01-01 12:00:00 | 8ms | - |
-| Admin Service | 🟢 Healthy | 2024-01-01 12:00:00 | 6ms | - |
-| Assets Service | 🟢 Healthy | 2024-01-01 12:00:00 | 10ms | - |
-| Chat Service | 🟢 Healthy | 2024-01-01 12:00:00 | 7ms | - |
-| Leaderboard Service | 🟢 Healthy | 2024-01-01 12:00:00 | 9ms | - |
-| Presence Service | 🟢 Healthy | 2024-01-01 12:00:00 | 11ms | - |
+- **Summary Statistics**: Overall counts of healthy, degraded, and unhealthy services
 
-## Status Notes
+- **Auto-refresh**: Status updates automatically every 15 seconds
 
-### Notification Service (🟡 Degraded)
-- **Issue**: High response latency detected (>200ms)
-- **Impact**: Notifications may be delayed by up to 5 seconds
-- **ETA**: Expected resolution within 1 hour
-- **Last Updated**: 2024-01-01 11:45:00 UTC
-- **Updated By**: admin@example.com
+- **Manual Refresh**: "🔄 Refresh" button for immediate status check
 
-### Game Server (🔴 Unhealthy)
-- **Issue**: Service restarting after unexpected crash
-- **Impact**: Game unavailable, players cannot connect
-- **ETA**: Expected resolution within 15 minutes
-- **Last Updated**: 2024-01-01 11:50:00 UTC
-- **Updated By**: admin@example.com
+### Service Status Indicator (Navigation Bar)
 
----
+- **Location**: Header navigation bar (visible to all users)
+- **Visual States**:
+  - 🟢 Green: All services healthy
+  - 🟡 Amber: One or more services degraded
+  - 🔴 Red: One or more services unhealthy
+  - ⚪ Gray: Status unknown (loading or error)
+- **Tooltip**: Descriptive summary of service status on hover
+- **Action**: Clicking opens the Service Management page
 
-*Status checks run automatically every 60 seconds. Manual updates can be made by administrators.*
-```
+### Service Details
+
+Each service card displays:
+
+#### Process Information
+- **Process ID (PID)**: Operating system process identifier
+- **Uptime**: How long the service has been running (formatted as hours, minutes, seconds)
+- **CPU Usage**: Percentage of CPU resources used
+- **Memory**: Memory usage in MB and percentage of system memory
+- **Threads**: Number of active threads
+- **Open Files**: Number of open file descriptors (when available)
+
+#### Service Metadata
+- **Version**: Service version number
+- **Service Name**: Internal service identifier
+- **Description**: Human-readable description of the service's purpose
+- **Internal Flag**: Indicates if the service is an internal component (e.g., File Watcher)
+
+#### File Watcher Service
+The File Watcher Service (AI Content Management) includes additional metadata:
+- **Running Status**: Whether the watcher process is detected
+- **Debounce Time**: File change debounce interval in seconds
+- **Watched Directory**: Directory being monitored
+- **Command**: Command line used to start the watcher
+
+### Logs Viewing
+
+Services with logging enabled (Wiki Service, Auth Service) include a "📋 Logs" button that opens a modal displaying:
+- Recent log entries (up to 100 by default)
+- Log level (ERROR, WARNING, INFO, DEBUG)
+- Timestamp for each entry
+- Raw log messages
+- Color-coded log levels for easy scanning
+- Auto-refresh every 5 seconds when modal is open
+
+### Copy Functionality
+
+- **Individual Service Copy**: "📋 Copy" button on each service card copies formatted service information to clipboard
+- **Copy All**: "📋 Copy All" button in header copies a comprehensive status report for all services
+- **Formatted Output**: Includes all service details in a readable text format suitable for reports or troubleshooting
 
 ## Status Indicators
 
 ### 🟢 Green (Healthy)
 - Service is fully operational
 - All health checks passing
-- Response time within acceptable range
-- No known issues
+- Response time < 1500ms
+- No errors or warnings
 
 **Criteria:**
 - Health endpoint returns `200 OK`
 - Status is `"healthy"`
-- Response time < 100ms (or service-specific threshold)
-- Database connection active (if applicable)
+- Response time < 1500ms
+- No errors in health check response
 
 ### 🟡 Yellow (Degraded)
 - Service is partially operational
-- Some functionality may be limited
-- Performance issues or warnings
-- Non-critical errors
+- Performance issues detected
+- Response time between 1500ms and 2000ms
+- Service functional but slow
 
 **Criteria:**
-- Health endpoint returns `200 OK` but status is `"degraded"`
-- Response time > 100ms but < 1000ms
-- Warnings present in health check response
-- Partial functionality available
+- Health endpoint returns `200 OK`
+- Status is `"healthy"` but response time > 1500ms
+- Or service reports `"degraded"` status
+- Status reason: "Slow response time (Xms exceeds 1500ms threshold)"
 
 ### 🔴 Red (Unhealthy)
 - Service is down or critically impaired
 - Critical functionality unavailable
-- Errors preventing normal operation
-- Requires immediate attention
+- Response time > 2000ms or timeout
+- Connection errors or HTTP errors
 
 **Criteria:**
 - Health endpoint returns non-200 status
 - Status is `"unhealthy"`
-- Response time > 1000ms or timeout
-- Critical errors in health check response
-- Service unreachable
+- Response time > 2000ms or request timeout
+- Connection refused or HTTP errors (404, 500, etc.)
+- Status reason provides specific error details
 
-## Services to Monitor
+## Monitored Services
 
 ### Core Services
-1. **Wiki Service** (self)
-   - Health endpoint: `GET /health`
-   - Database connection check
-   - File system access check
+
+1. **Wiki Service**
+   - Health endpoint: `GET /api/health`
+   - Logs endpoint: `GET /api/admin/logs`
+   - Description: Core wiki service providing page management, search, navigation, and content APIs
+   - Process information: Self-monitoring (current process)
 
 2. **Auth Service**
    - Health endpoint: `GET /health`
-   - Database connection check
-   - Token validation check
+   - Logs endpoint: `GET /api/logs`
+   - Description: Authentication and user management service handling login, registration, and JWT tokens
+   - Process information: Retrieved from health endpoint
 
-3. **Notification Service**
-   - Health endpoint: `GET /health`
-   - Database connection check
-   - Message queue check (if applicable)
-
-### Game Services
-4. **Game Server**
-   - Health endpoint: `GET /health` (if available)
-   - Connection check
-   - Player capacity check
-
-5. **Web Client**
-   - CDN/static asset availability
-   - API connectivity check
+3. **File Watcher Service**
+   - Health endpoint: Uses Wiki Service health endpoint
+   - Description: AI Content Management file watcher that monitors markdown files and syncs changes to the database
+   - Type: Internal component (not a separate HTTP service)
+   - Process detection: Automatically detects running file watcher process
+   - Metadata: Command line, debounce time, watched directory
 
 ### Supporting Services
-6. **Admin Service**
-   - Health endpoint: `GET /health`
-   - Database connection check
 
-7. **Assets Service**
+4. **Notification Service**
    - Health endpoint: `GET /health`
-   - Storage availability check
+   - Description: Handles user notifications and alerts across the platform
 
-8. **Chat Service**
+5. **Game Server**
    - Health endpoint: `GET /health`
-   - WebSocket connection check (if applicable)
+   - Description: Core game server handling game logic, player sessions, and game state
 
-9. **Leaderboard Service**
+6. **Web Client**
    - Health endpoint: `GET /health`
-   - Database connection check
+   - Description: Frontend React application providing the user interface for the wiki and platform
 
-10. **Presence Service**
+7. **Admin Service**
+   - Health endpoint: `GET /health`
+   - Description: Administrative service for platform management and configuration
+
+8. **Assets Service**
+   - Health endpoint: `GET /health`
+   - Description: Manages static assets, file uploads, and media storage
+
+9. **Chat Service**
+   - Health endpoint: `GET /health`
+   - Description: Real-time chat and messaging service for user communication
+
+10. **Leaderboard Service**
     - Health endpoint: `GET /health`
-    - Database connection check
+    - Description: Tracks and displays player rankings, scores, and achievements
+
+11. **Presence Service**
+    - Health endpoint: `GET /health`
+    - Description: Tracks user online/offline status and active sessions
 
 ## Implementation
 
-### Service Health Checker
+### Backend Service
 
-Create a service to check health of all services:
+The `ServiceStatusService` (`services/wiki/app/services/service_status_service.py`) handles:
 
-```python
-# app/services/service_status_service.py
-
-class ServiceStatusService:
-    """Service for checking health of all Arcadium services"""
-
-    SERVICES = {
-        'wiki': {
-            'name': 'Wiki Service',
-            'url': os.getenv('WIKI_SERVICE_URL', 'http://localhost:5000'),
-            'health_endpoint': '/health'
-        },
-        'auth': {
-            'name': 'Auth Service',
-            'url': os.getenv('AUTH_SERVICE_URL', 'http://localhost:8000'),
-            'health_endpoint': '/health'
-        },
-        # ... other services
-    }
-
-    def check_service_health(self, service_id: str) -> Dict:
-        """Check health of a specific service"""
-        # Implementation
-
-    def check_all_services(self) -> Dict[str, Dict]:
-        """Check health of all services"""
-        # Implementation
-
-    def determine_status(self, health_response: Dict) -> str:
-        """Determine status (healthy/degraded/unhealthy) from health response"""
-        # Implementation
-```
+- **Service Health Checks**: HTTP requests to each service's health endpoint
+- **Process Information**: Gathering PID, uptime, CPU, memory, threads using `psutil`
+- **Connection Pooling**: Uses `requests.Session` for improved performance
+- **Timeout Management**: Optimized timeouts (0.5s for wiki, 1.0s for others)
+- **Status Determination**: Evaluates response time and health endpoint status
+- **Error Handling**: Graceful handling of timeouts, connection errors, and HTTP errors
+- **Status Reasons**: Provides descriptive reasons for non-healthy statuses
 
 ### API Endpoints
 
@@ -202,33 +217,83 @@ GET /api/admin/service-status
   "services": {
     "wiki": {
       "name": "Wiki Service",
+      "description": "Core wiki service providing page management, search, navigation, and content APIs",
       "status": "healthy",
       "last_check": "2024-01-01T12:00:00Z",
-      "response_time_ms": 5,
+      "response_time_ms": 5.2,
+      "status_reason": null,
+      "error": null,
+      "process_info": {
+        "pid": 12345,
+        "uptime_seconds": 3600.5,
+        "cpu_percent": 2.5,
+        "memory_mb": 150.3,
+        "memory_percent": 1.2,
+        "threads": 8,
+        "open_files": 15
+      },
+      "version": "1.0.0",
+      "service_name": "wiki",
       "details": {
-        "database": "connected",
-        "version": "1.0.0"
-      }
+        "status": "healthy",
+        "service": "wiki"
+      },
+      "manual_notes": null,
+      "is_internal": false
     },
     "auth": {
       "name": "Auth Service",
-      "status": "healthy",
-      "last_check": "2024-01-01T12:00:00Z",
-      "response_time_ms": 12,
-      "details": {
-        "database": "connected",
-        "version": "1.0.0"
-      }
-    },
-    "notification": {
-      "name": "Notification Service",
+      "description": "Authentication and user management service handling login, registration, and JWT tokens",
       "status": "degraded",
       "last_check": "2024-01-01T12:00:00Z",
-      "response_time_ms": 250,
+      "response_time_ms": 1107.3,
+      "status_reason": "Slow response time (1107ms exceeds 1500ms threshold)",
+      "error": null,
+      "process_info": {
+        "pid": 67890,
+        "uptime_seconds": 7200.0,
+        "cpu_percent": 0.5,
+        "memory_mb": 87.8,
+        "memory_percent": 0.6,
+        "threads": 5,
+        "open_files": 2
+      },
+      "version": "1.0.0",
+      "service_name": "auth",
       "details": {
-        "database": "connected",
-        "version": "1.0.0",
-        "warnings": ["High latency detected"]
+        "status": "healthy",
+        "service": "auth"
+      },
+      "manual_notes": null,
+      "is_internal": false
+    },
+    "file-watcher": {
+      "name": "File Watcher Service",
+      "description": "AI Content Management file watcher that monitors markdown files and syncs changes to the database",
+      "status": "healthy",
+      "last_check": "2024-01-01T12:00:00Z",
+      "response_time_ms": 5.2,
+      "status_reason": null,
+      "error": null,
+      "process_info": {
+        "pid": 11111,
+        "uptime_seconds": 1800.0,
+        "cpu_percent": 0.1,
+        "memory_mb": 45.2,
+        "memory_percent": 0.3,
+        "threads": 3,
+        "open_files": 5
+      },
+      "watcher_metadata": {
+        "command": "python -m app.sync watch",
+        "debounce_seconds": 1.0,
+        "watched_directory": "/path/to/data/pages"
+      },
+      "is_running": true,
+      "is_internal": true,
+      "details": {
+        "status": "healthy",
+        "service": "wiki"
       }
     }
   },
@@ -236,134 +301,121 @@ GET /api/admin/service-status
 }
 ```
 
-#### Update Service Status (Admin Only)
+#### Refresh Service Status
 ```
-PUT /api/admin/service-status
+POST /api/admin/service-status/refresh
 ```
 
-**Request:**
-```json
-{
-  "service": "notification",
-  "status": "degraded",
-  "notes": "High latency detected, investigating",
-  "eta": "2024-01-01T13:00:00Z"
-}
+Triggers an immediate health check of all services.
+
+#### Get Service Logs (Wiki Service)
 ```
+GET /api/admin/logs?limit=100&level=ERROR
+```
+
+**Query Parameters:**
+- `limit` (optional): Maximum number of log entries (default: 100, max: 500)
+- `level` (optional): Filter by log level (ERROR, WARNING, INFO, DEBUG)
 
 **Response:**
 ```json
 {
-  "success": true,
-  "message": "Status updated",
-  "service": "notification",
-  "updated_at": "2024-01-01T12:00:00Z"
+  "logs": [
+    {
+      "timestamp": "2024-01-01T12:00:00.123456",
+      "level": "ERROR",
+      "message": "Database connection failed",
+      "raw_message": "Database connection failed",
+      "pathname": "/app/services/db.py",
+      "lineno": 42,
+      "funcName": "connect",
+      "process": 12345,
+      "thread": 140234567890,
+      "threadName": "MainThread"
+    }
+  ]
 }
 ```
 
-### Status Page Update
-
-The status page can be updated in two ways:
-
-1. **Automatic**: Scheduled task checks all services and updates the page
-2. **Manual**: Admin updates status via API or directly edits the page
-
-### Health Check Integration
-
-Each service should implement a `/health` endpoint that returns:
-
-```json
-{
-  "status": "healthy" | "degraded" | "unhealthy",
-  "service": "service-name",
-  "version": "1.0.0",
-  "database": "connected" | "disconnected",
-  "dependencies": {
-    "dependency_name": "healthy" | "degraded" | "unhealthy"
-  },
-  "timestamp": "2024-01-01T00:00:00Z"
-}
+#### Get Service Logs (Auth Service)
+```
+GET /api/logs?limit=100&level=ERROR
 ```
 
-## User Interface
+Same format as Wiki Service logs.
 
-### Display Options
+### Frontend Components
 
-1. **Table View** (default)
-   - Compact table with all services
-   - Status indicators (colored circles or emoji)
-   - Sortable columns
-   - Filterable by status
+- **ServiceManagementPage** (`client/src/pages/ServiceManagementPage.jsx`): Main dashboard component
+- **ServiceStatusIndicator** (`client/src/components/common/ServiceStatusIndicator.jsx`): Navigation bar status indicator
+- **ServiceLogsButton** (embedded in ServiceManagementPage): Logs viewing modal
+- **useServiceStatus** (`client/src/services/api/services.js`): React Query hook for service status
+- **useServiceLogs** (`client/src/services/api/services.js`): React Query hook for service logs
 
-2. **Card View** (optional)
-   - Individual cards for each service
-   - More detailed information per service
-   - Better for mobile devices
+### Auto-Refresh Configuration
 
-3. **Timeline View** (optional)
-   - Historical status changes
-   - Incident timeline
-   - Uptime statistics
+- **Service Status**: Refreshes every 15 seconds when page is active
+- **Service Logs**: Refreshes every 5 seconds when logs modal is open
+- **Background Refetching**: Disabled when browser tab is in background (saves resources)
+- **Manual Refresh**: Available via "🔄 Refresh" button
 
-### Auto-Refresh
+## Status Determination Logic
 
-- Optional: Auto-refresh page every 60 seconds
-- Show "Last updated" timestamp
-- Indicate when refresh is in progress
+### Response Time Thresholds
 
-## Access Control
+- **Healthy**: Response time < 1500ms
+- **Degraded**: Response time between 1500ms and 2000ms
+- **Unhealthy**: Response time > 2000ms or timeout
 
-- **View**: Public (all users can view)
-- **Edit**: Admin only
-- **API Updates**: Admin only (requires authentication)
+### Status Reasons
 
-## Maintenance Windows
+When a service is not healthy, a descriptive reason is provided:
 
-Admins can manually set status to yellow/red with notes for planned maintenance:
+- **Slow Response Time**: "Slow response time (Xms exceeds 1500ms threshold)" or "Slow response time (Xms exceeds 2000ms threshold)"
+- **Timeout**: "Request timed out after Xs - service may be overloaded or unreachable"
+- **Connection Error**: "Connection refused - service may be down or not listening on the expected port"
+- **HTTP Error**: "HTTP 404 error - service may be experiencing issues" or "Health endpoint not found (404) - service may be misconfigured"
+- **Service-Reported**: Uses reason from service's health endpoint if available
 
-```markdown
-### Auth Service (🟡 Degraded)
-- **Issue**: Planned maintenance window
-- **Impact**: Authentication may be unavailable
-- **ETA**: 2024-01-01 14:00:00 UTC
-- **Last Updated**: 2024-01-01 13:00:00 UTC
-```
+## Performance Optimizations
+
+1. **Connection Pooling**: Uses `requests.Session` to reuse HTTP connections
+2. **Optimized Timeouts**: Short timeouts (0.5s for wiki, 1.0s for others) to prevent long waits
+3. **Non-blocking Process Info**: Uses `psutil.Process.oneshot()` and `cpu_percent(interval=None)` for fast health checks
+4. **Windows Optimizations**: Skips slow `open_files()` call on Windows
+5. **Parallel Checks**: Services checked independently (wiki checked first, then others)
 
 ## Error Handling
 
-- **Service Unreachable**: Mark as red, note "Service unreachable"
-- **Timeout**: Mark as yellow/red based on timeout duration
-- **Invalid Response**: Mark as yellow, note "Invalid health check response"
-- **Partial Failure**: Mark as degraded if some checks pass but others fail
+- **Timeout**: Returns unhealthy status with timeout reason
+- **Connection Refused**: Returns unhealthy status with connection error reason
+- **HTTP Errors**: Returns unhealthy status with HTTP error details
+- **Non-JSON Response**: Returns degraded status for HTML responses (web client), unhealthy for other non-JSON
+- **401/403 Responses**: Treated as healthy (service is up, just needs authentication)
+- **Missing Process Info**: Gracefully handles missing `psutil` or process access errors
 
-## Testing
+## Access Control
 
-### Unit Tests
-- Service health check logic
-- Status determination logic
-- Response parsing
-
-### Integration Tests
-- Health endpoint calls
-- Status page updates
-- API endpoint authentication
-
-### End-to-End Tests
-- Full status check workflow
-- Page rendering with various statuses
-- Admin status updates
+- **Current**: Temporarily available to all users (for development)
+- **Future**: Will require admin role for full access
+- **Status Indicator**: Visible to all users in navigation bar
+- **Service Management Page**: Will require admin role (currently open to all)
 
 ## Future Enhancements
 
-- **Historical Data**: Track status over time
+- **Service Control**: Start/stop/restart services (requires backend implementation)
+- **Historical Data**: Track status over time with graphs
 - **Alerting**: Notify admins when services go down
 - **Metrics Dashboard**: Response time graphs, uptime percentages
 - **Service Dependencies Graph**: Visual representation of service dependencies
 - **Incident Management**: Link to incident reports
 - **Scheduled Checks**: Configurable check intervals per service
+- **Filtering and Sorting**: Filter services by status, sort by various metrics
+- **Export Functionality**: Export status reports in various formats (JSON, CSV, PDF)
 
 ## Related Documentation
 
 - [Service Architecture](../services/service-architecture.md) - Service communication and health checks
 - [Service Dependencies](../services/service-dependencies.md) - Service relationships
 - [Wiki Admin Dashboard](wiki-admin-dashboard.md) - Admin features
+- [Wiki Service README](../../services/wiki/README.md) - Wiki service setup and API

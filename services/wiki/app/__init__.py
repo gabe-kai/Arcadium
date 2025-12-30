@@ -56,6 +56,11 @@ def create_app(config_name=None):
 
     app.register_blueprint(wiki_bp, url_prefix="/api")
 
+    # Initialize in-memory log handler for log viewing
+    from app.utils.log_handler import get_log_handler
+
+    get_log_handler()  # Initialize the handler
+
     # Root route
     @app.route("/")
     def root():

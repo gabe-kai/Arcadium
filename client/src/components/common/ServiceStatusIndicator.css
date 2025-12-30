@@ -1,0 +1,73 @@
+.arc-service-status-indicator {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: transform var(--arc-transition-fast);
+  position: relative;
+}
+
+.arc-service-status-indicator:hover {
+  transform: scale(1.1);
+}
+
+.arc-service-status-indicator:active {
+  transform: scale(0.95);
+}
+
+.arc-service-status-indicator-light {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  box-shadow: 0 0 8px currentColor;
+  transition: all var(--arc-transition-base);
+}
+
+/* Healthy (green) */
+.arc-service-status-indicator-healthy .arc-service-status-indicator-light {
+  background-color: var(--arc-success-text);
+  color: var(--arc-success-text);
+  box-shadow: 0 0 12px var(--arc-success-text);
+}
+
+/* Degraded (amber/yellow) */
+.arc-service-status-indicator-degraded .arc-service-status-indicator-light {
+  background-color: #fbbf24;
+  color: #fbbf24;
+  box-shadow: 0 0 12px #fbbf24;
+}
+
+/* Unhealthy (red) */
+.arc-service-status-indicator-unhealthy .arc-service-status-indicator-light {
+  background-color: var(--arc-error-text);
+  color: var(--arc-error-text);
+  box-shadow: 0 0 12px var(--arc-error-text);
+}
+
+/* Unknown/Loading (gray) */
+.arc-service-status-indicator-unknown .arc-service-status-indicator-light {
+  background-color: var(--arc-text-subtle);
+  color: var(--arc-text-subtle);
+  box-shadow: 0 0 8px var(--arc-text-subtle);
+  opacity: 0.5;
+}
+
+/* Pulse animation for loading/unknown state */
+.arc-service-status-indicator-unknown .arc-service-status-indicator-light {
+  animation: arc-service-status-pulse 2s ease-in-out infinite;
+}
+
+@keyframes arc-service-status-pulse {
+  0%, 100% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}

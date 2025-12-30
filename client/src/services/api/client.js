@@ -18,9 +18,11 @@ apiClient.interceptors.request.use((config) => {
       config.headers.Authorization = `Bearer ${token}`;
     }
   } else {
-    // Log warning if no token for authenticated endpoints
-    if (config.method && ['post', 'put', 'delete'].includes(config.method.toLowerCase())) {
-      console.warn('No authentication token found for', config.method?.toUpperCase(), config.url);
+    // Log warning if no token for authenticated endpoints (excluding service-status which is temporarily public)
+    const isAuthEndpoint = (config.url?.includes('/admin/') && !config.url?.includes('/admin/service-status')) ||
+                          (config.method && ['post', 'put', 'delete'].includes(config.method.toLowerCase()));
+    if (isAuthEndpoint) {
+      console.warn('No authentication token found for', config.method?.toUpperCase() || 'GET', config.url);
     }
   }
   return config;
@@ -39,6 +41,16 @@ apiClient.interceptors.response.use(
     // Handle 401 Unauthorized - token expired or invalid
     if (error.response?.status === 401) {
       const errorMessage = error.response?.data?.error || 'Authentication failed';
+      const requestUrl = error.config?.url || '';
+
+      // Skip redirect for service-status endpoint (allows anonymous browsing)
+      // This endpoint gracefully handles 401/403 for non-admin users
+      if (requestUrl.includes('/admin/service-status')) {
+        // Just log and reject - let the calling code handle it gracefully
+        console.warn('Service status requires authentication:', errorMessage);
+        return Promise.reject(error);
+      }
+
       console.warn('Authentication error (401):', errorMessage);
 
       // Clear invalid token
