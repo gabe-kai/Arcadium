@@ -6,13 +6,13 @@ import './ServiceStatusIndicator.css';
 
 /**
  * ServiceStatusIndicator component - Shows overall service health status
- * Visible to everyone, but navigation requires admin access
+ * Visible to everyone regardless of authentication status
  */
 export function ServiceStatusIndicator() {
   const navigate = useNavigate();
-  // Temporarily removed auth requirements - fetch for everyone
-  // Always try to fetch status (endpoint is temporarily public)
-  const { data: statusData, isLoading, isError, error } = useServiceStatus(true, true, null);
+  const { isAuthenticated, token } = useAuth();
+  // Fetch status for everyone - use token if authenticated, but allow anonymous access
+  const { data: statusData, isLoading, isError, error } = useServiceStatus(true, true, token);
 
   const handleClick = () => {
     navigate('/services');
@@ -61,11 +61,11 @@ export function ServiceStatusIndicator() {
     const hasNoAccess = !statusData?.services || Object.keys(statusData.services || {}).length === 0;
 
     if (hasNoAccess) {
-      return 'Service status requires admin access. Click to view (admin only).';
+      return 'Service status unavailable. Click to view details.';
     }
 
     if (isError) {
-      return 'Service status unavailable. Click to view details (admin only).';
+      return 'Service status unavailable. Click to view details.';
     }
 
     const services = Object.values(statusData.services);
@@ -92,7 +92,7 @@ export function ServiceStatusIndicator() {
       tooltip += `\n\nLast updated: ${lastUpdate.toLocaleString()}`;
     }
 
-    tooltip += '\n\nClick to view details (admin access required).';
+    tooltip += '\n\nClick to view service details.';
 
     return tooltip;
   };

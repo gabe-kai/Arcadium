@@ -344,13 +344,12 @@ def update_oversized_page_status(page_id):
 
 
 @admin_bp.route("/admin/service-status", methods=["GET"])
-# Temporarily removed auth requirements to focus on core functionality
-# @require_auth
-# @require_role(["admin"])
+@require_auth
 def get_service_status():
     """Get service status for all Arcadium services.
 
-    Permissions: Admin (temporarily disabled for development)
+    Permissions: Authenticated users (any role) - view-only access
+    Admin role required for control/logs features
     """
     try:
         # Check all services (with optimized timeouts)
@@ -515,13 +514,12 @@ def update_service_status():
 
 
 @admin_bp.route("/admin/logs", methods=["GET"])
-# Temporarily removed auth requirements to focus on core functionality
-# @require_auth
-# @require_role(["admin"])
+@require_auth
+@require_role(["admin"])
 def get_logs():
     """Get recent log entries for the wiki service.
 
-    Permissions: Admin (temporarily disabled for development)
+    Permissions: Admin
 
     Query parameters:
         limit: Maximum number of log entries to return (default: 100, max: 500)
@@ -554,11 +552,10 @@ def get_logs():
 
 @admin_bp.route("/admin/service-status/refresh", methods=["POST"])
 @require_auth
-@require_role(["admin"])
 def refresh_service_status_page():
     """Refresh the service status page with current health check data.
 
-    Permissions: Admin
+    Permissions: Authenticated users (any role) - view-only access
     """
     try:
         user_id = getattr(request, "user_id", None) or uuid.UUID(
@@ -585,4 +582,62 @@ def refresh_service_status_page():
         )
     except Exception as e:  # pragma: no cover - defensive
         db.session.rollback()
+        return jsonify({"error": str(e)}), 500
+
+
+@admin_bp.route("/admin/service-status/<service_id>/control", methods=["POST"])
+@require_auth
+@require_role(["admin"])
+def control_service(service_id: str):
+    """Control a service (start/stop/restart).
+
+    Permissions: Admin
+
+    Request Body:
+        {
+            "action": "start" | "stop" | "restart"
+        }
+    """
+    try:
+        data = request.get_json() or {}
+        action = data.get("action", "").lower()
+
+        if action not in ["start", "stop", "restart"]:
+            return (
+                jsonify(
+                    {"error": "Invalid action. Must be 'start', 'stop', or 'restart'"}
+                ),
+                400,
+            )
+
+        if service_id not in ServiceStatusService.SERVICES:
+            return jsonify({"error": f"Unknown service: {service_id}"}), 400
+
+        # Check if service can be controlled
+        controllable_services = ["wiki", "auth", "web-client", "file-watcher"]
+        if service_id not in controllable_services:
+            return (
+                jsonify(
+                    {
+                        "error": f"Service {service_id} cannot be controlled automatically",
+                        "message": "Only wiki, auth, web-client, and file-watcher can be controlled",
+                    }
+                ),
+                400,
+            )
+
+        # Perform action
+        if action == "start":
+            result = ServiceStatusService.start_service(service_id)
+        elif action == "stop":
+            result = ServiceStatusService.stop_service(service_id)
+        else:  # restart
+            result = ServiceStatusService.restart_service(service_id)
+
+        if result.get("success"):
+            return jsonify(result), 200
+        else:
+            return jsonify(result), 400
+
+    except Exception as e:
         return jsonify({"error": str(e)}), 500

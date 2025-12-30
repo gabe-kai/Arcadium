@@ -4,6 +4,8 @@
 
 The Service Management Page is an interactive web interface that provides real-time monitoring and management of all Arcadium services. It displays service health status, process information, resource usage, and recent logs in a user-friendly dashboard format.
 
+**Note:** There is also a wiki page named "Arcadium Service Status" (slug: `service-status`) that is automatically updated every 10 minutes with current service health information. This page is stored in the database (not as a markdown file) and is marked as a system page.
+
 ## Purpose
 
 - **Real-time Monitoring**: Live status updates every 15 seconds for all services
@@ -16,8 +18,9 @@ The Service Management Page is an interactive web interface that provides real-t
 
 - **URL**: `/services` (in web client)
 - **Navigation**: Click the status indicator (🟢/🟡/🔴) in the header navigation bar
-- **View Access**: Currently available to all users (authentication requirements temporarily disabled for development)
-- **Future**: Will require admin role for full access
+- **Status Indicator**: Visible to everyone (authenticated or not) - shows overall system health
+- **Page Access**: Requires authentication (any role) - view-only mode for non-admin users
+- **Admin Features**: Control buttons (start/stop/restart) and Logs buttons require admin role
 
 ## Features
 
@@ -80,7 +83,9 @@ The File Watcher Service (AI Content Management) includes additional metadata:
 
 ### Logs Viewing
 
-Services with logging enabled (Wiki Service, Auth Service) include a "📋 Logs" button that opens a modal displaying:
+**Permissions:** Admin only
+
+Services with logging enabled (Wiki Service, Auth Service) include a "📋 Logs" button (visible only to admin users) that opens a modal displaying:
 - Recent log entries (up to 100 by default)
 - Log level (ERROR, WARNING, INFO, DEBUG)
 - Timestamp for each entry
@@ -90,9 +95,22 @@ Services with logging enabled (Wiki Service, Auth Service) include a "📋 Logs"
 
 ### Copy Functionality
 
+**Permissions:** All authenticated users
+
 - **Individual Service Copy**: "📋 Copy" button on each service card copies formatted service information to clipboard
 - **Copy All**: "📋 Copy All" button in header copies a comprehensive status report for all services
 - **Formatted Output**: Includes all service details in a readable text format suitable for reports or troubleshooting
+
+### Service Control
+
+**Permissions:** Admin only
+
+Services that support programmatic control (Wiki Service, Auth Service, Web Client, File Watcher) include a "⚙️ Control" button (visible only to admin users) that allows:
+- **Start**: Start a stopped service
+- **Stop**: Gracefully stop a running service
+- **Restart**: Stop and then start a service
+
+Control operations are restricted to admin users for security reasons.
 
 ## Status Indicators
 
@@ -147,7 +165,8 @@ Services with logging enabled (Wiki Service, Auth Service) include a "📋 Logs"
    - Health endpoint: `GET /health`
    - Logs endpoint: `GET /api/logs`
    - Description: Authentication and user management service handling login, registration, and JWT tokens
-   - Process information: Retrieved from health endpoint
+   - Process information: Retrieved from standardized health endpoint response
+   - Standard compliance: ✅ Uses `health_check` utility, includes all required fields
 
 3. **File Watcher Service**
    - Health endpoint: Uses Wiki Service health endpoint
@@ -167,8 +186,10 @@ Services with logging enabled (Wiki Service, Auth Service) include a "📋 Logs"
    - Description: Core game server handling game logic, player sessions, and game state
 
 6. **Web Client**
-   - Health endpoint: `GET /health`
+   - Health endpoint: `GET /health` (Vite dev server middleware)
    - Description: Frontend React application providing the user interface for the wiki and platform
+   - Process information: Limited in browser context, but includes standard format structure
+   - Standard compliance: ✅ Includes all required fields (some values are placeholders in browser context)
 
 7. **Admin Service**
    - Health endpoint: `GET /health`
@@ -192,17 +213,26 @@ Services with logging enabled (Wiki Service, Auth Service) include a "📋 Logs"
 
 ## Implementation
 
+### Health Endpoint Standard
+
+All services implement a standardized health endpoint format as defined in [Health Endpoint Standard](../services/health-endpoint-standard.md). This ensures consistent metadata across all services:
+
+- **Required Fields**: `status`, `service`, `version`, `process_info`
+- **Process Info**: PID, uptime, CPU usage, memory usage, threads, open files
+- **Optional Fields**: `dependencies` (service dependency status), service-specific metadata
+
 ### Backend Service
 
 The `ServiceStatusService` (`services/wiki/app/services/service_status_service.py`) handles:
 
 - **Service Health Checks**: HTTP requests to each service's health endpoint
-- **Process Information**: Gathering PID, uptime, CPU, memory, threads using `psutil`
+- **Process Information**: Extracted from standardized health endpoint responses
 - **Connection Pooling**: Uses `requests.Session` for improved performance
 - **Timeout Management**: Optimized timeouts (0.5s for wiki, 1.0s for others)
 - **Status Determination**: Evaluates response time and health endpoint status
 - **Error Handling**: Graceful handling of timeouts, connection errors, and HTTP errors
 - **Status Reasons**: Provides descriptive reasons for non-healthy statuses
+- **Standard Compliance**: Validates and extracts process_info from standardized health responses
 
 ### API Endpoints
 
@@ -400,6 +430,23 @@ When a service is not healthy, a descriptive reason is provided:
 - **Future**: Will require admin role for full access
 - **Status Indicator**: Visible to all users in navigation bar
 - **Service Management Page**: Will require admin role (currently open to all)
+
+## Automatic Updates
+
+The "Arcadium Service Status" wiki page (slug: `service-status`) is automatically updated every 10 minutes by a background scheduler. The scheduler:
+
+- Runs as a daemon thread when the Wiki Service starts
+- Checks all services and updates the status page
+- **First update**: Runs immediately on startup
+- **Subsequent updates**: Aligned to 10-minute intervals (00, 10, 20, 30, 40, 50 minutes past each hour)
+  - Example: If service starts at 14:07, first update is immediate, second update is at 14:10, then 14:20, 14:30, etc.
+- Uses the system admin user ID (`00000000-0000-0000-0000-000000000001`) for page updates
+- Logs all update operations for monitoring, including the next scheduled update time
+- Does not run during tests (skipped when `TESTING=True`)
+
+The scheduler is automatically started when the Flask application initializes (except in testing mode). Manual updates can still be triggered via the `/api/admin/service-status/refresh` endpoint.
+
+**Note:** The service status page is stored in the database (not as a markdown file) and is marked as a system page (`is_system_page=True`).
 
 ## Future Enhancements
 

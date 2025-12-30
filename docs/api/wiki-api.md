@@ -14,6 +14,53 @@ Authorization: Bearer <token>
 
 ## Endpoints
 
+### Health Check
+
+#### Get Health Status
+```
+GET /api/health
+```
+
+**Description:** Health check endpoint that returns service status and process metadata. Conforms to the [Health Endpoint Standard](../../services/health-endpoint-standard.md).
+
+**Authentication:** Not required
+
+**Response:**
+```json
+{
+  "status": "healthy",
+  "service": "wiki",
+  "version": "1.0.0",
+  "process_info": {
+    "pid": 12345,
+    "uptime_seconds": 3600.0,
+    "cpu_percent": 2.5,
+    "memory_mb": 150.0,
+    "memory_percent": 1.2,
+    "threads": 8,
+    "open_files": 5
+  },
+  "dependencies": {
+    "auth_service": {
+      "status": "reachable",
+      "url": "http://localhost:8000",
+      "response_code": 401
+    }
+  }
+}
+```
+
+**Response Fields:**
+- `status` (string, required): Service health status (`healthy`, `degraded`, or `unhealthy`)
+- `service` (string, required): Service identifier (`wiki`)
+- `version` (string, required): Service version
+- `process_info` (object, required): Process metadata including PID, uptime, CPU, memory, threads, and open files
+- `dependencies` (object, optional): Status of service dependencies (e.g., auth service reachability)
+
+**Note:** This endpoint is optimized for speed and does not block on external service checks. Response time is typically < 50ms.
+
+---
+
 ### Pages
 
 #### List Pages
@@ -894,7 +941,7 @@ GET /api/admin/service-status
 
 Get real-time status of all Arcadium services.
 
-**Permissions:** Currently public (temporarily disabled for development), will require Admin
+**Permissions:** Authenticated users (any role) - view-only access
 
 **Response:**
 ```json
@@ -971,16 +1018,20 @@ Get real-time status of all Arcadium services.
 POST /api/admin/service-status/refresh
 ```
 
-Trigger an immediate health check of all services.
+Trigger an immediate health check of all services and update the service status wiki page.
 
-**Permissions:** Currently public (temporarily disabled for development), will require Admin
+**Permissions:** Authenticated users (any role) - view-only access
+
+**Note:** The service status page is also automatically updated every 10 minutes by a background scheduler. This endpoint allows manual updates on demand.
 
 **Response:**
 ```json
 {
   "success": true,
-  "message": "Service status refreshed",
-  "last_updated": "2024-01-01T12:00:00Z"
+  "message": "Service status page updated",
+  "page_id": "uuid",
+  "page_slug": "service-status",
+  "updated_at": "2024-01-01T12:00:00Z"
 }
 ```
 
@@ -995,7 +1046,7 @@ Get recent log entries from the Wiki Service.
 - `limit` (optional): Maximum number of log entries (default: 100, max: 500)
 - `level` (optional): Filter by log level (`ERROR`, `WARNING`, `INFO`, `DEBUG`)
 
-**Permissions:** Currently public (temporarily disabled for development), will require Admin
+**Permissions:** Admin only
 
 **Response:**
 ```json
@@ -1046,6 +1097,50 @@ Update manual status notes for a service (for admin-added maintenance notes).
   "updated_at": "2024-01-01T12:00:00Z"
 }
 ```
+
+#### Control Service
+```
+POST /api/admin/service-status/<service_id>/control
+```
+
+Control a service (start, stop, or restart).
+
+**Permissions:** Admin only
+
+**Request Body:**
+```json
+{
+  "action": "start" | "stop" | "restart"
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Service wiki started successfully (PID: 12345).",
+  "pid": 12345
+}
+```
+
+**Error Response:**
+```json
+{
+  "success": false,
+  "message": "Service wiki is already running (PID: 12345)"
+}
+```
+
+**Supported Services:**
+- `wiki` - Wiki Service
+- `auth` - Auth Service
+- `web-client` - Web Client
+- `file-watcher` - File Watcher Service
+
+**Note:** Only services with defined start commands can be controlled. Other services will return an error.
+
+---
+
 ```
 PUT /api/admin/oversized-pages/{page_id}/status
 ```

@@ -61,6 +61,14 @@ def create_app(config_name=None):
 
     get_log_handler()  # Initialize the handler
 
+    # Start service status page auto-updater (runs every 10 minutes)
+    from app.services.service_status_scheduler import ServiceStatusScheduler
+
+    service_status_scheduler = ServiceStatusScheduler(app, interval_minutes=10)
+    service_status_scheduler.start()
+    # Store reference on app for potential cleanup (though daemon thread will stop on exit)
+    app.service_status_scheduler = service_status_scheduler
+
     # Root route
     @app.route("/")
     def root():

@@ -266,6 +266,15 @@ Clicking the status indicator opens the Service Management page.
 
 Service status automatically refreshes every 15 seconds when the page is active.
 
+### Automatic Status Page Updates
+
+The "Arcadium Service Status" wiki page (slug: `service-status`) is automatically updated every 10 minutes by a background scheduler:
+
+- **First update**: Runs immediately when the Wiki Service starts
+- **Subsequent updates**: Aligned to 10-minute intervals (00, 10, 20, 30, 40, 50 minutes past each hour)
+- The scheduler runs as a daemon thread and logs all operations
+- Manual updates can still be triggered via the `/api/admin/service-status/refresh` endpoint
+
 ### Monitored Services
 
 The system monitors:

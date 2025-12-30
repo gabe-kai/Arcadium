@@ -41,25 +41,38 @@ WIKI_SERVICE_URL=http://wiki:5000
 
 **Endpoint:** `GET /health`
 
-**All services implement:**
+**All services implement a standardized health check format with process metadata:**
 ```json
 {
   "status": "healthy" | "degraded" | "unhealthy",
   "service": "service-name",
   "version": "1.0.0",
-  "database": "connected" | "disconnected",
+  "process_info": {
+    "pid": 12345,
+    "uptime_seconds": 3600.0,
+    "cpu_percent": 2.5,
+    "memory_mb": 150.0,
+    "memory_percent": 1.2,
+    "threads": 8,
+    "open_files": 5
+  },
   "dependencies": {
     "auth": "healthy",
     "notification": "healthy"
-  },
-  "timestamp": "2024-01-01T00:00:00Z"
+  }
 }
 ```
 
+**Implementation:**
+- All Python services use the `health_check` utility module
+- See [Health Endpoint Standard](health-endpoint-standard.md) for complete specification
+- Template available at `docs/services/health-endpoint-template.py`
+
 **Usage:**
 - Docker Compose health checks
-- Service status monitoring
+- Service status monitoring (Service Management page)
 - Load balancer health checks (future)
+- Process monitoring and resource tracking
 
 ### Error Handling
 
