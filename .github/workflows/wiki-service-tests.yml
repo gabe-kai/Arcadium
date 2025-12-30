@@ -94,7 +94,7 @@ jobs:
 
       - name: Install pytest reporting tools
         run: |
-          pip install pytest-html pytest-json-report
+          pip install pytest-html pytest-json-report pytest-json-report-append
 
       - name: Run pytest for Wiki Service
         env:
@@ -102,29 +102,28 @@ jobs:
           TEST_DATABASE_URL: postgresql://postgres:Le555ecure@localhost:5432/arcadium_testing_wiki
         continue-on-error: true
         run: |
-          # Run tests with better output formatting
+          # Run tests with concise output during execution
+          # Full details will be in reports
           pytest \
-            --tb=short \
-            --maxfail=10 \
+            --tb=line \
+            --maxfail=50 \
             --junit-xml=test-results.xml \
             --html=test-report.html \
             --self-contained-html \
             --json-report \
             --json-report-file=test-report.json \
-            -v \
-            --durations=10
+            -q \
+            --durations=10 \
+            --color=yes \
+            -ra
 
       - name: Generate failure summary
         if: always()
         run: |
-          echo "=== TEST EXECUTION SUMMARY ===" > test-summary.txt
-          echo "" >> test-summary.txt
-
-          # Extract summary from JSON report
-          if [ -f test-report.json ]; then
-            python3 << 'PYTHON_SCRIPT'
+          python3 << 'PYTHON_SCRIPT'
           import json
           import sys
+          from collections import defaultdict
 
           try:
               with open('test-report.json', 'r') as f:
@@ -135,42 +134,132 @@ jobs:
               passed = summary.get('passed', 0)
               failed = summary.get('failed', 0)
               skipped = summary.get('skipped', 0)
+              error = summary.get('error', 0)
 
-              print(f"Total tests: {total}")
-              print(f"Passed: {passed}")
-              print(f"Failed: {failed}")
-              print(f"Skipped: {skipped}")
-              print("")
+              # Write comprehensive summary
+              with open('test-summary.txt', 'w') as f:
+                  f.write("=" * 80 + "\n")
+                  f.write("TEST EXECUTION SUMMARY\n")
+                  f.write("=" * 80 + "\n\n")
+                  f.write(f"Total tests: {total}\n")
+                  f.write(f"✅ Passed: {passed}\n")
+                  f.write(f"❌ Failed: {failed}\n")
+                  f.write(f"⏭️  Skipped: {skipped}\n")
+                  if error > 0:
+                      f.write(f"⚠️  Errors: {error}\n")
+                  f.write("\n")
 
+              # Generate failures-only file for easy copying
               if failed > 0:
-                  print("=== FAILED TESTS ===")
-                  for test in report.get('tests', []):
-                      if test.get('outcome') == 'failed':
+                  failed_tests = [t for t in report.get('tests', []) if t.get('outcome') == 'failed']
+
+                  # Group by test file
+                  failures_by_file = defaultdict(list)
+                  for test in failed_tests:
+                      nodeid = test.get('nodeid', 'unknown')
+                      # Extract file path (everything before ::)
+                      file_path = nodeid.split('::')[0] if '::' in nodeid else nodeid
+                      failures_by_file[file_path].append(test)
+
+                  with open('test-failures-only.txt', 'w') as f:
+                      f.write("=" * 80 + "\n")
+                      f.write(f"FAILED TESTS ({failed} total)\n")
+                      f.write("=" * 80 + "\n\n")
+
+                      for file_path, tests in sorted(failures_by_file.items()):
+                          f.write(f"\n📁 {file_path}\n")
+                          f.write("-" * 80 + "\n")
+
+                          for test in tests:
+                              nodeid = test.get('nodeid', 'unknown')
+                              call = test.get('call', {})
+                              longrepr = call.get('longrepr', 'No error details')
+
+                              # Extract test name
+                              test_name = nodeid.split('::')[-1] if '::' in nodeid else nodeid
+
+                              f.write(f"\n❌ {test_name}\n")
+                              f.write(f"   Full path: {nodeid}\n")
+                              f.write("\n")
+
+                              # Show full error (not truncated)
+                              f.write("Error Details:\n")
+                              f.write("-" * 40 + "\n")
+                              f.write(longrepr)
+                              f.write("\n")
+                              f.write("-" * 40 + "\n")
+                              f.write("\n")
+
+                  # Also create a compact version
+                  with open('test-failures-compact.txt', 'w') as f:
+                      f.write("=" * 80 + "\n")
+                      f.write(f"FAILED TESTS - COMPACT ({failed} total)\n")
+                      f.write("=" * 80 + "\n\n")
+
+                      for test in failed_tests:
                           nodeid = test.get('nodeid', 'unknown')
                           call = test.get('call', {})
                           longrepr = call.get('longrepr', 'No error details')
 
-                          print(f"\n{nodeid}")
-                          print("-" * 80)
-                          # Show first 30 lines of error
-                          lines = longrepr.split('\n')[:30]
-                          print('\n'.join(lines))
-                          if len(longrepr.split('\n')) > 30:
-                              print(f"... (truncated, {len(longrepr.split('\n')) - 30} more lines)")
-                          print("")
+                          # Extract just the essential error message (first few lines)
+                          error_lines = longrepr.split('\n')
+                          # Find the actual error (usually after some traceback)
+                          error_msg = ""
+                          for i, line in enumerate(error_lines):
+                              if any(keyword in line for keyword in ['Error:', 'AssertionError', 'Exception:', 'Failed:', 'FAILED']):
+                                  # Get next 10 lines as context
+                                  error_msg = '\n'.join(error_lines[max(0, i-2):i+10])
+                                  break
+
+                          if not error_msg:
+                              error_msg = '\n'.join(error_lines[:15])
+
+                          f.write(f"❌ {nodeid}\n")
+                          f.write(f"{error_msg}\n")
+                          f.write("\n" + "-" * 80 + "\n\n")
+
+              else:
+                  # No failures - create empty files
+                  with open('test-failures-only.txt', 'w') as f:
+                      f.write("No test failures.\n")
+                  with open('test-failures-compact.txt', 'w') as f:
+                      f.write("No test failures.\n")
+
           except Exception as e:
               print(f"Error generating summary: {e}", file=sys.stderr)
+              import traceback
+              traceback.print_exc()
+              sys.exit(1)
           PYTHON_SCRIPT
-          fi >> test-summary.txt
+
+          except Exception as e:
+              print(f"Error generating summary: {e}", file=sys.stderr)
+              sys.exit(1)
+          PYTHON_SCRIPT
 
       - name: Display test summary
         if: always()
         run: |
-          echo "=== TEST EXECUTION SUMMARY ==="
+          echo ""
+          echo "═══════════════════════════════════════════════════════════════════════════════"
+          echo "TEST EXECUTION SUMMARY"
+          echo "═══════════════════════════════════════════════════════════════════════════════"
+          echo ""
+
           if [ -f test-summary.txt ]; then
             cat test-summary.txt
           else
-            echo "Summary file not found"
+            echo "⚠️  Summary file not found"
+          fi
+
+          # Show failures in compact format
+          if [ -f test-failures-compact.txt ]; then
+            echo ""
+            echo "═══════════════════════════════════════════════════════════════════════════════"
+            echo "FAILED TESTS (COMPACT - Easy to Copy)"
+            echo "═══════════════════════════════════════════════════════════════════════════════"
+            echo ""
+            cat test-failures-compact.txt
           fi
 
           # Show pass/fail status
@@ -182,14 +271,23 @@ jobs:
           try:
               with open('test-report.json', 'r') as f:
                   report = json.load(f)
-              failed = report.get('summary', {}).get('failed', 0)
+              summary = report.get('summary', {})
+              failed = summary.get('failed', 0)
+              total = summary.get('total', 0)
+              passed = summary.get('passed', 0)
+
               if failed > 0:
-                  print(f"\n❌ {failed} test(s) failed")
+                  print(f"\n❌ {failed} of {total} test(s) failed ({passed} passed)")
+                  print(f"\n📋 Full failure details available in:")
+                  print(f"   - test-failures-only.txt (detailed, grouped by file)")
+                  print(f"   - test-failures-compact.txt (compact, easy to copy)")
+                  print(f"   - test-report.html (interactive HTML report)")
                   sys.exit(1)
               else:
-                  print("\n✅ All tests passed")
+                  print(f"\n✅ All {total} tests passed")
           except Exception as e:
               print(f"Error reading report: {e}", file=sys.stderr)
+              sys.exit(1)
           PYTHON_SCRIPT
           fi
 
@@ -203,7 +301,10 @@ jobs:
             services/wiki/test-report.html
             services/wiki/test-report.json
             services/wiki/test-summary.txt
+            services/wiki/test-failures-only.txt
+            services/wiki/test-failures-compact.txt
           retention-days: 7
+          if-no-files-found: ignore
 
       - name: Publish test results
         if: always()
@@ -211,5 +312,5 @@ jobs:
         with:
           files: services/wiki/test-results.xml
           check_name: Wiki Service Test Results
-          comment_mode: create new
+          comment_mode: changes
           report_individual_runs: true
