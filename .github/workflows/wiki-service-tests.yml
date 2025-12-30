@@ -251,11 +251,6 @@ jobs:
               sys.exit(1)
           PYTHON_SCRIPT
 
-          except Exception as e:
-              print(f"Error generating summary: {e}", file=sys.stderr)
-              sys.exit(1)
-          PYTHON_SCRIPT
-
       - name: Display test summary
         if: always()
         run: |
@@ -327,6 +322,7 @@ jobs:
 
       - name: Publish test results
         if: always()
+        continue-on-error: true
         uses: EnricoMi/publish-unit-test-result-action@v2
         with:
           files: services/wiki/test-results.xml

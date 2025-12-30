@@ -408,42 +408,58 @@ jobs:
                       failure_block = []
                       current_test = None
 
-                      for i, line in enumerate(lines):
-                          # Detect test failure
-                          if re.search(r'FAIL|Error:|×|failed', line, re.IGNORECASE):
-                              if not in_failure:
-                                  in_failure = True
-                                  # Look back for test name
-                                  for j in range(max(0, i-3), i):
-                                      test_match = re.search(r'(\d+)\s+\)\s+(.+?)(?:\s+\(|$)', lines[j])
-                                      if test_match:
-                                          current_test = test_match.group(2).strip()
-                                          break
-                                  failure_block = [line]
-                              else:
-                                  failure_block.append(line)
-                          elif in_failure:
-                              if line.strip() and not line.startswith(' ') and not line.startswith('\t') and not line.startswith('at '):
-                                  # End of failure block
-                                  if failure_block:
-                                      all_failures.append({
-                                          'group': group_name,
-                                          'test': current_test or 'Unknown test',
-                                          'error': '\n'.join(failure_block[:25])  # Limit to 25 lines
-                                      })
-                                  in_failure = False
-                                  failure_block = []
-                                  current_test = None
-                              else:
-                                  failure_block.append(line)
+              for i, line in enumerate(lines):
+                  # Detect test failure - look for ✘ or failed status
+                  if re.search(r'✘|×|FAIL|failed', line, re.IGNORECASE) and 'test' in line.lower():
+                      if not in_failure:
+                          in_failure = True
+                          # Extract test name from the line itself
+                          test_match = re.search(r'›\s+(.+?)(?:\s+\(|$)', line)
+                          if test_match:
+                              current_test = test_match.group(1).strip()
+                          else:
+                              # Fallback: look back for test name
+                              for j in range(max(0, i-3), i):
+                                  test_match = re.search(r'›\s+(.+?)(?:\s+\(|$)', lines[j])
+                                  if test_match:
+                                      current_test = test_match.group(1).strip()
+                                      break
+                          failure_block = [line]
+                      else:
+                          failure_block.append(line)
+                  elif in_failure:
+                      # Continue collecting failure details
+                      # Stop when we hit a new test (✓ or ✘ at start) or summary line
+                      if (line.strip().startswith('✓') or line.strip().startswith('✘') or
+                          line.strip().startswith('×') or
+                          re.match(r'^\s*\d+\s+passed|failed|skipped', line, re.IGNORECASE)):
+                          # End of failure block
+                          if failure_block:
+                              all_failures.append({
+                                  'group': group_name,
+                                  'test': current_test or 'Unknown test',
+                                  'error': '\n'.join(failure_block[:30])  # Limit to 30 lines
+                              })
+                          in_failure = False
+                          failure_block = []
+                          current_test = None
+                          # If this is a new failure, start collecting it
+                          if re.search(r'✘|×|FAIL|failed', line, re.IGNORECASE):
+                              in_failure = True
+                              test_match = re.search(r'›\s+(.+?)(?:\s+\(|$)', line)
+                              if test_match:
+                                  current_test = test_match.group(1).strip()
+                              failure_block = [line]
+                      else:
+                          failure_block.append(line)
 
-                      # Capture last failure if still in progress
-                      if in_failure and failure_block:
-                          all_failures.append({
-                              'group': group_name,
-                              'test': current_test or 'Unknown test',
-                              'error': '\n'.join(failure_block[:25])
-                          })
+              # Capture last failure if still in progress
+              if in_failure and failure_block:
+                  all_failures.append({
+                      'group': group_name,
+                      'test': current_test or 'Unknown test',
+                      'error': '\n'.join(failure_block[:30])
+                  })
 
               except Exception as e:
                   print(f"Error processing {output_file}: {e}", file=sys.stderr)
@@ -471,8 +487,9 @@ jobs:
                       f.write(f"\n📁 {failure['group'].upper()} Tests\n")
                       f.write("-" * 80 + "\n")
                       f.write(f"❌ {failure['test']}\n")
-                      f.write(f"\nError: {failure['error']}\n")
-                      if failure['stack']:
+                      f.write(f"\nError Details:\n")
+                      f.write(f"{failure.get('error', 'No error details available')}\n")
+                      if 'stack' in failure and failure['stack']:
                           f.write(f"\nStack trace:\n{failure['stack']}\n")
                       f.write("-" * 80 + "\n\n")
           else:
