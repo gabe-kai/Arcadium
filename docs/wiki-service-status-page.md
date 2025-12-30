@@ -4,6 +4,8 @@
 
 The Service Management Page is an interactive web interface that provides real-time monitoring and management of all Arcadium services. It displays service health status, process information, resource usage, and recent logs in a user-friendly dashboard format.
 
+**Note:** There is also a wiki page named "Arcadium Service Status" (slug: `service-status`) that is automatically updated every 10 minutes with current service health information. This page is stored in the database (not as a markdown file) and is marked as a system page.
+
 ## Purpose
 
 - **Real-time Monitoring**: Live status updates every 15 seconds for all services
@@ -428,6 +430,23 @@ When a service is not healthy, a descriptive reason is provided:
 - **Future**: Will require admin role for full access
 - **Status Indicator**: Visible to all users in navigation bar
 - **Service Management Page**: Will require admin role (currently open to all)
+
+## Automatic Updates
+
+The "Arcadium Service Status" wiki page (slug: `service-status`) is automatically updated every 10 minutes by a background scheduler. The scheduler:
+
+- Runs as a daemon thread when the Wiki Service starts
+- Checks all services and updates the status page
+- **First update**: Runs immediately on startup
+- **Subsequent updates**: Aligned to 10-minute intervals (00, 10, 20, 30, 40, 50 minutes past each hour)
+  - Example: If service starts at 14:07, first update is immediate, second update is at 14:10, then 14:20, 14:30, etc.
+- Uses the system admin user ID (`00000000-0000-0000-0000-000000000001`) for page updates
+- Logs all update operations for monitoring, including the next scheduled update time
+- Does not run during tests (skipped when `TESTING=True`)
+
+The scheduler is automatically started when the Flask application initializes (except in testing mode). Manual updates can still be triggered via the `/api/admin/service-status/refresh` endpoint.
+
+**Note:** The service status page is stored in the database (not as a markdown file) and is marked as a system page (`is_system_page=True`).
 
 ## Future Enhancements
 

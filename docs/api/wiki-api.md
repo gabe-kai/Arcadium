@@ -1018,16 +1018,20 @@ Get real-time status of all Arcadium services.
 POST /api/admin/service-status/refresh
 ```
 
-Trigger an immediate health check of all services.
+Trigger an immediate health check of all services and update the service status wiki page.
 
 **Permissions:** Authenticated users (any role) - view-only access
+
+**Note:** The service status page is also automatically updated every 10 minutes by a background scheduler. This endpoint allows manual updates on demand.
 
 **Response:**
 ```json
 {
   "success": true,
-  "message": "Service status refreshed",
-  "last_updated": "2024-01-01T12:00:00Z"
+  "message": "Service status page updated",
+  "page_id": "uuid",
+  "page_slug": "service-status",
+  "updated_at": "2024-01-01T12:00:00Z"
 }
 ```
 
