@@ -94,6 +94,7 @@ def test_comment_query_optimization(app):
             created_by=uuid.UUID("00000000-0000-0000-0000-000000000001"),
             updated_by=uuid.UUID("00000000-0000-0000-0000-000000000001"),
             status="published",
+            section="Regression-Testing",
             file_path="test-page.md",
         )
         db.session.add(page)

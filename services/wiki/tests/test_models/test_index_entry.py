@@ -18,6 +18,7 @@ def test_index_entry_creation(app):
             slug="test-page",
             file_path="data/pages/test-page.md",
             content="Content",
+            section="Regression-Testing",
             created_by=user_id,
             updated_by=user_id,
         )
@@ -55,6 +56,7 @@ def test_keyword_entry(app):
             slug="test-page",
             file_path="data/pages/test-page.md",
             content="Content",
+            section="Regression-Testing",
             created_by=user_id,
             updated_by=user_id,
         )
@@ -87,6 +89,7 @@ def test_manual_keyword_entry(app):
             slug="test-page",
             file_path="data/pages/test-page.md",
             content="Content",
+            section="Regression-Testing",
             created_by=user_id,
             updated_by=user_id,
         )
@@ -119,6 +122,7 @@ def test_index_entry_relationship_to_page(app):
             slug="test-page",
             file_path="data/pages/test-page.md",
             content="Content",
+            section="Regression-Testing",
             created_by=user_id,
             updated_by=user_id,
         )
@@ -161,6 +165,7 @@ def test_index_entry_cascade_delete(app):
             slug="test-page",
             file_path="data/pages/test-page.md",
             content="Content",
+            section="Regression-Testing",
             created_by=user_id,
             updated_by=user_id,
         )
@@ -202,6 +207,7 @@ def test_fulltext_vs_keyword_entries(app):
             slug="test-page",
             file_path="data/pages/test-page.md",
             content="Content",
+            section="Regression-Testing",
             created_by=user_id,
             updated_by=user_id,
         )

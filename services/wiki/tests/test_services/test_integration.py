@@ -21,6 +21,7 @@ def test_page_creation_triggers_version_and_index(app):
             content="Content about Python and programming",
             user_id=user_id,
             slug="test-page",
+            section="Regression-Testing",
         )
 
         # Should have version
@@ -40,11 +41,19 @@ def test_page_update_triggers_version_and_link_update(app):
 
         # Create two pages
         page1 = PageService.create_page(
-            title="Page 1", content="Content 1", user_id=user_id, slug="page-1"
+            title="Page 1",
+            content="Content 1",
+            user_id=user_id,
+            slug="page-1",
+            section="Regression-Testing",
         )
 
         page2 = PageService.create_page(
-            title="Page 2", content="Content 2", user_id=user_id, slug="page-2"
+            title="Page 2",
+            content="Content 2",
+            user_id=user_id,
+            slug="page-2",
+            section="Regression-Testing",
         )
 
         # Update page1 to link to page2
@@ -82,7 +91,11 @@ def test_page_deletion_triggers_orphanage_and_link_cleanup(app):
 
             # Create parent and child
             parent = PageService.create_page(
-                title="Parent", content="Parent content", user_id=user_id, slug="parent"
+                title="Parent",
+                content="Parent content",
+                user_id=user_id,
+                slug="parent",
+                section="Regression-Testing",
             )
 
             child = PageService.create_page(
@@ -91,6 +104,7 @@ def test_page_deletion_triggers_orphanage_and_link_cleanup(app):
                 user_id=user_id,
                 slug="child",
                 parent_id=parent.id,
+                section="Regression-Testing",
             )
 
             # Create link from child to parent
@@ -142,10 +156,15 @@ def test_slug_change_updates_links_and_versions(app):
             content="Link to [Page 2](page-2)",
             user_id=user_id,
             slug="page-1",
+            section="Regression-Testing",
         )
 
         page2 = PageService.create_page(
-            title="Page 2", content="Content 2", user_id=user_id, slug="page-2"
+            title="Page 2",
+            content="Content 2",
+            user_id=user_id,
+            slug="page-2",
+            section="Regression-Testing",
         )
 
         # Create link from page1 to page2
@@ -200,7 +219,11 @@ def test_rollback_updates_content_and_creates_version(app):
 
         # Create page
         page = PageService.create_page(
-            title="Test Page", content="Version 1", user_id=user_id, slug="test-page"
+            title="Test Page",
+            content="Version 1",
+            user_id=user_id,
+            slug="test-page",
+            section="Regression-Testing",
         )
 
         # Update page
@@ -230,6 +253,7 @@ def test_index_update_on_page_update(app):
             content="Original content about JavaScript",
             user_id=user_id,
             slug="test-page",
+            section="Regression-Testing",
         )
 
         # Index it

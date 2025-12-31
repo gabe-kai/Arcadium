@@ -167,6 +167,7 @@ def test_create_comment_invalid_parent_wrong_page(client, app, test_page, test_u
             created_by=test_user_id,
             updated_by=test_user_id,
             status="published",
+            section="Regression-Testing",
             file_path="other-page.md",
         )
         db.session.add(other_page)

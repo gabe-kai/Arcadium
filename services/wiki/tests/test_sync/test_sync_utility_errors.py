@@ -100,6 +100,7 @@ def test_sync_file_duplicate_slug(temp_pages_dir, app, sync_utility, admin_user_
             title="Existing",
             slug="duplicate-slug",
             content="# Existing",
+            section="Regression-Testing",
             created_by=admin_user_id,
             updated_by=admin_user_id,
             file_path="existing.md",

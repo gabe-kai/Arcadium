@@ -22,6 +22,7 @@ def test_oversized_notification_creation(app):
             updated_by=user_id,
             content_size_kb=150.0,  # Over limit
             word_count=5000,
+            section="Regression-Testing",
         )
         db.session.add(page)
         db.session.commit()
@@ -73,6 +74,7 @@ def test_notification_with_notified_users(app):
             slug="test-page",
             file_path="data/pages/test-page.md",
             content="Content",
+            section="Regression-Testing",
             created_by=user_id,
             updated_by=user_id,
         )
@@ -113,6 +115,7 @@ def test_notification_with_due_date(app):
             slug="test-page",
             file_path="data/pages/test-page.md",
             content="Content",
+            section="Regression-Testing",
             created_by=user_id,
             updated_by=user_id,
         )
@@ -156,6 +159,7 @@ def test_notification_relationship_to_page(app):
             slug="test-page",
             file_path="data/pages/test-page.md",
             content="Content",
+            section="Regression-Testing",
             created_by=user_id,
             updated_by=user_id,
         )
@@ -193,6 +197,7 @@ def test_notification_cascade_delete(app):
             slug="test-page",
             file_path="data/pages/test-page.md",
             content="Content",
+            section="Regression-Testing",
             created_by=user_id,
             updated_by=user_id,
         )
@@ -240,6 +245,7 @@ def test_notification_to_dict(app):
             slug="test-page",
             file_path="data/pages/test-page.md",
             content="Content",
+            section="Regression-Testing",
             created_by=user_id,
             updated_by=user_id,
         )

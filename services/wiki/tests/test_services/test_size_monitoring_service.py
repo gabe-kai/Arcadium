@@ -32,6 +32,7 @@ def test_pages(app, test_user_id):
             updated_by=test_user_id,
             content_size_kb=5.0,
             word_count=100,
+            section="Regression-Testing",
             file_path="small-page.md",
         )
         db.session.add(page1)
@@ -46,6 +47,7 @@ def test_pages(app, test_user_id):
             updated_by=test_user_id,
             content_size_kb=50.0,
             word_count=500,
+            section="Regression-Testing",
             file_path="medium-page.md",
         )
         db.session.add(page2)
@@ -60,6 +62,7 @@ def test_pages(app, test_user_id):
             updated_by=test_user_id,
             content_size_kb=600.0,
             word_count=5000,
+            section="Regression-Testing",
             file_path="large-page.md",
         )
         db.session.add(page3)
@@ -74,6 +77,7 @@ def test_pages(app, test_user_id):
             updated_by=test_user_id,
             content_size_kb=1200.0,
             word_count=12000,
+            section="Regression-Testing",
             file_path="very-large-page.md",
         )
         db.session.add(page4)

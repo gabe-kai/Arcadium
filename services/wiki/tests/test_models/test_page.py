@@ -14,6 +14,7 @@ def test_page_creation(app):
             slug="test-page",
             file_path="data/pages/test-page.md",
             content="# Test Page\n\nContent here",
+            section="Regression-Testing",
             created_by=uuid.uuid4(),
             updated_by=uuid.uuid4(),
         )
@@ -37,6 +38,7 @@ def test_slug_uniqueness(app):
             slug="test-slug",
             file_path="data/pages/test-slug.md",
             content="Content",
+            section="Regression-Testing",
             created_by=user_id,
             updated_by=user_id,
         )
@@ -71,6 +73,7 @@ def test_parent_child_relationship(app):
             slug="parent",
             file_path="data/pages/parent.md",
             content="Parent content",
+            section="Regression-Testing",
             created_by=user_id,
             updated_by=user_id,
         )
@@ -82,6 +85,7 @@ def test_parent_child_relationship(app):
             slug="child",
             file_path="data/pages/child.md",
             content="Child content",
+            section="Regression-Testing",
             parent_id=parent.id,
             created_by=user_id,
             updated_by=user_id,

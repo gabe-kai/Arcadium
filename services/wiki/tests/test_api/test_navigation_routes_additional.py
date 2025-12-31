@@ -16,6 +16,7 @@ def test_get_navigation_deep_hierarchy(client, app, test_user_id):
             created_by=test_user_id,
             updated_by=test_user_id,
             status="published",
+            section="Regression-Testing",
             file_path="level-1.md",
         )
         db.session.add(level1)
@@ -28,6 +29,7 @@ def test_get_navigation_deep_hierarchy(client, app, test_user_id):
             created_by=test_user_id,
             updated_by=test_user_id,
             status="published",
+            section="Regression-Testing",
             parent_id=level1.id,
             file_path="level-2.md",
         )
@@ -41,6 +43,7 @@ def test_get_navigation_deep_hierarchy(client, app, test_user_id):
             created_by=test_user_id,
             updated_by=test_user_id,
             status="published",
+            section="Regression-Testing",
             parent_id=level2.id,
             file_path="level-3.md",
         )
@@ -54,6 +57,7 @@ def test_get_navigation_deep_hierarchy(client, app, test_user_id):
             created_by=test_user_id,
             updated_by=test_user_id,
             status="published",
+            section="Regression-Testing",
             parent_id=level3.id,
             file_path="level-4.md",
         )
@@ -91,6 +95,7 @@ def test_get_navigation_multiple_roots(client, app, test_user_id):
             created_by=test_user_id,
             updated_by=test_user_id,
             status="published",
+            section="Regression-Testing",
             file_path="root-1.md",
         )
         root2 = Page(
@@ -100,6 +105,7 @@ def test_get_navigation_multiple_roots(client, app, test_user_id):
             created_by=test_user_id,
             updated_by=test_user_id,
             status="published",
+            section="Regression-Testing",
             file_path="root-2.md",
         )
         db.session.add(root1)
@@ -126,6 +132,7 @@ def test_get_navigation_ordering(client, app, test_user_id):
             created_by=test_user_id,
             updated_by=test_user_id,
             status="published",
+            section="Regression-Testing",
             file_path="parent.md",
         )
         db.session.add(parent)
@@ -139,6 +146,7 @@ def test_get_navigation_ordering(client, app, test_user_id):
             created_by=test_user_id,
             updated_by=test_user_id,
             status="published",
+            section="Regression-Testing",
             parent_id=parent.id,
             order_index=2,
             file_path="second.md",
@@ -150,6 +158,7 @@ def test_get_navigation_ordering(client, app, test_user_id):
             created_by=test_user_id,
             updated_by=test_user_id,
             status="published",
+            section="Regression-Testing",
             parent_id=parent.id,
             order_index=1,
             file_path="first.md",
@@ -191,6 +200,7 @@ def test_get_breadcrumb_handles_missing_parent(client, app, test_user_id):
             created_by=test_user_id,
             updated_by=test_user_id,
             status="published",
+            section="Regression-Testing",
             file_path="root.md",
         )
         db.session.add(root)
@@ -204,6 +214,7 @@ def test_get_breadcrumb_handles_missing_parent(client, app, test_user_id):
             created_by=test_user_id,
             updated_by=test_user_id,
             status="published",
+            section="Regression-Testing",
             parent_id=root.id,
             file_path="child.md",
         )
@@ -231,6 +242,7 @@ def test_get_breadcrumb_circular_reference_prevention(client, app, test_user_id)
             created_by=test_user_id,
             updated_by=test_user_id,
             status="published",
+            section="Regression-Testing",
             file_path="page-1.md",
         )
         db.session.add(page1)
@@ -243,6 +255,7 @@ def test_get_breadcrumb_circular_reference_prevention(client, app, test_user_id)
             created_by=test_user_id,
             updated_by=test_user_id,
             status="published",
+            section="Regression-Testing",
             parent_id=page1.id,
             file_path="page-2.md",
         )
@@ -268,6 +281,7 @@ def test_get_previous_next_ordering_by_title(client, app, test_user_id):
             created_by=test_user_id,
             updated_by=test_user_id,
             status="published",
+            section="Regression-Testing",
             file_path="parent.md",
         )
         db.session.add(parent)
@@ -281,6 +295,7 @@ def test_get_previous_next_ordering_by_title(client, app, test_user_id):
             created_by=test_user_id,
             updated_by=test_user_id,
             status="published",
+            section="Regression-Testing",
             parent_id=parent.id,
             order_index=1,
             file_path="b-page.md",
@@ -292,6 +307,7 @@ def test_get_previous_next_ordering_by_title(client, app, test_user_id):
             created_by=test_user_id,
             updated_by=test_user_id,
             status="published",
+            section="Regression-Testing",
             parent_id=parent.id,
             order_index=1,
             file_path="a-page.md",
@@ -319,6 +335,7 @@ def test_get_previous_next_includes_own_drafts(client, app, test_user_id):
             created_by=test_user_id,
             updated_by=test_user_id,
             status="published",
+            section="Regression-Testing",
             file_path="parent.md",
         )
         db.session.add(parent)
@@ -331,6 +348,7 @@ def test_get_previous_next_includes_own_drafts(client, app, test_user_id):
             created_by=test_user_id,
             updated_by=test_user_id,
             status="published",
+            section="Regression-Testing",
             parent_id=parent.id,
             order_index=1,
             file_path="published.md",
@@ -342,6 +360,7 @@ def test_get_previous_next_includes_own_drafts(client, app, test_user_id):
             created_by=test_user_id,
             updated_by=test_user_id,
             status="draft",
+            section="Regression-Testing",
             parent_id=parent.id,
             order_index=2,
             file_path="my-draft.md",
@@ -375,6 +394,7 @@ def test_get_previous_next_admin_sees_all_drafts(
             created_by=test_user_id,
             updated_by=test_user_id,
             status="published",
+            section="Regression-Testing",
             file_path="parent.md",
         )
         db.session.add(parent)
@@ -387,6 +407,7 @@ def test_get_previous_next_admin_sees_all_drafts(
             created_by=test_user_id,
             updated_by=test_user_id,
             status="published",
+            section="Regression-Testing",
             parent_id=parent.id,
             order_index=1,
             file_path="published.md",
@@ -398,6 +419,7 @@ def test_get_previous_next_admin_sees_all_drafts(
             created_by=test_user_id,
             updated_by=test_user_id,
             status="draft",
+            section="Regression-Testing",
             parent_id=parent.id,
             order_index=2,
             file_path="other-draft.md",
@@ -429,6 +451,7 @@ def test_get_navigation_tree_empty_children(client, app, test_user_id):
             created_by=test_user_id,
             updated_by=test_user_id,
             status="published",
+            section="Regression-Testing",
             file_path="root.md",
         )
         db.session.add(root)
@@ -453,6 +476,7 @@ def test_get_breadcrumb_single_page(client, app, test_user_id):
             created_by=test_user_id,
             updated_by=test_user_id,
             status="published",
+            section="Regression-Testing",
             parent_id=None,
             file_path="isolated.md",
         )

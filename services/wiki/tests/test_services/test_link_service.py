@@ -59,11 +59,19 @@ def test_update_page_links(app):
 
         # Create pages
         page1 = PageService.create_page(
-            title="Page 1", content="Content 1", user_id=user_id, slug="page-1"
+            title="Page 1",
+            content="Content 1",
+            user_id=user_id,
+            slug="page-1",
+            section="Regression-Testing",
         )
 
         page2 = PageService.create_page(
-            title="Page 2", content="Content 2", user_id=user_id, slug="page-2"
+            title="Page 2",
+            content="Content 2",
+            user_id=user_id,
+            slug="page-2",
+            section="Regression-Testing",
         )
 
         # Update page1 to link to page2
@@ -85,11 +93,19 @@ def test_update_page_links_removes_old_links(app):
 
         # Create pages
         page1 = PageService.create_page(
-            title="Page 1", content="Content 1", user_id=user_id, slug="page-1"
+            title="Page 1",
+            content="Content 1",
+            user_id=user_id,
+            slug="page-1",
+            section="Regression-Testing",
         )
 
         PageService.create_page(
-            title="Page 2", content="Content 2", user_id=user_id, slug="page-2"
+            title="Page 2",
+            content="Content 2",
+            user_id=user_id,
+            slug="page-2",
+            section="Regression-Testing",
         )
 
         page3 = PageService.create_page(
@@ -119,11 +135,19 @@ def test_get_outgoing_links(app):
 
         # Create pages
         page1 = PageService.create_page(
-            title="Page 1", content="Content 1", user_id=user_id, slug="page-1"
+            title="Page 1",
+            content="Content 1",
+            user_id=user_id,
+            slug="page-1",
+            section="Regression-Testing",
         )
 
         page2 = PageService.create_page(
-            title="Page 2", content="Content 2", user_id=user_id, slug="page-2"
+            title="Page 2",
+            content="Content 2",
+            user_id=user_id,
+            slug="page-2",
+            section="Regression-Testing",
         )
 
         page3 = PageService.create_page(
@@ -149,11 +173,19 @@ def test_get_incoming_links(app):
 
         # Create pages
         page1 = PageService.create_page(
-            title="Page 1", content="Content 1", user_id=user_id, slug="page-1"
+            title="Page 1",
+            content="Content 1",
+            user_id=user_id,
+            slug="page-1",
+            section="Regression-Testing",
         )
 
         page2 = PageService.create_page(
-            title="Page 2", content="Content 2", user_id=user_id, slug="page-2"
+            title="Page 2",
+            content="Content 2",
+            user_id=user_id,
+            slug="page-2",
+            section="Regression-Testing",
         )
 
         page3 = PageService.create_page(
@@ -181,11 +213,19 @@ def test_bidirectional_tracking(app):
 
         # Create pages
         page1 = PageService.create_page(
-            title="Page 1", content="Content 1", user_id=user_id, slug="page-1"
+            title="Page 1",
+            content="Content 1",
+            user_id=user_id,
+            slug="page-1",
+            section="Regression-Testing",
         )
 
         page2 = PageService.create_page(
-            title="Page 2", content="Content 2", user_id=user_id, slug="page-2"
+            title="Page 2",
+            content="Content 2",
+            user_id=user_id,
+            slug="page-2",
+            section="Regression-Testing",
         )
 
         # Create link from page1 to page2
@@ -218,7 +258,11 @@ def test_handle_slug_change(app):
         )
 
         page2 = PageService.create_page(
-            title="Page 2", content="Content 2", user_id=user_id, slug="page-2"
+            title="Page 2",
+            content="Content 2",
+            user_id=user_id,
+            slug="page-2",
+            section="Regression-Testing",
         )
 
         # Create link
@@ -250,11 +294,19 @@ def test_handle_slug_change_wiki_format(app):
 
         # Create pages
         page1 = PageService.create_page(
-            title="Page 1", content="Link to [[page-2]]", user_id=user_id, slug="page-1"
+            title="Page 1",
+            content="Link to [[page-2]]",
+            user_id=user_id,
+            slug="page-1",
+            section="Regression-Testing",
         )
 
         page2 = PageService.create_page(
-            title="Page 2", content="Content 2", user_id=user_id, slug="page-2"
+            title="Page 2",
+            content="Content 2",
+            user_id=user_id,
+            slug="page-2",
+            section="Regression-Testing",
         )
 
         # Create link
@@ -285,7 +337,11 @@ def test_handle_page_deletion(app):
         )
 
         page2 = PageService.create_page(
-            title="Page 2", content="Content 2", user_id=user_id, slug="page-2"
+            title="Page 2",
+            content="Content 2",
+            user_id=user_id,
+            slug="page-2",
+            section="Regression-Testing",
         )
 
         # Create links
@@ -326,10 +382,15 @@ def test_get_link_statistics(app):
             content="Link to [Page 3](page-3)",
             user_id=user_id,
             slug="page-2",
+            section="Regression-Testing",
         )
 
         PageService.create_page(
-            title="Page 3", content="Content 3", user_id=user_id, slug="page-3"
+            title="Page 3",
+            content="Content 3",
+            user_id=user_id,
+            slug="page-3",
+            section="Regression-Testing",
         )
 
         # Create links
@@ -354,10 +415,15 @@ def test_find_broken_links(app):
             content="Link to [Page 2](page-2) and [Missing](missing-page)",
             user_id=user_id,
             slug="page-1",
+            section="Regression-Testing",
         )
 
         PageService.create_page(
-            title="Page 2", content="Content 2", user_id=user_id, slug="page-2"
+            title="Page 2",
+            content="Content 2",
+            user_id=user_id,
+            slug="page-2",
+            section="Regression-Testing",
         )
 
         # Create links (only page2 exists, missing-page doesn't)
@@ -385,11 +451,19 @@ def test_find_broken_links_specific_page(app):
 
         # Create pages
         page1 = PageService.create_page(
-            title="Page 1", content="Content 1", user_id=user_id, slug="page-1"
+            title="Page 1",
+            content="Content 1",
+            user_id=user_id,
+            slug="page-1",
+            section="Regression-Testing",
         )
 
         page2 = PageService.create_page(
-            title="Page 2", content="Content 2", user_id=user_id, slug="page-2"
+            title="Page 2",
+            content="Content 2",
+            user_id=user_id,
+            slug="page-2",
+            section="Regression-Testing",
         )
 
         # Create a temporary page, link to it, then delete it to create broken link

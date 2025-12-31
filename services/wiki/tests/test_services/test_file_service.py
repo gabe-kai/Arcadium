@@ -17,6 +17,7 @@ def test_calculate_file_path_root_page(app):
             title="Test Page",
             slug="test-page",
             content="Content",
+            section=None,  # No section for root page test
             file_path="test-page.md",  # Set initial file_path
             created_by=uuid.uuid4(),
             updated_by=uuid.uuid4(),
@@ -35,7 +36,7 @@ def test_calculate_file_path_with_section(app):
             title="Test Page",
             slug="test-page",
             content="Content",
-            section="game-mechanics",
+            section="game-mechanics",  # Use the section we're testing
             file_path=os.path.join("game-mechanics", "test-page.md"),
             created_by=uuid.uuid4(),
             updated_by=uuid.uuid4(),
@@ -66,6 +67,7 @@ def test_calculate_file_path_with_parent(app):
             title="Child Page",
             slug="child-page",
             content="Child content",
+            section=None,  # No section - test parent hierarchy only
             parent_id=parent.id,
             file_path=os.path.join("parent-page", "child-page.md"),
             created_by=user_id,
@@ -97,6 +99,7 @@ def test_calculate_file_path_nested_hierarchy(app):
             title="Parent",
             slug="parent",
             content="Content",
+            section=None,  # No section - test parent hierarchy only
             parent_id=grandparent.id,
             file_path=os.path.join("grandparent", "parent.md"),
             created_by=user_id,
@@ -109,6 +112,7 @@ def test_calculate_file_path_nested_hierarchy(app):
             title="Child",
             slug="child",
             content="Content",
+            section=None,  # No section - test parent hierarchy only
             parent_id=parent.id,
             file_path=os.path.join("grandparent", "parent", "child.md"),
             created_by=user_id,
@@ -200,6 +204,7 @@ def test_move_page_file(app):
                 title="Test Page",
                 slug="test-page",
                 content="Test content",
+                section="Regression-Testing",
                 file_path="old-path.md",
                 created_by=uuid.uuid4(),
                 updated_by=uuid.uuid4(),

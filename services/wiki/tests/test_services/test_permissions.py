@@ -15,7 +15,11 @@ def test_viewer_cannot_create_page(app):
         # This should be enforced in the API layer, but test service layer too
         try:
             page = PageService.create_page(
-                title="Test Page", content="Content", user_id=user_id, slug="test-page"
+                title="Test Page",
+                content="Content",
+                user_id=user_id,
+                slug="test-page",
+                section="Regression-Testing",
             )
             # If it succeeds at service layer, that's fine (API enforces)
             # But check permissions
@@ -34,7 +38,11 @@ def test_player_cannot_edit_page(app):
 
         # Create page as writer/admin
         page = PageService.create_page(
-            title="Test Page", content="Content", user_id=user_id, slug="test-page"
+            title="Test Page",
+            content="Content",
+            user_id=user_id,
+            slug="test-page",
+            section="Regression-Testing",
         )
 
         # Player should not be able to edit
@@ -81,7 +89,11 @@ def test_writer_cannot_edit_other_writer_page(app):
 
         # Create page as writer1
         page = PageService.create_page(
-            title="Test Page", content="Content", user_id=writer1_id, slug="test-page"
+            title="Test Page",
+            content="Content",
+            user_id=writer1_id,
+            slug="test-page",
+            section="Regression-Testing",
         )
 
         # Writer2 should not be able to edit writer1's page
@@ -119,7 +131,11 @@ def test_writer_cannot_delete_other_writer_page(app):
 
         # Create page as writer1
         page = PageService.create_page(
-            title="Test Page", content="Content", user_id=writer1_id, slug="test-page"
+            title="Test Page",
+            content="Content",
+            user_id=writer1_id,
+            slug="test-page",
+            section="Regression-Testing",
         )
 
         # Writer2 should not be able to delete
@@ -186,6 +202,7 @@ def test_draft_visibility_viewer(app):
             user_id=writer_id,
             slug="draft-page",
             status="draft",
+            section="Regression-Testing",
         )
 
         # Create published page
@@ -216,6 +233,7 @@ def test_draft_visibility_writer_own(app):
             user_id=writer_id,
             slug="draft-page",
             status="draft",
+            section="Regression-Testing",
         )
 
         # Writer should see their own draft
@@ -265,6 +283,7 @@ def test_admin_can_see_all_drafts(app):
             user_id=writer_id,
             slug="draft-page",
             status="draft",
+            section="Regression-Testing",
         )
 
         # Admin should see all drafts

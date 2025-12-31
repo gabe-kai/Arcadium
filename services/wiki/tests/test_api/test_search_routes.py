@@ -103,6 +103,7 @@ def test_search_draft_filtering_viewer(client, app, test_user_id):
             created_by=test_user_id,
             updated_by=test_user_id,
             status="draft",
+            section="Regression-Testing",
             file_path="draft-page.md",
         )
         db.session.add(draft_page)
@@ -133,6 +134,7 @@ def test_search_include_drafts_creator(client, app, test_user_id):
             created_by=test_user_id,
             updated_by=test_user_id,
             status="draft",
+            section="Regression-Testing",
             file_path="my-draft.md",
         )
         db.session.add(draft_page)
@@ -167,6 +169,7 @@ def test_search_include_drafts_admin(client, app, test_user_id, test_admin_id):
             created_by=test_user_id,
             updated_by=test_user_id,
             status="draft",
+            section="Regression-Testing",
             file_path="other-draft.md",
         )
         db.session.add(draft_page)
@@ -330,6 +333,7 @@ def test_get_master_index(client, app, test_user_id):
             created_by=test_user_id,
             updated_by=test_user_id,
             status="published",
+            section="Regression-Testing",
             file_path="apple-page.md",
         )
         page_b = Page(
@@ -339,6 +343,7 @@ def test_get_master_index(client, app, test_user_id):
             created_by=test_user_id,
             updated_by=test_user_id,
             status="published",
+            section="Regression-Testing",
             file_path="banana-page.md",
         )
         db.session.add(page_a)
@@ -369,6 +374,7 @@ def test_get_master_index_letter_filter(client, app, test_user_id):
             created_by=test_user_id,
             updated_by=test_user_id,
             status="published",
+            section="Regression-Testing",
             file_path="apple-page.md",
         )
         page_b = Page(
@@ -378,6 +384,7 @@ def test_get_master_index_letter_filter(client, app, test_user_id):
             created_by=test_user_id,
             updated_by=test_user_id,
             status="published",
+            section="Regression-Testing",
             file_path="banana-page.md",
         )
         db.session.add(page_a)
@@ -408,7 +415,7 @@ def test_get_master_index_section_filter(client, app, test_user_id):
             created_by=test_user_id,
             updated_by=test_user_id,
             status="published",
-            section="section-a",
+            section="Regression-Testing",
             file_path="section-a-page.md",
         )
         page2 = Page(
@@ -418,7 +425,7 @@ def test_get_master_index_section_filter(client, app, test_user_id):
             created_by=test_user_id,
             updated_by=test_user_id,
             status="published",
-            section="section-b",
+            section="Regression-Testing",
             file_path="section-b-page.md",
         )
         db.session.add(page1)
@@ -426,15 +433,15 @@ def test_get_master_index_section_filter(client, app, test_user_id):
         db.session.commit()
 
     # Filter by section
-    response = client.get("/api/index?section=section-a")
+    response = client.get("/api/index?section=Regression-Testing")
     assert response.status_code == 200
     data = response.get_json()
     assert "index" in data
 
-    # All results should be from section-a
+    # All results should be from Regression-Testing
     for letter, pages in data["index"].items():
         for page in pages:
-            assert page.get("section") == "section-a"
+            assert page.get("section") == "Regression-Testing"
 
 
 def test_get_master_index_excludes_drafts(client, app, test_user_id):
@@ -448,6 +455,7 @@ def test_get_master_index_excludes_drafts(client, app, test_user_id):
             created_by=test_user_id,
             updated_by=test_user_id,
             status="draft",
+            section="Regression-Testing",
             file_path="draft-page.md",
         )
         db.session.add(draft_page)
@@ -473,6 +481,7 @@ def test_get_master_index_response_structure(client, app, test_user_id):
             created_by=test_user_id,
             updated_by=test_user_id,
             status="published",
+            section="Regression-Testing",
             file_path="test-page.md",
         )
         db.session.add(page)

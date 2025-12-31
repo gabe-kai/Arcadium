@@ -7,6 +7,11 @@ Project documentation for Arcadium.
 - `architecture/` - Architecture decisions and diagrams
 - `api/` - API documentation
 - `game-design/` - Game design documents
+- `services/` - Service specifications and standards
+
+## Development Standards
+
+- [Development Conventions](development-conventions.md) - Development conventions and standards for the project
 
 ## Service Documentation
 

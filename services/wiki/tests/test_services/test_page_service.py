@@ -15,7 +15,10 @@ def test_create_page_basic(app):
         user_id = uuid.uuid4()
 
         page = PageService.create_page(
-            title="Test Page", content="# Test Page\n\nContent here.", user_id=user_id
+            title="Test Page",
+            content="# Test Page\n\nContent here.",
+            user_id=user_id,
+            section="Regression-Testing",
         )
 
         assert page.title == "Test Page"
@@ -33,7 +36,11 @@ def test_create_page_with_custom_slug(app):
         user_id = uuid.uuid4()
 
         page = PageService.create_page(
-            title="Test Page", content="Content", user_id=user_id, slug="custom-slug"
+            title="Test Page",
+            content="Content",
+            user_id=user_id,
+            slug="custom-slug",
+            section="Regression-Testing",
         )
 
         assert page.slug == "custom-slug"
@@ -45,7 +52,11 @@ def test_create_page_duplicate_slug(app):
         user_id = uuid.uuid4()
 
         PageService.create_page(
-            title="First Page", content="Content", user_id=user_id, slug="test-slug"
+            title="First Page",
+            content="Content",
+            user_id=user_id,
+            slug="test-slug",
+            section="Regression-Testing",
         )
 
         import pytest
@@ -56,6 +67,7 @@ def test_create_page_duplicate_slug(app):
                 content="Content",
                 user_id=user_id,
                 slug="test-slug",
+                section="Regression-Testing",
             )
 
 
@@ -85,7 +97,11 @@ def test_create_page_draft(app):
         user_id = uuid.uuid4()
 
         page = PageService.create_page(
-            title="Draft Page", content="Draft content", user_id=user_id, status="draft"
+            title="Draft Page",
+            content="Draft content",
+            user_id=user_id,
+            status="draft",
+            section="Regression-Testing",
         )
 
         assert page.status == "draft"
@@ -97,7 +113,10 @@ def test_update_page_content(app):
         user_id = uuid.uuid4()
 
         page = PageService.create_page(
-            title="Test Page", content="Original content", user_id=user_id
+            title="Test Page",
+            content="Original content",
+            user_id=user_id,
+            section="Regression-Testing",
         )
 
         original_version = page.version
@@ -116,7 +135,11 @@ def test_update_page_slug(app):
         user_id = uuid.uuid4()
 
         page = PageService.create_page(
-            title="Test Page", content="Content", user_id=user_id, slug="old-slug"
+            title="Test Page",
+            content="Content",
+            user_id=user_id,
+            slug="old-slug",
+            section="Regression-Testing",
         )
 
         updated = PageService.update_page(
@@ -132,15 +155,25 @@ def test_update_page_parent(app):
         user_id = uuid.uuid4()
 
         parent1 = PageService.create_page(
-            title="Parent 1", content="Content", user_id=user_id
+            title="Parent 1",
+            content="Content",
+            user_id=user_id,
+            section="Regression-Testing",
         )
 
         parent2 = PageService.create_page(
-            title="Parent 2", content="Content", user_id=user_id
+            title="Parent 2",
+            content="Content",
+            user_id=user_id,
+            section="Regression-Testing",
         )
 
         child = PageService.create_page(
-            title="Child", content="Content", user_id=user_id, parent_id=parent1.id
+            title="Child",
+            content="Content",
+            user_id=user_id,
+            parent_id=parent1.id,
+            section="Regression-Testing",
         )
 
         updated = PageService.update_page(
@@ -156,11 +189,18 @@ def test_update_page_circular_reference(app):
         user_id = uuid.uuid4()
 
         parent = PageService.create_page(
-            title="Parent", content="Content", user_id=user_id
+            title="Parent",
+            content="Content",
+            user_id=user_id,
+            section="Regression-Testing",
         )
 
         child = PageService.create_page(
-            title="Child", content="Content", user_id=user_id, parent_id=parent.id
+            title="Child",
+            content="Content",
+            user_id=user_id,
+            parent_id=parent.id,
+            section="Regression-Testing",
         )
 
         import pytest
@@ -181,7 +221,10 @@ def test_delete_page(app):
             user_id = uuid.uuid4()
 
             page = PageService.create_page(
-                title="Test Page", content="Content", user_id=user_id
+                title="Test Page",
+                content="Content",
+                user_id=user_id,
+                section="Regression-Testing",
             )
 
             result = PageService.delete_page(page.id, user_id)
@@ -203,15 +246,26 @@ def test_delete_page_with_children(app):
             user_id = uuid.uuid4()
 
             parent = PageService.create_page(
-                title="Parent", content="Content", user_id=user_id
+                title="Parent",
+                content="Content",
+                user_id=user_id,
+                section="Regression-Testing",
             )
 
             child1 = PageService.create_page(
-                title="Child 1", content="Content", user_id=user_id, parent_id=parent.id
+                title="Child 1",
+                content="Content",
+                user_id=user_id,
+                parent_id=parent.id,
+                section="Regression-Testing",
             )
 
             child2 = PageService.create_page(
-                title="Child 2", content="Content", user_id=user_id, parent_id=parent.id
+                title="Child 2",
+                content="Content",
+                user_id=user_id,
+                parent_id=parent.id,
+                section="Regression-Testing",
             )
 
             result = PageService.delete_page(parent.id, user_id)
@@ -231,7 +285,11 @@ def test_get_page_draft_visibility(app):
         other_user_id = uuid.uuid4()
 
         draft = PageService.create_page(
-            title="Draft Page", content="Draft content", user_id=user_id, status="draft"
+            title="Draft Page",
+            content="Draft content",
+            user_id=user_id,
+            status="draft",
+            section="Regression-Testing",
         )
 
         # Writer who created it can see it
@@ -258,11 +316,19 @@ def test_list_pages_draft_filtering(app):
         other_user_id = uuid.uuid4()
 
         published = PageService.create_page(
-            title="Published", content="Content", user_id=user_id, status="published"
+            title="Published",
+            content="Content",
+            user_id=user_id,
+            status="published",
+            section="Regression-Testing",
         )
 
         my_draft = PageService.create_page(
-            title="My Draft", content="Content", user_id=user_id, status="draft"
+            title="My Draft",
+            content="Content",
+            user_id=user_id,
+            status="draft",
+            section="Regression-Testing",
         )
 
         other_draft = PageService.create_page(
@@ -270,6 +336,7 @@ def test_list_pages_draft_filtering(app):
             content="Content",
             user_id=other_user_id,
             status="draft",
+            section="Regression-Testing",
         )
 
         # Viewer sees only published
@@ -296,7 +363,10 @@ def test_can_edit_permissions(app):
         other_user_id = uuid.uuid4()
 
         page = PageService.create_page(
-            title="Test Page", content="Content", user_id=user_id
+            title="Test Page",
+            content="Content",
+            user_id=user_id,
+            section="Regression-Testing",
         )
 
         # Admin can edit any page
@@ -321,11 +391,17 @@ def test_can_delete_permissions(app):
         other_user_id = uuid.uuid4()
 
         my_page = PageService.create_page(
-            title="My Page", content="Content", user_id=user_id
+            title="My Page",
+            content="Content",
+            user_id=user_id,
+            section="Regression-Testing",
         )
 
         other_page = PageService.create_page(
-            title="Other Page", content="Content", user_id=other_user_id
+            title="Other Page",
+            content="Content",
+            user_id=other_user_id,
+            section="Regression-Testing",
         )
 
         # Admin can delete any page

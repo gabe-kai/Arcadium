@@ -17,6 +17,7 @@ def test_create_version(app):
             content="Original content",
             user_id=user_id,
             slug="test-page",
+            section="Regression-Testing",
         )
 
         # PageService already created version 1, so next version should be 2
@@ -41,7 +42,11 @@ def test_create_multiple_versions(app):
 
         # Create a page (PageService automatically creates version 1)
         page = PageService.create_page(
-            title="Test Page", content="Version 1", user_id=user_id, slug="test-page"
+            title="Test Page",
+            content="Version 1",
+            user_id=user_id,
+            slug="test-page",
+            section="Regression-Testing",
         )
 
         # PageService already created version 1, so next is version 2
@@ -70,7 +75,11 @@ def test_get_version(app):
 
         # Create a page (PageService creates version 1)
         page = PageService.create_page(
-            title="Test Page", content="Version 1", user_id=user_id, slug="test-page"
+            title="Test Page",
+            content="Version 1",
+            user_id=user_id,
+            slug="test-page",
+            section="Regression-Testing",
         )
 
         # Update page (PageService creates version 2)
@@ -94,7 +103,11 @@ def test_get_all_versions(app):
 
         # Create a page (PageService creates version 1)
         page = PageService.create_page(
-            title="Test Page", content="Version 1", user_id=user_id, slug="test-page"
+            title="Test Page",
+            content="Version 1",
+            user_id=user_id,
+            slug="test-page",
+            section="Regression-Testing",
         )
 
         # Update page multiple times (PageService creates versions automatically)
@@ -118,7 +131,11 @@ def test_get_latest_version(app):
 
         # Create a page (PageService creates version 1)
         page = PageService.create_page(
-            title="Test Page", content="Version 1", user_id=user_id, slug="test-page"
+            title="Test Page",
+            content="Version 1",
+            user_id=user_id,
+            slug="test-page",
+            section="Regression-Testing",
         )
 
         # Update page (PageService creates versions automatically)
@@ -185,6 +202,7 @@ def test_compare_versions(app):
             content="Version 1 content",
             user_id=user_id,
             slug="test-page",
+            section="Regression-Testing",
         )
 
         # Update page (PageService creates version 2)
@@ -211,7 +229,11 @@ def test_rollback_to_version_admin(app):
 
         # Create a page (PageService creates version 1)
         page = PageService.create_page(
-            title="Test Page", content="Version 1", user_id=user_id, slug="test-page"
+            title="Test Page",
+            content="Version 1",
+            user_id=user_id,
+            slug="test-page",
+            section="Regression-Testing",
         )
 
         # Update page (PageService creates versions automatically)
@@ -237,7 +259,11 @@ def test_rollback_to_version_writer_own_page(app):
 
         # Create a page (PageService creates version 1)
         page = PageService.create_page(
-            title="Test Page", content="Version 1", user_id=writer_id, slug="test-page"
+            title="Test Page",
+            content="Version 1",
+            user_id=writer_id,
+            slug="test-page",
+            section="Regression-Testing",
         )
 
         # Update page (PageService creates version 2)
@@ -259,7 +285,11 @@ def test_rollback_to_version_writer_other_page(app):
 
         # Create a page (PageService creates version 1)
         page = PageService.create_page(
-            title="Test Page", content="Version 1", user_id=user_id, slug="test-page"
+            title="Test Page",
+            content="Version 1",
+            user_id=user_id,
+            slug="test-page",
+            section="Regression-Testing",
         )
 
         # Try to rollback as different writer (should fail)
@@ -279,7 +309,11 @@ def test_rollback_to_version_viewer(app):
 
         # Create a page (PageService creates version 1)
         page = PageService.create_page(
-            title="Test Page", content="Version 1", user_id=user_id, slug="test-page"
+            title="Test Page",
+            content="Version 1",
+            user_id=user_id,
+            slug="test-page",
+            section="Regression-Testing",
         )
 
         # Try to rollback as viewer (should fail)
@@ -298,7 +332,11 @@ def test_get_version_history_summary(app):
 
         # Create a page (PageService creates version 1 with default summary)
         page = PageService.create_page(
-            title="Test Page", content="Version 1", user_id=user_id, slug="test-page"
+            title="Test Page",
+            content="Version 1",
+            user_id=user_id,
+            slug="test-page",
+            section="Regression-Testing",
         )
 
         # Update page (PageService creates version 2)
@@ -319,7 +357,11 @@ def test_get_version_count(app):
 
         # Create a page (PageService creates version 1)
         page = PageService.create_page(
-            title="Test Page", content="Version 1", user_id=user_id, slug="test-page"
+            title="Test Page",
+            content="Version 1",
+            user_id=user_id,
+            slug="test-page",
+            section="Regression-Testing",
         )
 
         # Update page (PageService creates versions automatically)
@@ -338,7 +380,11 @@ def test_version_retention(app):
 
         # Create a page (PageService creates version 1)
         page = PageService.create_page(
-            title="Test Page", content="Version 1", user_id=user_id, slug="test-page"
+            title="Test Page",
+            content="Version 1",
+            user_id=user_id,
+            slug="test-page",
+            section="Regression-Testing",
         )
 
         # Create many versions by updating the page

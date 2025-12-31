@@ -94,6 +94,7 @@ More text here.
                 "slug": "code-block-test",
                 "content": content,
                 "status": "published",
+                "section": "Regression-Testing",
             },
             headers=auth_headers(test_writer_id, "writer"),
         )
@@ -167,7 +168,12 @@ def test_create_page_success(client, app, test_writer_id):
     with mock_auth(test_writer_id, "writer"):
         response = client.post(
             "/api/pages",
-            json={"title": "New Page", "content": "# Content", "status": "published"},
+            json={
+                "title": "New Page",
+                "content": "# Content",
+                "status": "published",
+                "section": "Regression-Testing",
+            },
             headers=auth_headers(test_writer_id, "writer"),
         )
         assert response.status_code == 201
@@ -194,6 +200,7 @@ author: AI Assistant
                 "title": "Test Page",
                 "content": content_with_frontmatter,
                 "status": "published",
+                "section": "Regression-Testing",
             },
             headers=auth_headers(test_writer_id, "writer"),
         )
@@ -222,6 +229,7 @@ author: AI Assistant
         slug="test-page-frontmatter",
         content=original_content,
         status="published",
+        section="Regression-Testing",
         created_by=test_writer_id,
         updated_by=test_writer_id,
         file_path="test-page-frontmatter.md",
@@ -298,6 +306,7 @@ def test_update_page_success(client, app, test_writer_id):
             created_by=test_writer_id,
             updated_by=test_writer_id,
             status="published",
+            section="Regression-Testing",
             file_path="page-to-update.md",
         )
         db.session.add(page)
@@ -358,6 +367,7 @@ def test_delete_page_success(client, app, test_writer_id):
             created_by=test_writer_id,
             updated_by=test_writer_id,
             status="published",
+            section="Regression-Testing",
             file_path="page-to-delete.md",
         )
         db.session.add(page)
@@ -384,6 +394,7 @@ def test_delete_page_with_children(client, app, test_writer_id):
             created_by=test_writer_id,
             updated_by=test_writer_id,
             status="published",
+            section="Regression-Testing",
             file_path="parent-page.md",
         )
         db.session.add(parent)
@@ -397,6 +408,7 @@ def test_delete_page_with_children(client, app, test_writer_id):
             created_by=test_writer_id,
             updated_by=test_writer_id,
             status="published",
+            section="Regression-Testing",
             parent_id=parent.id,
             file_path="child-page.md",
         )
@@ -485,6 +497,7 @@ def test_archive_page_success(client, app, test_writer_id):
             created_by=test_writer_id,
             updated_by=test_writer_id,
             status="published",
+            section="Regression-Testing",
             file_path="page-to-archive.md",
         )
         db.session.add(page)
@@ -554,6 +567,7 @@ def test_admin_can_archive_any_page(client, app, test_admin_id, test_writer_id):
             created_by=test_writer_id,
             updated_by=test_writer_id,
             status="published",
+            section="Regression-Testing",
             file_path="writers-page.md",
         )
         db.session.add(page)
@@ -583,6 +597,7 @@ def test_unarchive_page_success(client, app, test_writer_id):
             created_by=test_writer_id,
             updated_by=test_writer_id,
             status="archived",
+            section="Regression-Testing",
             file_path="archived-page.md",
         )
         db.session.add(page)
@@ -616,6 +631,7 @@ def test_archive_already_archived_page(client, app, test_writer_id):
             created_by=test_writer_id,
             updated_by=test_writer_id,
             status="archived",
+            section="Regression-Testing",
             file_path="already-archived.md",
         )
         db.session.add(page)
@@ -642,6 +658,7 @@ def test_unarchive_not_archived_page(client, app, test_writer_id):
             created_by=test_writer_id,
             updated_by=test_writer_id,
             status="published",
+            section="Regression-Testing",
             file_path="published-page.md",
         )
         db.session.add(page)
@@ -668,6 +685,7 @@ def test_get_page_includes_permission_flags(client, app, test_writer_id):
             created_by=test_writer_id,
             updated_by=test_writer_id,
             status="published",
+            section="Regression-Testing",
             file_path="test-page.md",
         )
         db.session.add(page)
@@ -697,6 +715,7 @@ def test_archived_page_hidden_from_list(client, app, test_writer_id):
             created_by=test_writer_id,
             updated_by=test_writer_id,
             status="published",
+            section="Regression-Testing",
             file_path="published-page.md",
         )
         archived_page = Page(
@@ -706,6 +725,7 @@ def test_archived_page_hidden_from_list(client, app, test_writer_id):
             created_by=test_writer_id,
             updated_by=test_writer_id,
             status="archived",
+            section="Regression-Testing",
             file_path="archived-page.md",
         )
         db.session.add(published_page)

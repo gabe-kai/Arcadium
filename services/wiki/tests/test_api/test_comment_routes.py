@@ -23,6 +23,7 @@ def test_get_comments_empty(client, app, test_page):
                 created_by=test_page.created_by,
                 updated_by=test_page.updated_by,
                 status=test_page.status,
+                section="Regression-Testing",
                 file_path=test_page.file_path,
             )
             db.session.add(page)

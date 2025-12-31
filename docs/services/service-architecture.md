@@ -119,21 +119,29 @@ CREATE SCHEMA notification;
 ### Connection Management
 
 **Connection Pooling:**
-- 10 connections per service (default)
-- Configurable via environment variable
-- Connection timeout: 5 seconds
-- Max idle time: 30 minutes
+- 10 connections per service (default, configurable via `DB_POOL_SIZE`)
+- Max overflow: 20 connections (configurable via `DB_MAX_OVERFLOW`)
+- Connection timeout: 5 seconds (configurable via `DB_POOL_TIMEOUT`)
+- Max idle time: 30 minutes (configurable via `DB_POOL_RECYCLE`)
+- Pool pre-ping: Enabled (verifies connections before use)
 
 **Connection String:**
 ```
 # Option 1: Using arcadium_user and arcadium_pass (recommended)
 arcadium_user=arcadium
 arcadium_pass=your-secure-password
+DB_HOST=localhost (default)
+DB_PORT=5432 (default)
 DB_NAME=arcadium_game_server
 
 # Option 2: Using DATABASE_URL directly
 DATABASE_URL=postgresql://arcadium:your-secure-password@host:5432/arcadium_game_server
 ```
+
+**Read Replicas:**
+- Not implemented (future enhancement)
+- Current: All services connect to primary database
+- Future: Read replicas for read-heavy operations
 
 **Migration Strategy:**
 - Each service manages own migrations

@@ -198,6 +198,7 @@ def test_get_service_status_page_exists(app, test_user_id):
             updated_by=test_user_id,
             is_system_page=True,
             status="published",
+            section="Regression-Testing",
             file_path="service-status.md",
         )
         db.session.add(page)
@@ -266,6 +267,7 @@ def test_create_or_update_status_page_update(mock_check_all, app, test_user_id):
             updated_by=test_user_id,
             is_system_page=True,
             status="published",
+            section="Regression-Testing",
             file_path="service-status.md",
         )
         db.session.add(existing)

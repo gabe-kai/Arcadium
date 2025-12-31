@@ -21,6 +21,7 @@ def test_get_orphanage_only_returns_orphaned_pages(client, app, test_user_id):
             created_by=test_user_id,
             updated_by=test_user_id,
             status="published",
+            section="Regression-Testing",
             parent_id=orphanage.id,
             is_orphaned=True,
             file_path="orphaned-page.md",
@@ -35,6 +36,7 @@ def test_get_orphanage_only_returns_orphaned_pages(client, app, test_user_id):
             created_by=test_user_id,
             updated_by=test_user_id,
             status="published",
+            section="Regression-Testing",
             parent_id=None,
             is_orphaned=False,
             file_path="normal-page.md",
@@ -65,6 +67,7 @@ def test_reassign_orphaned_pages_actually_updates_page_state(
             created_by=test_user_id,
             updated_by=test_user_id,
             status="published",
+            section="Regression-Testing",
             file_path="deleted-parent.md",
         )
         db.session.add(deleted_parent)
@@ -78,6 +81,7 @@ def test_reassign_orphaned_pages_actually_updates_page_state(
             created_by=test_user_id,
             updated_by=test_user_id,
             status="published",
+            section="Regression-Testing",
             file_path="new-parent.md",
         )
         db.session.add(new_parent)
@@ -93,6 +97,7 @@ def test_reassign_orphaned_pages_actually_updates_page_state(
             created_by=test_user_id,
             updated_by=test_user_id,
             status="published",
+            section="Regression-Testing",
             parent_id=orphanage.id,
             is_orphaned=True,
             orphaned_from=deleted_parent_id,  # Reference to deleted parent
@@ -136,6 +141,7 @@ def test_reassign_orphaned_pages_to_root_clears_parent(
             created_by=test_user_id,
             updated_by=test_user_id,
             status="published",
+            section="Regression-Testing",
             parent_id=orphanage.id,
             is_orphaned=True,
             file_path="orphan.md",
@@ -170,6 +176,7 @@ def test_reassign_non_orphaned_page_fails(client, app, test_user_id, test_admin_
             created_by=test_user_id,
             updated_by=test_user_id,
             status="published",
+            section="Regression-Testing",
             file_path="new-parent.md",
         )
         db.session.add(new_parent)
@@ -183,6 +190,7 @@ def test_reassign_non_orphaned_page_fails(client, app, test_user_id, test_admin_
             created_by=test_user_id,
             updated_by=test_user_id,
             status="published",
+            section="Regression-Testing",
             parent_id=None,
             is_orphaned=False,
             file_path="normal-page.md",
@@ -219,6 +227,7 @@ def test_reassign_orphaned_pages_circular_reference_prevention(
             created_by=test_user_id,
             updated_by=test_user_id,
             status="published",
+            section="Regression-Testing",
             file_path="parent.md",
         )
         db.session.add(parent)
@@ -232,6 +241,7 @@ def test_reassign_orphaned_pages_circular_reference_prevention(
             created_by=test_user_id,
             updated_by=test_user_id,
             status="published",
+            section="Regression-Testing",
             parent_id=parent.id,
             file_path="child.md",
         )
@@ -248,6 +258,7 @@ def test_reassign_orphaned_pages_circular_reference_prevention(
             created_by=test_user_id,
             updated_by=test_user_id,
             status="published",
+            section="Regression-Testing",
             parent_id=orphanage.id,
             is_orphaned=True,
             file_path="orphan.md",
@@ -306,6 +317,7 @@ def test_reassign_orphaned_pages_remaining_count_accuracy(
             created_by=test_user_id,
             updated_by=test_user_id,
             status="published",
+            section="Regression-Testing",
             file_path="new-parent.md",
         )
         db.session.add(new_parent)
@@ -324,6 +336,7 @@ def test_reassign_orphaned_pages_remaining_count_accuracy(
                 created_by=test_user_id,
                 updated_by=test_user_id,
                 status="published",
+                section="Regression-Testing",
                 parent_id=orphanage.id,
                 is_orphaned=True,
                 file_path=f"orphan-{i}.md",
@@ -373,6 +386,7 @@ def test_clear_orphanage_actually_reassigns_pages(
                 created_by=test_user_id,
                 updated_by=test_user_id,
                 status="published",
+                section="Regression-Testing",
                 parent_id=orphanage.id,
                 is_orphaned=True,
                 file_path=f"orphan-{i}.md",
@@ -417,6 +431,7 @@ def test_clear_orphanage_with_reassign_to_actually_reassigns(
             created_by=test_user_id,
             updated_by=test_user_id,
             status="published",
+            section="Regression-Testing",
             file_path="new-parent.md",
         )
         db.session.add(new_parent)
@@ -435,6 +450,7 @@ def test_clear_orphanage_with_reassign_to_actually_reassigns(
                 created_by=test_user_id,
                 updated_by=test_user_id,
                 status="published",
+                section="Regression-Testing",
                 parent_id=orphanage.id,
                 is_orphaned=True,
                 file_path=f"orphan-{i}.md",
@@ -476,6 +492,7 @@ def test_reassign_all_with_empty_orphanage(client, app, test_user_id, test_admin
             created_by=test_user_id,
             updated_by=test_user_id,
             status="published",
+            section="Regression-Testing",
             file_path="new-parent.md",
         )
         db.session.add(new_parent)

@@ -1,11 +1,11 @@
 # Wiki UI Implementation Guide
 
-This guide outlines the implementation plan for building the Wiki User Interface based on the specifications in `wiki-user-interface.md`. The backend API is complete and ready to consume.
+This guide outlines the implementation status and details for the Wiki User Interface. The backend API is complete and ready to consume.
 
 ## Current Status
 
 ### ✅ Backend API (Complete)
-- All API endpoints implemented and tested (561 tests passing)
+- All API endpoints implemented and tested (560+ tests passing)
 - Page CRUD operations
 - Comments system with threading
 - Search and indexing
@@ -15,82 +15,90 @@ This guide outlines the implementation plan for building the Wiki User Interface
 - Admin dashboard endpoints
 - Service status endpoints
 
-### 🧩 Frontend UI (In Progress - Phases 1-11 Complete)
+### ✅ Frontend UI (Phases 1-11, 15 Complete)
 **Test Coverage**: 523+ passing unit/integration tests across 35 test files, 32+ E2E tests
 **Backend Test Coverage**: 560+ passing tests across 50+ test files
 **Total Project Coverage**: 1,115+ tests across 89+ test files
 
-#### ✅ Phase 1: Foundation & Setup (Complete)
+---
+
+## Table of Contents
+
+1. [Completed Phases](#completed-phases)
+2. [Implementation Details](#implementation-details)
+3. [Technical Stack](#technical-stack)
+4. [Component Structure](#component-structure)
+5. [Testing Strategy](#testing-strategy)
+6. [Future Enhancements](#future-enhancements)
+
+---
+
+## Completed Phases
+
+### ✅ Phase 1: Foundation & Setup
 - React + Vite client bootstrapped in `client/`
-- Basic project structure created (`components`, `pages`, `services`, `utils`, `test`)
-- React Router configured with core routes (home, page view, edit, search, index)
-- Base layout components implemented (header, footer, layout, sidebar placeholder)
-- Initial styling in place for a modern, book-like reading shell
-- Axios API client configured with `VITE_WIKI_API_BASE_URL` fallback to `http://localhost:5000/api`
-- Testing infrastructure set up (Vitest + React Testing Library) with smoke tests for routing, layout, and API client
-- **CORS configured** - Flask backend allows requests from React dev server (`localhost:3000`)
-- **React Query integration** - Server state management for page data fetching
-- **Auth context** - JWT token storage and Authorization header support ready
-- **E2E Testing** - Playwright E2E tests for full user flows (syntax highlighting, navigation, TOC, backlinks)
+- Project structure (`components`, `pages`, `services`, `utils`, `test`)
+- React Router configured with core routes
+- Base layout components (header, footer, layout, sidebar)
+- Initial styling for modern, book-like reading shell
+- Axios API client with `VITE_WIKI_API_BASE_URL`
+- Testing infrastructure (Vitest + React Testing Library)
+- CORS configured
+- React Query integration
+- Auth context (JWT token storage)
+- E2E Testing (Playwright)
 
-#### ✅ Phase 2: Reading View - Core Components (Complete)
+### ✅ Phase 2: Reading View - Core Components
 - **PageView component** - Full reading experience with content rendering, metadata display
-- **Edit button** - Edit button in page header (shown for writers/admins with edit permissions)
-- **Delete/Archive buttons** - Delete and archive buttons in page header (shown based on permissions)
-- **Breadcrumb Navigation** - Component implemented with API integration, tests included
-- **Previous/Next Navigation** - Component implemented with API integration, tests included
+- **Edit button** - Shown for writers/admins with edit permissions
+- **Delete/Archive buttons** - Shown based on permissions
+- **Breadcrumb Navigation** - Component with API integration
+- **Previous/Next Navigation** - Component with API integration
 - **Enhanced Content Styling**:
-  - Syntax highlighting (Prism.js with multiple languages: JS, TS, Python, Bash, JSON, Markdown, CSS, SQL)
-  - Responsive image handling (max-width 100%, rounded corners, shadows)
-  - Styled tables (striped rows, hover effects, borders)
-  - Enhanced blockquotes (background, decorative quote mark)
-  - Internal vs external link distinction (visual indicators, external icon)
-- **API Integration**:
-  - `usePage`, `useBreadcrumb`, `usePageNavigation` hooks
-  - Automatic syntax highlighting and link processing after render
-- **Tests added**:
-  - PageView component tests (loading, error, success states)
-  - Breadcrumb component tests (7 test cases)
-  - PageNavigation component tests (8 test cases)
-  - Backend: cache service tests (user_id=None), CORS header tests, unauthenticated page access tests
+  - Syntax highlighting (Prism.js with multiple languages)
+  - Responsive image handling
+  - Styled tables (striped rows, hover effects)
+  - Enhanced blockquotes
+  - Internal vs external link distinction
+- **API Integration**: `usePage`, `useBreadcrumb`, `usePageNavigation` hooks
 
-#### ✅ Phase 3: Navigation Tree (Left Sidebar) (Complete)
-- **NavigationTree component** - Hierarchical page navigation with expandable/collapsible nodes
-- **Tree Search** - Search/filter within tree with auto-expand matching branches
+### ✅ Phase 3: Navigation Tree (Left Sidebar)
+- **NavigationTree component** - Hierarchical page navigation
 - **Tree Features**:
-  - Expandable/collapsible tree nodes with smooth animations
+  - Expandable/collapsible tree nodes with animations
   - Highlights current page
   - Auto-expands path to current page
   - Persists expanded state in localStorage
-  - Draft badge indicator for draft pages
+  - Draft badge indicator
   - Hover effects and active state highlighting
-- **API Integration**:
-  - `useNavigationTree` hook with 5-minute cache
-- **Tests added**:
-  - NavigationTree component tests (11 test cases covering all features)
+  - Page count per section
+- **Section View Toggle** ✅ (Major Feature):
+  - Toggle between hierarchical view and section grouping
+  - Section grouping displays pages grouped by section
+  - "No Section" grouping for pages without section (appears at top)
+  - Folder icons for sections, document icons for pages
+  - Section view is default when page loads
+  - Preference persisted in localStorage
+- **Tree Search** - Search/filter within tree with auto-expand matching branches
+- **API Integration**: `useNavigationTree` hook with 5-minute cache
 
-#### ✅ Phase 4: Table of Contents & Backlinks (Right Sidebar) (Complete)
+### ✅ Phase 4: Table of Contents & Backlinks (Right Sidebar)
 - **TableOfContents component** - Auto-generated from page headings (H2-H6)
   - Click to scroll to section (smooth scroll)
   - Highlight current section while scrolling
   - Indentation for nested headings
   - Active section highlighting
   - Sticky positioning support
+  - Collapsible for pages with < 5 TOC items
 - **Backlinks component** - Displays pages that link to current page
   - Shows backlink count
   - Click to navigate to linking page
   - Styled list with hover effects
-- **Integration**:
-  - Both components integrated into PageView right sidebar
-  - Rendered when `table_of_contents` or `backlinks` data is available from API
-- **Tests added**:
-  - TableOfContents component tests (10 test cases)
-  - Backlinks component tests (9 test cases)
-  - PageView integration tests for TOC and Backlinks
+- **Integration**: Both components integrated into PageView right sidebar
 
-#### ✅ Phase 5: Comments System (Complete)
-- **CommentsList component** - Displays all comments for a page with threading
-- **CommentItem component** - Displays single comment with nested replies (up to 5 levels)
+### ✅ Phase 5: Comments System
+- **CommentsList component** - Displays all comments with threading
+- **CommentItem component** - Single comment with nested replies (up to 5 levels)
 - **CommentForm component** - Form for creating new comments and replies
 - **Features**:
   - Threaded comments with visual indentation
@@ -101,42 +109,47 @@ This guide outlines the implementation plan for building the Wiki User Interface
   - Relative and absolute timestamps
   - Reply button disabled at max depth (5 levels)
   - Sign-in prompt for unauthenticated users
-- **API Integration**:
-  - `useComments` hook for fetching comments
-  - `useCreateComment`, `useUpdateComment`, `useDeleteComment` mutations
-  - Automatic refetch on mutations
-- **Integration**:
-  - Fully integrated into PageView component
-  - Rendered below page content
-- **Tests added**:
-  - CommentsList component tests (7 tests)
-  - CommentItem component tests (15 tests)
-  - CommentForm component tests (16 tests)
-  - Comments API service tests
+  - Pagination (10 comments per page with navigation)
+- **API Integration**: `useComments`, `useCreateComment`, `useUpdateComment`, `useDeleteComment` hooks
 
-#### ✅ Phase 7: WYSIWYG Editor Integration (Complete)
+### ✅ Phase 6: Search Interface
+- **Search Bar Component** - In header with keyboard shortcuts (Ctrl+K / Cmd+K)
+  - Recent searches dropdown (localStorage, max 10 items)
+  - Search suggestions as you type (debounced, 300ms)
+  - Clear button
+- **Search Results Page** - Full search results with:
+  - Title, snippet, section, relevance score
+  - Search term highlighting
+  - Pagination (20 results per page)
+  - "No results" state
+- **Index View** - Alphabetical listing:
+  - Filter by section
+  - Click letter to jump to section
+  - Search within index
+  - Page count per letter
+- **API Integration**: `useSearch`, `useIndex` hooks
+
+### ✅ Phase 7: WYSIWYG Editor Integration
 - **Editor Component** - Tiptap-based rich text editor
   - Markdown import/export
   - All formatting tools (headings, bold, italic, code, lists, links, images, tables)
   - Code blocks with syntax highlighting
   - Undo/redo functionality
+  - Real-time preview toggle
 - **EditorToolbar Component** - Full formatting toolbar
   - Format dropdown (H1-H6, Paragraph)
   - Text formatting buttons
   - List buttons
   - Link and image insertion
   - Code block and table insertion
+  - Two-row toolbar (table controls appear when cursor is in table)
 - **EditPage Component** - Full editing interface
   - Editor integration
   - Auto-save drafts to localStorage
   - Save/create page functionality
-- **Tests added**:
-  - Editor component tests (14 test cases)
-  - EditorToolbar component tests (33 test cases)
-  - EditPage component tests (22 test cases)
-  - Integration tests for page editing flow (6 test cases)
+  - **Save Navigation**: After successful save, navigates back to view mode (not staying in editor)
 
-#### ✅ Phase 8: Page Metadata Editor (Complete)
+### ✅ Phase 8: Page Metadata Editor
 - **MetadataForm Component** - Complete metadata editing form
   - Title input (required, auto-generates slug)
   - Slug input (editable, real-time validation)
@@ -151,814 +164,350 @@ This guide outlines the implementation plan for building the Wiki User Interface
   - Debounced parent page search (300ms)
   - Real-time validation feedback
   - Click-outside to close dropdown
-- **Integration**:
-  - Fully integrated into EditPage component
-  - Metadata saved with page content
-  - Auto-save includes metadata
-  - Draft loading includes metadata
-- **Tests added**:
-  - MetadataForm component tests (40+ test cases)
-  - Slug utility tests (20 test cases)
-  - API function tests (searchPages, validateSlug - 10 test cases)
-  - Integration tests for metadata in edit flow (5 test cases)
-
-## Implementation Phases
-
-### Phase 1: Foundation & Setup
-**Goal**: Set up the frontend framework and basic infrastructure
-
-#### Tasks:
-- [x] Choose frontend framework (React 18 + React Router, Vite)
-- [x] Set up project structure (components, pages, services, utils, test)
-- [x] Configure build tools (Vite + `@vitejs/plugin-react-swc`)
-- [x] Set up routing (React Router with core routes + v7 future flags)
-- [x] Set up state management (React Query for server state, simple Auth context for auth state)
-- [x] Configure API service layer (Axios wrapper in `src/services/api/client.js` with auth header support)
-- [x] Set up authentication integration (JWT token storage + Axios Authorization header hookup)
-- [x] Create base layout components (Header, Footer, Layout, Sidebar placeholder)
-- [x] Set up CSS/styling approach (global CSS with modern, book-like layout)
-- [x] Configure environment variables for API endpoints (`VITE_WIKI_API_BASE_URL`)
-- [x] Set up UI testing infrastructure (Vitest + React Testing Library) and smoke tests
-
-#### Deliverables:
-- Working development environment (`npm install`, `npm run dev` in `client/`)
-- Basic routing structure with placeholder pages
-- API service layer with error handling hook (Axios client + interceptor)
-- Testable layout shell (header, sidebar, content, footer)
-- UI test harness ready for future components (Vitest + RTL)
-
----
-
-### Phase 2: Reading View - Core Components
-**Goal**: Implement the main reading experience
-
-#### Tasks:
-- [x] **Page Content Component** ✅ (Complete)
-  - [x] Render markdown HTML content from backend API
-  - [x] Display page title and metadata (updated_at, word_count, size, status)
-  - [x] Apply basic typography styles (via global CSS)
-  - [x] Syntax highlighting for code blocks (Prism.js with multiple languages)
-  - [x] Code blocks with proper formatting (whitespace preservation, language specifiers, multi-line support)
-  - [x] Responsive image handling (max-width 100%, rounded corners, shadows)
-  - [x] Table styling (striped rows, hover effects, borders)
-  - [x] Enhanced block quote styling (background, decorative quote mark)
-  - [x] Internal vs external link styling (visual distinction, external icon)
-
-- [x] **Breadcrumb Navigation** ✅
-  - [x] Build breadcrumb trail from page hierarchy
-  - [x] Click to navigate to parent pages
-  - [x] Display: `Home > Section > Parent > Current Page`
-  - [x] Hide when only root page (single item)
-  - [x] Style with separators and hover effects
-
-- [x] **Previous/Next Navigation** ✅
-  - [x] Calculate previous/next pages based on order_index
-  - [x] Display buttons at bottom of content
-  - [x] Handle edge cases (first/last pages - disabled state)
-  - [x] Style with hover effects and disabled states
-
-- [x] **Page Header** (Basic implementation complete)
-  - [x] Display page title
-  - [x] Show metadata (last updated, word count, size)
-  - [x] Status indicator (published/draft)
-  - [x] Edit button (for writers/admins) - ✅ Complete (auth integration complete)
-
-#### API Endpoints Used:
-- `GET /api/pages/{page_id}` - Get page content ✅ (in use)
-- `GET /api/pages/{page_id}/breadcrumb` - Get breadcrumb path (for breadcrumb nav)
-- `GET /api/pages/{page_id}/navigation` - Get previous/next pages (for prev/next nav)
-- `GET /api/navigation` - Get full navigation tree (for sidebar)
-
-#### Deliverables:
-- ✅ Fully styled page reading view - **COMPLETE**
-- ✅ Working navigation (breadcrumbs, prev/next) - **COMPLETE**
-- ✅ Responsive layout (basic) - **COMPLETE**
-- ✅ Component tests for all navigation components - **COMPLETE**
-- ✅ Enhanced content styling (syntax highlighting, tables, images, blockquotes, links) - **COMPLETE**
-
-**Phase 2 Status: ✅ COMPLETE**
-
----
-
-### Phase 3: Navigation Tree (Left Sidebar)
-**Goal**: Implement hierarchical page navigation
-
-#### Tasks:
-- [x] **Navigation Tree Component** ✅
-  - [x] Fetch and build page hierarchy
-  - [x] Expandable/collapsible tree nodes
-  - [x] Highlight current page
-  - [x] Click to navigate
-  - [x] Hover effects
-  - [x] Active state highlighting
-  - [x] Auto-expand path to current page
-  - [x] Icons for pages vs sections - ✅ Complete (folder icon for sections, document icon for pages)
-
-- [x] **Tree Search** ✅
-  - [x] Search/filter within tree
-  - [x] Auto-expand matching branches
-  - [x] Filter non-matching branches
-
-- [x] **Tree Features** ✅
-  - [x] Remember expanded state (localStorage)
-  - [x] Draft badge indicator
-  - [x] Show page count per section - ✅ Complete (displays count of all descendant pages)
-  - [ ] Lazy load children - **TODO** (not needed yet, performance is good)
-
-#### API Endpoints Used:
-- `GET /api/navigation` - Get hierarchical structure ✅ (in use)
-
-#### Deliverables:
-- ✅ Functional navigation tree
-- ✅ Search within tree
-- ✅ Smooth expand/collapse (CSS transitions)
-- ✅ Expanded state persistence
-- ✅ Current page highlighting
-
-**Phase 3 Status: ✅ COMPLETE** (except optional enhancements)
-
----
-
-### Phase 4: Table of Contents & Backlinks (Right Sidebar)
-**Goal**: Implement right sidebar with TOC and backlinks
-
-#### Tasks:
-- [x] **Table of Contents Component** ✅
-  - [x] Auto-generate from page headings (H2-H6)
-  - [x] Click to scroll to section (smooth scroll)
-  - [x] Highlight current section while scrolling
-  - [x] Sticky positioning (stays visible)
-  - [x] Indentation for nested headings
-  - [x] Active section highlighting
-  - [x] Collapsible if page is short - ✅ Complete (collapsible for pages with < 5 TOC items)
-
-- [x] **Backlinks Component** ✅
-  - [x] Display pages that link to current page
-  - [x] Show context snippet (where link appears) - ✅ Complete (frontend ready, requires backend support for context data)
-  - [x] Click to navigate to linking page
-  - [x] Display backlink count
-  - [x] Styled list with hover effects
-
-#### API Endpoints Used:
-- `GET /api/pages/{page_id}` - Includes `table_of_contents` and `backlinks` ✅ (in use)
-
-#### Deliverables:
-- ✅ Sticky TOC with scroll highlighting
-- ✅ Functional backlinks section
-- ✅ Smooth scroll-to-section behavior
-- ✅ Component tests for both TOC and Backlinks
-
-**Phase 4 Status: ✅ COMPLETE** (except optional enhancements)
-
----
-
-### Phase 5: Comments System
-**Goal**: Implement threaded comments below page content
-
-#### Tasks:
-- [x] **Comments List Component** ✅
-  - [x] Display threaded comments (max 5 levels deep)
-  - [x] Visual indentation for thread depth
-  - [x] User avatars/names
-  - [x] Timestamps (relative and absolute)
-  - [x] Collapsible threads
-  - [x] Pagination for long threads - ✅ Complete (10 comments per page with navigation)
-
-- [x] **Comment Form Component** ✅
-  - [x] Text area for new comment
-  - [x] Reply button on each comment (disabled at max depth)
-  - [x] "Recommend update" checkbox (for players)
-  - [x] Submit button
-  - [x] Loading states
-  - [x] Error handling
-
-- [x] **Comment Actions** ✅
-  - [x] Edit own comments (inline editing)
-  - [x] Delete own comments (with confirmation)
-  - [x] Mark as recommendation (special styling)
-  - [x] Visual indicator for thread depth
-
-- [x] **Comment Styling** ✅
-  - [x] Light background for comments section
-  - [x] Clear separation between threads
-  - [x] Highlight recommendations
-  - [x] Responsive layout
-
-#### API Endpoints Used:
-- `GET /api/pages/{page_id}/comments` - List comments ✅ (in use)
-- `POST /api/pages/{page_id}/comments` - Create comment ✅ (in use)
-- `PUT /api/comments/{comment_id}` - Update comment ✅ (in use)
-- `DELETE /api/comments/{comment_id}` - Delete comment ✅ (in use)
-
-#### Deliverables:
-- ✅ Fully functional threaded comments
-- ✅ Reply, edit, delete functionality
-- ✅ Recommendation styling
-- ✅ Integration with PageView
-- ✅ Comprehensive test coverage
-- [ ] Pagination - **TODO** (optional enhancement)
-
-**Phase 5 Status: ✅ COMPLETE** (except optional pagination enhancement)
-
----
-
-### Phase 6: Search Interface
-**Goal**: Implement global search functionality
-
-#### Tasks:
-- [x] **Search Bar Component** ✅
-  - [x] Search input in header
-  - [x] Keyboard shortcuts (Ctrl+K / Cmd+K)
-  - [x] Dropdown with recent searches (localStorage) - ✅ **Optional enhancement complete**
-  - [x] Search suggestions as you type (debounced) - ✅ **Optional enhancement complete**
-  - [x] Clear button - ✅ **Optional enhancement complete**
-
-- [x] **Search Results Page** ✅
-  - [x] Display search results
-  - [x] Show: title, snippet, section, relevance score
-  - [x] Highlight search terms
-  - [x] Click to navigate to page
-  - [x] "No results" state
-  - [x] Pagination - ✅ **Optional enhancement complete**
-
-- [x] **Index View** ✅
-  - [x] Alphabetical listing of all pages
-  - [x] Filter by section
-  - [x] Click letter to jump to section
-  - [x] Search within index
-  - [x] Show page count per letter - ✅ **Optional enhancement complete**
-
-#### API Endpoints Used:
-- `GET /api/search?q={query}` - Full-text search ✅ (in use)
-- `GET /api/index` - Get index entries ✅ (in use)
-
-#### Deliverables:
-- ✅ Global search bar in header
-- ✅ Search results page with highlighting
-- ✅ Alphabetical index view with filters
-- ✅ Search API integration
-- ✅ Comprehensive test coverage
-
-**Phase 6 Status: ✅ COMPLETE** (including all optional enhancements)
-
----
-
-### Phase 7: WYSIWYG Editor Integration
-**Goal**: Integrate Tiptap editor for page editing
-
-#### Tasks:
-- [x] **Install Tiptap Dependencies** ✅
-  - [x] Install `@tiptap/react` and core packages
-  - [x] Install extensions (bold, italic, lists, links, images, tables, code)
-  - [x] Install markdown conversion utilities (marked, turndown)
-
-- [x] **Editor Component** ✅
-  - [x] Initialize Tiptap editor
-  - [x] Configure toolbar with all required buttons
-  - [x] Format dropdown (H1-H6, Paragraph)
-  - [x] Bold, Italic, Code buttons
-  - [x] Bullet list, Numbered list buttons
-  - [x] Link button (with prompt dialog)
-  - [x] Image insert button (with prompt dialog)
-  - [x] Code block button
-  - [x] Table button (opens dialog for custom dimensions)
-  - [x] Undo/Redo buttons
-
-- [x] **Editor Features** ✅
-  - [x] Load markdown content into editor
-  - [x] Export editor content to markdown
-  - [x] Auto-save drafts (localStorage)
-  - [x] Link insertion (basic prompt)
-  - [x] Image insertion (basic prompt)
-  - [x] **Table insertion dialog** - Customizable rows (1-20) and columns (1-20) with optional header row
-  - [x] **Table controls toolbar** - Second toolbar row appears when cursor is inside a table:
-    - Add/Delete columns (before/after current column)
-    - Add/Delete rows (before/after current row)
-    - Delete entire table
-  - [x] **Table markdown conversion** - Full round-trip support (HTML ↔ GFM markdown)
-  - [x] Keyboard shortcuts (Tiptap built-in)
-  - [x] Real-time preview toggle - ✅ Complete (toggle between editor and preview)
-  - [x] Link insertion dialog with page search - ✅ Complete (searchable dialog for internal/external links)
-  - [x] Image upload with preview - ✅ Complete (file upload with preview and URL input)
-
-- [x] **Editor Styling** ✅
-  - [x] Clean background with theme colors
-  - [x] Comfortable padding
-  - [x] Toolbar styling
-  - [x] Content area styling
-  - [x] Focus states
-
-#### API Endpoints Used:
-- `GET /api/pages/{page_id}` - Load page for editing ✅ (in use)
-- `PUT /api/pages/{page_id}` - Save page updates ✅ (in use)
-- `POST /api/pages` - Create new page ✅ (in use)
-- `POST /api/upload/images` - Upload images (not yet implemented)
-
-#### Deliverables:
-- ✅ Fully functional Tiptap editor
-- ✅ All formatting tools working
-- ✅ Link and image insertion (basic)
-- ✅ Auto-save drafts
-- ✅ Comprehensive test coverage (14+ tests for Editor, 33+ tests for EditorToolbar)
-
-**Phase 7 Status: ✅ COMPLETE** (except optional enhancements)
-
----
-
-### Phase 8: Page Metadata Editor
-**Goal**: Implement form for editing page metadata
-
-#### Tasks:
-- [x] **Metadata Form Component** ✅
-  - [x] Title input (required)
-  - [x] Slug input (auto-generated from title, editable)
-  - [x] Parent page dropdown (with search)
-  - [x] Section dropdown or text input
-  - [x] Order number input (positive integer)
-  - [x] Status toggle (published/draft)
-  - [x] Validation messages
-
-- [x] **Form Features** ✅
-  - [x] Auto-generate slug from title
-  - [x] Search parent pages as you type (debounced)
-  - [x] Validate slug uniqueness (debounced API call)
-  - [x] Validate parent exists
-  - [x] Form state management
-  - [x] Error handling
-
-- [x] **Form Styling** ✅
-  - [x] Clean form layout
-  - [x] Label styling
-  - [x] Input styling
-  - [x] Error message styling
-  - [x] Success states
-
-#### API Endpoints Used:
-- `GET /api/pages` - Search for parent pages ✅ (in use)
-- `GET /api/pages/{page_id}` - Load page metadata ✅ (in use)
-- `PUT /api/pages/{page_id}` - Update page metadata ✅ (in use)
-
-#### Deliverables:
-- ✅ Complete metadata editor
-- ✅ Validation and error handling
-- ✅ Auto-slug generation
-- ✅ Comprehensive test coverage:
-  - MetadataForm component: 40+ test cases
-  - Slug utility: 20 test cases
-  - API functions (searchPages, validateSlug): 16 test cases
-  - Integration tests: 6 test cases (enhanced)
-  - EditPage tests: Updated for metadata integration
-- ✅ Full integration with EditPage
-- ✅ Styling and UX polish
-
-**Phase 8 Status: ✅ COMPLETE**
-
-**Documentation**: See `client/PHASE_8_SUMMARY.md` for detailed implementation notes.
-
----
-
-### Phase 9: Editing View Layout
-**Goal**: Combine editor and metadata form into full editing experience
-
-#### Tasks:
-- [x] **Editing View Layout** ✅
-  - [x] Toolbar with Save, Cancel, Preview, History buttons
-  - [x] Metadata form at top
-  - [x] Editor in middle
-  - [x] Version info display
-  - [x] Enhanced unsaved changes warning
-  - [x] Loading states
-
-- [x] **Editor Actions** ✅
-  - [x] Save button (creates new version)
-  - [x] Cancel button (discard changes, confirm if unsaved)
-  - [x] Preview toggle (toggle between editor and preview)
-  - [x] History button (links to version history page)
-
-- [x] **Version History Integration** ✅
-  - [x] Display current version number
-  - [x] Link to view history
-  - [x] Version history page component
-
-#### API Endpoints Used:
-- `GET /api/pages/{page_id}/versions` - List versions ✅ (in use)
-- `GET /api/pages/{page_id}/versions/{version}` - Get specific version ✅ (API functions added)
-- `GET /api/pages/{page_id}/versions/compare` - Compare versions ✅ (API functions added)
-- `POST /api/pages/{page_id}/versions/{version}/restore` - Restore version ✅ (API functions added)
-
-#### Deliverables:
-- ✅ Complete editing view with enhanced layout
-- ✅ Save/cancel/preview functionality
-- ✅ Version history page access
-- ✅ Version info display in edit header
-- ✅ Enhanced unsaved changes warning with icon
-- ✅ History button in actions toolbar
-- ✅ Comprehensive test coverage (30+ new tests)
-
-**Phase 9 Status: ✅ COMPLETE**
-
----
-
-### Phase 10: Page Creation Flow
-**Goal**: Implement "New Page" creation workflow
-
-#### Tasks:
-- [x] **New Page Modal/Page** ✅
-  - [x] Choose parent page (optional) - ✅ Implemented in Phase 8
-  - [x] Choose section - ✅ Implemented in Phase 8
-  - [x] Enter title (slug auto-generated) - ✅ Implemented in Phase 8
-  - [x] Open editor with empty content - ✅ Implemented
-  - [x] Save button creates page - ✅ Implemented
-
-- [x] **Creation Flow** ✅
-  - [x] Navigate to "New Page" from header - ✅ "New Page" button added
-  - [x] Fill metadata form - ✅ Implemented in Phase 8
-  - [x] Write content in editor - ✅ Implemented
-  - [x] Save page - ✅ Implemented
-  - [x] Redirect to new page - ✅ Implemented
-
-#### API Endpoints Used:
-- `POST /api/pages` - Create new page ✅ (in use)
-- `GET /api/pages` - List pages for parent selection ✅ (in use)
-
-#### Deliverables:
-- ✅ New page creation flow
-- ✅ Smooth redirect after creation
-- ✅ "New Page" button in header (for writers/admins)
-
-**Phase 10 Status: ✅ COMPLETE**
-
----
-
-### Phase 10.5: Version History & Comparison
-**Goal**: Implement version history viewing and comparison
-
-#### Tasks:
-- [x] **Version History Modal/Page** ✅
-  - [x] Display list of all versions - ✅ Implemented in Phase 9
-  - [x] Show version number, date, author, change summary - ✅ Implemented in Phase 9
-  - [x] Show diff stats (added/removed lines, char diff) - ✅ Implemented in Phase 9
-  - [x] Click to view specific version - ✅ Implemented
-  - [x] "Compare" button to compare versions - ✅ Implemented
-
-- [x] **Version View** ✅
-  - [x] Display specific version content
-  - [x] Show version metadata
-  - [x] "Restore" button (for admins/writers)
-  - [x] Link back to current version
-
-- [x] **Version Comparison** ✅
-  - [x] Side-by-side comparison view
-  - [x] Inline diff view (unified diff)
-  - [x] Highlight additions (green) and deletions (red)
-  - [x] Show diff stats summary
-  - [x] Scroll synchronization
-  - [x] Toggle between side-by-side and inline views
-
-- [x] **Version Features** ✅
-  - [x] Access from "History" button in editor - ✅ Implemented in Phase 9
-  - [x] Access from page header (version number link) - ✅ Implemented in Phase 9
-  - [ ] Keyboard shortcuts for navigation - **Optional enhancement**
-  - [ ] Export version as markdown/HTML - **Optional enhancement**
-
-#### API Endpoints Used:
-- `GET /api/pages/{page_id}/versions` - List all versions ✅ (in use)
-- `GET /api/pages/{page_id}/versions/{version}` - Get specific version ✅ (in use)
-- `GET /api/pages/{page_id}/versions/compare?from={v1}&to={v2}` - Compare versions ✅ (in use)
-- `POST /api/pages/{page_id}/versions/{version}/restore` - Restore version ✅ (in use)
-
-#### Deliverables:
-- ✅ Version history list (Phase 9)
-- ✅ Version viewing (PageVersionView component)
-- ✅ Version comparison (PageVersionCompare component - side-by-side and inline)
-- ✅ Restore functionality
-
-**Phase 10.5 Status: ✅ COMPLETE** (except optional enhancements)
-
----
-
-### Phase 11: Page Delete and Archive Functionality
-**Goal**: Implement page deletion and archiving with role-based permissions
-
-#### Tasks:
-- [x] **Backend Permission Checks** ✅
-  - [x] Add `can_archive()` method to PageService - ✅ Implemented
-  - [x] Verify `can_delete()` method works correctly - ✅ Verified
-  - [x] Update `get_page` endpoint to include permission flags - ✅ Implemented
-
-- [x] **Backend Archive Endpoints** ✅
-  - [x] `POST /api/pages/<page_id>/archive` - Archive a page - ✅ Implemented
-  - [x] `DELETE /api/pages/<page_id>/archive` - Unarchive a page - ✅ Implemented
-  - [x] Update status validation to accept 'archived' - ✅ Implemented
-  - [x] Exclude archived pages from list/search/index - ✅ Implemented
-
-- [x] **Frontend API Functions** ✅
-  - [x] `deletePage(pageId)` - Delete a page - ✅ Implemented
-  - [x] `archivePage(pageId)` - Archive a page - ✅ Implemented
-  - [x] `unarchivePage(pageId)` - Unarchive a page - ✅ Implemented
-
-- [x] **Frontend UI Components** ✅
-  - [x] Delete button in PageView header - ✅ Implemented
-  - [x] Archive button in PageView header - ✅ Implemented
-  - [x] Unarchive button in PageView header - ✅ Implemented
-  - [x] Confirmation dialog component - ✅ Implemented
-  - [x] Loading states during operations - ✅ Implemented
-
-- [x] **Permission-Based Visibility** ✅
-  - [x] Show delete button only when `can_delete` is true - ✅ Implemented
-  - [x] Show archive button only when `can_archive` is true and page not archived - ✅ Implemented
-  - [x] Show unarchive button only when `can_archive` is true and page is archived - ✅ Implemented
-
-- [x] **Archive Behavior** ✅
-  - [x] Archived pages hidden from list views - ✅ Implemented
-  - [x] Archived pages hidden from search results - ✅ Implemented
-  - [x] Archived pages hidden from index - ✅ Implemented
-  - [x] Only admins/writers with permission can view archived pages - ✅ Implemented
-
-#### API Endpoints Used:
-- `DELETE /api/pages/<page_id>` - Delete page ✅ (existing, verified)
-- `POST /api/pages/<page_id>/archive` - Archive page ✅ (new)
-- `DELETE /api/pages/<page_id>/archive` - Unarchive page ✅ (new)
-- `GET /api/pages/<page_id>` - Get page (now includes `can_delete` and `can_archive` flags) ✅
-
-#### Deliverables:
-- ✅ Delete page functionality with confirmation
-- ✅ Archive/unarchive page functionality with confirmation
-- ✅ Permission-based button visibility
-- ✅ Archived pages properly hidden from normal views
-- ✅ Comprehensive test coverage (12 backend tests)
-
-**Phase 11 Status: ✅ COMPLETE**
-
----
-
-### Phase 12: Responsive Design
-**Goal**: Make UI work on mobile, tablet, and desktop
-
-#### Tasks:
-- [ ] **Mobile (< 768px)**
-  - Collapsible sidebars (hamburger menu)
-  - Stacked layout
-  - Full-width content
-  - Touch-friendly buttons
-  - Simplified editor toolbar
-  - Mobile navigation menu
-
-- [ ] **Tablet (768px - 1024px)**
-  - Sidebar can be toggled
-  - Comfortable reading width maintained
-  - Editor toolbar adapts
-  - Responsive grid layouts
-
-- [ ] **Desktop (> 1024px)**
-  - Full three-column layout
-  - All features visible
-  - Optimal reading experience
-
-- [ ] **Responsive Components**
-  - Navigation tree (collapsible on mobile)
-  - TOC sidebar (collapsible on mobile)
-  - Editor toolbar (simplified on mobile)
-  - Comments (stacked on mobile)
-
-#### Deliverables:
-- Fully responsive design
-- Mobile-friendly navigation
-- Touch-optimized interactions
-
----
-
-### Phase 13: Accessibility
-**Goal**: Ensure UI is accessible to all users
-
-#### Tasks:
-- [ ] **Keyboard Navigation**
-  - Tab order is logical
-  - All interactive elements keyboard accessible
-  - Keyboard shortcuts documented
-  - Focus management
-
-- [ ] **Screen Reader Support**
-  - ARIA labels on all interactive elements
-  - Semantic HTML structure
-  - Alt text for images
-  - ARIA live regions for dynamic content
-
-- [ ] **Visual Accessibility**
-  - Focus indicators on all focusable elements
-  - High contrast mode support
-  - Color contrast ratios meet WCAG AA
-  - Text resizing support
-
-- [ ] **Testing**
-  - Test with screen readers (NVDA, JAWS, VoiceOver)
-  - Test keyboard-only navigation
-  - Test with browser zoom (200%)
-  - Test color contrast
-
-#### Deliverables:
-- WCAG 2.1 AA compliant
-- Keyboard navigation working
-- Screen reader tested
-
----
-
-### Phase 14: Performance Optimization
-**Goal**: Ensure fast, smooth user experience
-
-#### Tasks:
-- [ ] **Code Splitting**
-  - Lazy load routes
-  - Lazy load heavy components (editor, comments)
-  - Code splitting by route
-
-- [ ] **Caching**
-  - Cache API responses (React Query or SWR)
-  - Cache navigation tree
-  - Cache search results
-  - Use browser caching headers
-
-- [ ] **Optimization**
-  - Optimize images (lazy loading, responsive images)
-  - Debounce search inputs
-  - Virtualize long lists (comments, search results)
-  - Memoize expensive computations
-
-- [ ] **Performance Monitoring**
-  - Measure page load times
-  - Measure time to interactive
-  - Monitor API call performance
-  - Use React DevTools Profiler
-
-#### Deliverables:
-- Fast page loads (< 2s initial)
-- Smooth interactions (60fps)
-- Optimized API usage
-
----
-
-### Phase 15: Polish & Enhancements ✅
-**Goal**: Add polish and user experience enhancements
-
-#### Tasks:
-- [x] **Animations & Transitions**
+- **Integration**: Fully integrated into EditPage component
+
+### ✅ Phase 9: Editing View Layout
+- **Editing View Layout**:
+  - Toolbar with Save, Cancel, Preview, History buttons
+  - Metadata form at top
+  - Editor in middle
+  - Version info display
+  - Enhanced unsaved changes warning
+  - Loading states
+- **Version History Integration**:
+  - Display current version number
+  - Link to view history
+  - Version history page component (PageHistoryPage)
+- **Editor Actions**:
+  - Save button (creates new version, navigates to view mode)
+  - Cancel button (discard changes, confirm if unsaved)
+  - Preview toggle (toggle between editor and preview)
+  - History button (links to version history page)
+
+### ✅ Phase 10: Page Creation Flow
+- **New Page Modal/Page**:
+  - Choose parent page (optional)
+  - Choose section
+  - Enter title (slug auto-generated)
+  - Open editor with empty content
+  - Save button creates page
+- **Creation Flow**:
+  - Navigate to "New Page" from header ("New Page" button)
+  - Fill metadata form
+  - Write content in editor
+  - Save page
+  - Redirect to new page (view mode)
+
+### ✅ Phase 10.5: Version History & Comparison
+- **Version History Modal/Page**:
+  - Display list of all versions
+  - Show version number, date, author, change summary
+  - Show diff stats (added/removed lines, char diff)
+  - Click to view specific version
+  - "Compare" button to compare versions
+- **Version View**:
+  - Display specific version content
+  - Show version metadata
+  - "Restore" button (for admins/writers)
+  - Link back to current version
+- **Version Comparison**:
+  - Side-by-side comparison view
+  - Inline diff view (unified diff)
+  - Highlight additions (green) and deletions (red)
+  - Show diff stats summary
+  - Scroll synchronization
+  - Toggle between side-by-side and inline views
+
+### ✅ Phase 11: Page Delete and Archive Functionality
+- **Backend Permission Checks**:
+  - `can_archive()` method in PageService
+  - `can_delete()` method verified
+  - Permission flags in API responses
+- **Backend Archive Endpoints**:
+  - `POST /api/pages/<page_id>/archive` - Archive a page
+  - `DELETE /api/pages/<page_id>/archive` - Unarchive a page
+  - Archived pages excluded from list/search/index
+- **Frontend UI Components**:
+  - Delete button in PageView header
+  - Archive button in PageView header
+  - Unarchive button in PageView header
+  - Confirmation dialog component (DeleteArchiveDialog)
+  - Loading states during operations
+- **Permission-Based Visibility**:
+  - Show delete button only when `can_delete` is true
+  - Show archive button only when `can_archive` is true and page not archived
+  - Show unarchive button only when `can_archive` is true and page is archived
+
+### ✅ Phase 15: Polish & Enhancements
+- **Animations & Transitions**:
   - Smooth page transitions
   - Loading skeletons
   - Smooth scroll animations
   - Hover effects
   - Button press animations
-
-- [x] **Error Handling**
+- **Error Handling**:
   - User-friendly error messages
   - Retry mechanisms
   - Offline detection
   - Network error handling
-
-- [x] **User Feedback**
-  - Success notifications
+- **User Feedback**:
+  - Success notifications (NotificationProvider)
   - Error notifications
   - Loading indicators
   - Progress indicators
-
-- [x] **Theme Support**
-  - Light/dark mode toggle
+- **Theme Support**:
+  - Light/dark mode toggle (ThemeToggle component)
   - Respect system preferences
   - Persist theme choice
   - Header and all components adapt to theme
-
-- [x] **Additional Features**
+- **Additional Features**:
   - Print stylesheet
-  - Share page functionality
+  - Share page functionality (ShareButton component)
   - Copy link to page
-  - Export page as PDF (optional)
-
-#### Deliverables:
-- Polished, professional UI
-- Smooth animations
-- Comprehensive error handling
-- Theme support
+  - Service status indicator (ServiceStatusIndicator component)
+  - Profile page (ProfilePage component)
+  - Service management page (ServiceManagementPage component)
 
 ---
 
-## Technical Stack Recommendations
+## Implementation Details
+
+### Navigation Tree Enhancements
+
+#### Section View Toggle
+
+**Feature**: Toggle between hierarchical tree view and section grouping view
+
+**Implementation**:
+- Toggle checkbox in navigation tree controls
+- Section view is default (stored in localStorage, defaults to `true`)
+- When enabled, pages are grouped by their `section` field
+- Pages without a section are grouped under "No Section"
+- "No Section" appears at the top of the list
+- Sections displayed as folders (📁 icon) with folder names
+- Pages displayed as documents (📄 icon)
+- Pages within each section sorted alphabetically by title
+- Section preference persisted in localStorage (`arcadium_nav_section_view`)
+
+**Files**:
+- `client/src/components/navigation/NavigationTree.jsx` - Main implementation
+- `client/src/styles.css` - Section grouping styles
+
+### Editor Enhancements
+
+#### Link Dialog Improvements
+
+**Feature**: Enhanced link insertion dialog with improved page search
+
+**Implementation**:
+- **Client-side filtering**: All pages fetched once, filtered client-side
+- **Alphabetical sorting**: Pages sorted by title on fetch
+- **Title-based search**: Filters by page title (case-insensitive, space/special-character forgiving)
+- **Dropdown height limit**: Limited to 4 items with scrollbar
+- **Slug resolution**: Automatically resolves slugs to page IDs for internal links
+- **Dropdown visibility**: Shows on focus, hides on blur (with delay for click handling)
+
+**Files**:
+- `client/src/components/editor/LinkDialog.jsx` - Main implementation
+- `client/src/components/editor/LinkDialog.css` - Dropdown height and styling
+
+#### Save Navigation
+
+**Feature**: After successful page save, navigate back to view mode
+
+**Implementation**:
+- `updateMutation.onSuccess` navigates to `/pages/${pageId}` (view mode)
+- `createMutation.onSuccess` navigates to `/pages/${data.id}` (view mode)
+- User sees saved page in view mode instead of staying in editor
+
+**Files**:
+- `client/src/pages/EditPage.jsx` - Navigation logic in mutation callbacks
+
+### User Experience Enhancements
+
+#### Theme Toggle
+
+**Feature**: Light/dark mode toggle with system preference detection
+
+**Implementation**:
+- ThemeToggle component in header
+- Respects system preferences (prefers-color-scheme)
+- Persists user choice in localStorage
+- All components adapt to theme via CSS variables
+
+**Files**:
+- `client/src/components/common/ThemeToggle.jsx`
+- `client/src/components/common/ThemeToggle.css`
+
+#### Share Button
+
+**Feature**: Share page functionality with copy link
+
+**Implementation**:
+- ShareButton component in PageView header
+- Copy page link to clipboard
+- Fallback to Web Share API if available
+- Success/error notifications
+
+**Files**:
+- `client/src/components/common/ShareButton.jsx`
+- `client/src/components/common/ShareButton.css`
+- `client/src/utils/share.js` - Share utilities
+
+#### Service Status Indicator
+
+**Feature**: Visual indicator of overall service health in header
+
+**Implementation**:
+- ServiceStatusIndicator component in header
+- Shows overall status (healthy/degraded/unhealthy/unknown)
+- Color-coded indicator light
+- Click to navigate to service management page
+- Auto-refreshes every 15 seconds
+
+**Files**:
+- `client/src/components/common/ServiceStatusIndicator.jsx`
+- `client/src/components/common/ServiceStatusIndicator.css`
+- `client/src/services/api/services.js` - Service status API
+
+#### Notification System
+
+**Feature**: User feedback notifications (success, error, info)
+
+**Implementation**:
+- NotificationProvider context
+- NotificationContainer component
+- Toast-style notifications
+- Auto-dismiss after timeout
+- Manual dismiss option
+
+**Files**:
+- `client/src/components/common/NotificationProvider.jsx`
+- `client/src/components/common/NotificationContainer.jsx`
+- `client/src/components/common/Notification.jsx`
+
+#### Profile Page
+
+**Feature**: User profile page showing account information and permissions
+
+**Implementation**:
+- ProfilePage component
+- Displays username, email, user ID
+- Shows role and permissions
+- Redirects to sign-in if not authenticated
+
+**Files**:
+- `client/src/pages/ProfilePage.jsx`
+
+#### Service Management Page
+
+**Feature**: Admin page for monitoring and managing all Arcadium services
+
+**Implementation**:
+- ServiceManagementPage component
+- Displays status of all services
+- Manual refresh button
+- Service control actions (start/stop/restart)
+- Status notes editing
+- Export service status report
+
+**Files**:
+- `client/src/pages/ServiceManagementPage.jsx`
+- `client/src/services/api/services.js` - Service management API
+
+---
+
+## Technical Stack
 
 ### Framework
-- **React 18+** (recommended for Tiptap integration and ecosystem)
-- Alternative: Vue 3 or SvelteKit
+- **React 18+** with React Router v6
+- **Vite** as build tool
 
 ### Editor
-- **Tiptap** (`@tiptap/react`) - Already specified in design doc
-- Required extensions:
-  - `@tiptap/starter-kit` (base functionality)
-  - `@tiptap/extension-link` (links)
-  - `@tiptap/extension-image` (images)
-  - `@tiptap/extension-table` (tables)
-  - `@tiptap/extension-code-block` (code blocks)
-  - `@tiptap/extension-markdown` (markdown import/export)
-
-### Routing
-- **React Router v6** (if using React)
-- Alternative: Vue Router or SvelteKit routing
+- **Tiptap** (`@tiptap/react`) - WYSIWYG editor
+- Extensions: starter-kit, link, image, table, code-block, markdown
 
 ### State Management
-- **React Query / TanStack Query** (for server state)
-- **Zustand** or **Context API** (for client state)
-- Alternative: Redux Toolkit, Pinia (Vue)
+- **React Query / TanStack Query** - Server state
+- **Context API** - Client state (auth, theme, notifications)
 
 ### Styling
-- **Tailwind CSS** (recommended for rapid development)
-- Alternative: CSS Modules, styled-components, or SCSS
+- **Global CSS** with CSS variables for theming
+- Modern, book-like reading experience
 
 ### HTTP Client
-- **Axios** (recommended)
-- Alternative: Fetch API wrapper
+- **Axios** with interceptors for auth and error handling
 
 ### Code Highlighting
-- **Prism.js** or **highlight.js** (for code blocks)
-
-### Build Tool
-- **Vite** (already configured)
-
----
-
-## API Integration Notes
-
-### Authentication
-- JWT tokens stored in localStorage or httpOnly cookies
-- Token refresh mechanism
-- Handle 401 errors (redirect to login)
-
-### Error Handling
-- Centralized error handling
-- User-friendly error messages
-- Retry logic for network errors
-- Offline detection
-
-### API Service Structure
-```
-src/
-  services/
-    api/
-      client.js          # Axios instance with interceptors
-      pages.js           # Page API calls
-      comments.js        # Comment API calls
-      search.js          # Search API calls
-      navigation.js      # Navigation API calls
-      upload.js          # Upload API calls
-      auth.js            # Auth integration
-```
+- **Prism.js** - Syntax highlighting for code blocks
 
 ---
 
 ## Component Structure
 
-### Recommended Component Organization
 ```
 src/
   components/
     layout/
-      Header.jsx
+      Header.jsx          # Header with search, auth, theme toggle, service status
       Footer.jsx
       Layout.jsx
-      Sidebar.jsx
+      Sidebar.jsx          # Left sidebar with NavigationTree
     navigation/
-      NavTree.jsx
-      Breadcrumbs.jsx
-      PrevNext.jsx
+      NavigationTree.jsx   # Hierarchical navigation with section view toggle
+      Breadcrumb.jsx
+      PageNavigation.jsx   # Previous/Next navigation
+      TableOfContents.jsx  # Right sidebar TOC
+      Backlinks.jsx        # Right sidebar backlinks
     content/
-      PageContent.jsx
-      TableOfContents.jsx
-      Backlinks.jsx
+      (integrated into PageView)
     comments/
       CommentsList.jsx
       CommentItem.jsx
       CommentForm.jsx
     editor/
-      Editor.jsx
-      EditorToolbar.jsx
-      MetadataForm.jsx
-    search/
-      SearchBar.jsx
-      SearchResults.jsx
-      IndexView.jsx
+      Editor.jsx           # Tiptap editor
+      EditorToolbar.jsx   # Formatting toolbar
+      MetadataForm.jsx    # Page metadata editor
+      LinkDialog.jsx      # Link insertion dialog with page search
+      ImageUploadDialog.jsx
+      TableDialog.jsx
+    page/
+      DeleteArchiveDialog.jsx  # Confirmation dialog
     common/
-      Button.jsx
-      Input.jsx
-      Modal.jsx
-      Loading.jsx
+      ThemeToggle.jsx     # Light/dark mode toggle
+      ShareButton.jsx     # Share page functionality
+      ServiceStatusIndicator.jsx  # Service health indicator
+      NotificationProvider.jsx    # Notification context
+      NotificationContainer.jsx   # Notification display
+      Notification.jsx           # Individual notification
   pages/
     HomePage.jsx
-    PageView.jsx
-    EditPage.jsx
-    SearchPage.jsx
-    IndexPage.jsx
+    PageView.jsx          # Main reading view
+    EditPage.jsx          # WYSIWYG editor
+    SearchPage.jsx        # Search results
+    IndexPage.jsx         # Alphabetical index
+    PageHistoryPage.jsx   # Version history list
+    PageVersionView.jsx   # View specific version
+    PageVersionCompare.jsx # Compare versions
+    ProfilePage.jsx       # User profile
+    ServiceManagementPage.jsx  # Service status management
+    SignInPage.jsx        # Authentication
   services/
     api/
-      ...
+      client.js           # Axios instance
+      pages.js            # Page API calls
+      comments.js         # Comment API calls
+      search.js           # Search API calls
+      navigation.js       # Navigation API calls
+      auth.js            # Auth integration
+      services.js        # Service status API
   utils/
-    markdown.js
-    formatting.js
-    validation.js
+    markdown.js          # Markdown conversion
+    linkHandler.js      # Link processing
+    syntaxHighlight.js  # Code highlighting
+    share.js            # Share utilities
+    slug.js             # Slug generation
 ```
 
 ---
@@ -969,15 +518,10 @@ src/
 - Component tests (React Testing Library)
 - Utility function tests
 - API service tests (mocked)
-- **Status**: ✅ Comprehensive coverage (523+ client tests + 560+ backend tests = 1,115+ total tests across 89+ test files)
+- **Status**: ✅ Comprehensive coverage (523+ client tests)
   - All components fully tested
   - Edge cases covered
   - Error scenarios handled
-  - Integration flows tested
-  - Phase 5: 38+ new tests (CommentsList, CommentItem, CommentForm, comments API)
-  - Phase 8: 86+ new tests (MetadataForm, slug utility, API functions)
-  - Auth system: 90+ new tests (AuthContext, auth API, sign-in page, header auth)
-  - Phase 9: 30+ new tests (PageHistoryPage, version API functions, EditPage version features)
 
 ### Integration Tests
 - User flows (create page, edit page, comment)
@@ -985,12 +529,8 @@ src/
 - Search flows
 - Metadata editing flows
 - **Status**: ✅ Core flows tested (11+ integration tests)
-  - Page creation/editing flows
-  - Metadata editing flows
-  - Authentication flows
-  - Comments flows (create, edit, delete, reply)
 
-### E2E Tests ✅ (Implemented)
+### E2E Tests
 - **Playwright** - Full browser testing
 - Critical user journeys:
   - Page viewing with syntax highlighting
@@ -998,479 +538,94 @@ src/
   - Table of Contents scrolling and highlighting
   - Backlinks navigation
   - Link processing (internal vs external)
-- **Status**: ✅ E2E test suite implemented (20+ tests)
+- **Status**: ✅ E2E test suite implemented (32+ tests)
 - **Run**: `npm run test:e2e` from `client/` directory
-- **Documentation**: See `client/e2e/README.md`
 
 ---
 
-## Implementation Priority
+## Future Enhancements
 
-### MVP (Minimum Viable Product)
-1. Phase 1: Foundation & Setup
-2. Phase 2: Reading View - Core Components
-3. Phase 3: Navigation Tree
-4. Phase 4: Table of Contents & Backlinks
-5. Phase 5: Comments System
-6. Phase 7: WYSIWYG Editor Integration (basic)
-7. Phase 8: Page Metadata Editor
-8. Phase 9: Editing View Layout
-9. Phase 10: Page Creation Flow
+### Phase 12: Responsive Design (Not Started)
+- Mobile (< 768px) layout
+- Tablet (768px - 1024px) layout
+- Desktop (> 1024px) layout
+- Responsive components
 
-### Enhanced Features
-- Phase 6: Search Interface
-- Phase 12: Responsive Design
-- Phase 13: Accessibility
+### Phase 13: Accessibility (Not Started)
+- Keyboard navigation
+- Screen reader support
+- Visual accessibility (WCAG 2.1 AA compliance)
 
-### Polish
-- Phase 14: Performance Optimization
-- Phase 15: Polish & Enhancements
+### Phase 14: Performance Optimization (Not Started)
+- Code splitting
+- Caching strategies
+- Virtualization for long lists
+- Image optimization
 
 ---
 
-## Next Steps
+## API Integration
 
-### Immediate Next Steps
+### Authentication
+- JWT tokens stored in localStorage
+- Token in `Authorization: Bearer <token>` header
+- Handle 401 errors (redirect to login)
 
-1. **Phase 12: Responsive Design** (Next Priority)
-   - Mobile (< 768px) layout
-   - Tablet (768px - 1024px) layout
-   - Desktop (> 1024px) layout
-   - Responsive components
+### Error Handling
+- Centralized error handling via Axios interceptors
+- User-friendly error messages
+- Retry logic for network errors
+- Offline detection
 
-2. **Phase 13: Accessibility**
-   - Keyboard navigation
-   - Screen reader support
-   - Visual accessibility
-
-3. **Phase 14: Performance Optimization**
-   - Code splitting
-   - Caching strategies
-   - Optimization techniques
-
-4. **Phase 15: Polish & Enhancements** ✅
-   - Animations & transitions
-   - Error handling improvements
-   - Theme support (light/dark mode with system preference detection)
-   - Notification system for user feedback
-   - Print stylesheet
-   - Share/copy link functionality
-
-### Completed Phases
-
-- ✅ **Phase 1: Foundation & Setup** - Complete
-- ✅ **Phase 2: Reading View - Core Components** - Complete (including Edit button)
-- ✅ **Phase 3: Navigation Tree (Left Sidebar)** - Complete
-- ✅ **Phase 4: Table of Contents & Backlinks (Right Sidebar)** - Complete
-- ✅ **Phase 5: Comments System** - Complete (except optional pagination)
-- ✅ **Phase 6: Search Interface** - Complete (except optional enhancements)
-- ✅ **Phase 7: WYSIWYG Editor Integration** - Complete (except optional enhancements)
-- ✅ **Phase 8: Page Metadata Editor** - Complete
-- ✅ **Phase 9: Editing View Layout** - Complete
-- ✅ **Phase 10: Page Creation Flow** - Complete
-- ✅ **Phase 10.5: Version History & Comparison** - Complete (except optional enhancements)
-- ✅ **Phase 11: Page Delete and Archive Functionality** - Complete
-- ✅ **Phase 15: Polish & Enhancements** - Complete
-
-**Test Coverage**: 523+ client tests + 560+ backend tests = 1,115+ total tests across 89+ test files, comprehensive edge case coverage
-
-**Code Quality Infrastructure**:
-- ✅ Pre-commit hooks configured (ruff, black, isort, file checks)
-- ✅ CI/CD workflows with pre-commit integration
-- ✅ All code quality checks passing
+### API Service Structure
+```
+src/services/api/
+  client.js          # Axios instance with interceptors
+  pages.js           # Page API calls
+  comments.js        # Comment API calls
+  search.js          # Search API calls
+  navigation.js      # Navigation API calls
+  auth.js            # Auth integration
+  services.js        # Service status API
+```
 
 ---
 
-## Notes
+## Key Implementation Notes
 
-- Backend API is complete and ready to consume
-- All API endpoints are documented in `docs/api/wiki-api.md`
-- Design specifications are in `docs/wiki-user-interface.md`
-- This guide assumes React, but can be adapted for other frameworks
-- Tiptap is the specified editor (design doc requirement)
-- Focus on MVP first, then enhance with additional features
+### Section View Toggle
+- **Default**: Section view enabled (stored in localStorage)
+- **Grouping**: Pages grouped by `section` field from database
+- **No Section**: Pages without section grouped under "No Section" (appears at top)
+- **Icons**: Folders (📁) for sections, documents (📄) for pages
+- **Sorting**: Sections sorted alphabetically, "No Section" at top; pages within sections sorted alphabetically
 
-## Phase 5 Implementation Summary
+### Link Dialog
+- **Client-side filtering**: All pages fetched once, filtered in browser
+- **Search**: Case-insensitive, space/special-character forgiving title matching
+- **Dropdown**: Limited to 4 items with scrollbar
+- **Slug resolution**: Automatically converts slugs to page IDs for internal links
 
-Phase 5: Comments System has been completed with comprehensive test coverage.
+### Save Navigation
+- **Behavior**: After successful save, automatically navigates to view mode
+- **User Experience**: User sees saved page immediately, not stuck in editor
 
-**Key Achievements**:
-- ✅ Threaded comments system (up to 5 levels deep)
-- ✅ CommentsList, CommentItem, and CommentForm components
-- ✅ Full CRUD operations (create, read, update, delete)
-- ✅ Reply functionality with depth limits
-- ✅ Edit/delete own comments
-- ✅ Recommendation badge for player suggestions
-- ✅ Collapsible reply threads
-- ✅ Relative and absolute timestamps
-- ✅ 38+ new test cases
-- ✅ Full integration with PageView component
-- ✅ Comprehensive error handling and edge cases
+### Theme System
+- **System Preference**: Respects `prefers-color-scheme` media query
+- **Persistence**: User choice stored in localStorage
+- **CSS Variables**: All components use CSS variables for theme colors
 
-## Phase 7 Implementation Summary
-
-Phase 7: WYSIWYG Editor Integration has been completed with comprehensive test coverage.
-
-**Key Achievements**:
-- ✅ Tiptap-based rich text editor with full formatting capabilities
-- ✅ Editor component with markdown import/export
-- ✅ EditorToolbar component with all formatting tools (headings, bold, italic, code, lists, links, images, tables)
-- ✅ Code blocks with syntax highlighting
-- ✅ Undo/redo functionality
-- ✅ EditPage component with auto-save drafts to localStorage
-- ✅ 69+ new test cases (Editor: 14, EditorToolbar: 33, EditPage: 22)
-- ✅ Full integration with page creation and editing flows
-- ✅ Comprehensive error handling and edge cases
-
-## Phase 8 Implementation Summary
-
-Phase 8: Page Metadata Editor has been completed with comprehensive test coverage. See `client/PHASE_8_SUMMARY.md` for detailed implementation notes.
-
-**Key Achievements**:
-- ✅ Complete metadata editing form with all fields
-- ✅ Real-time slug validation with debouncing
-- ✅ Parent page search with debouncing
-- ✅ Auto-slug generation from title
-- ✅ 86+ new test cases
-- ✅ Full integration with EditPage component
-- ✅ Comprehensive error handling and edge cases
-
-## Phase 9 Implementation Summary
-
-Phase 9: Editing View Layout has been completed with comprehensive test coverage.
-
-**Key Achievements**:
-- ✅ Enhanced EditPage layout with version info display
-- ✅ Version history page component (PageHistoryPage)
-- ✅ Version API integration (fetchVersionHistory, fetchVersion, compareVersions, restoreVersion)
-- ✅ Enhanced unsaved changes warning with icon
-- ✅ History button in actions toolbar
-- ✅ Version info display in edit header (current version number)
-- ✅ Links to version history page
-- ✅ 30+ new test cases:
-  - PageHistoryPage: 18 tests
-  - Version API functions: 6 tests
-  - EditPage version features: 6 tests
-- ✅ Full integration with existing EditPage functionality
-- ✅ Comprehensive error handling and edge cases
-
-**New Components**:
-- `PageHistoryPage` - Displays version history list with metadata, diff stats, and navigation links
-
-**New API Functions**:
-- `fetchVersionHistory(pageId)` - Get all versions for a page
-- `useVersionHistory(pageId)` - React Query hook for version history
-- `fetchVersion(pageId, version)` - Get specific version
-- `useVersion(pageId, version)` - React Query hook for specific version
-- `compareVersions(pageId, version1, version2)` - Compare two versions
-- `restoreVersion(pageId, version)` - Restore a version
-
-**Files Created/Modified**:
-- `client/src/pages/PageHistoryPage.jsx` - New version history page
-- `client/src/pages/EditPage.jsx` - Enhanced with version info and history links
-- `client/src/services/api/pages.js` - Added version API functions
-- `client/src/App.jsx` - Added history route
-- `client/src/styles.css` - Added styles for Phase 9 components
-- `client/src/test/pages/PageHistoryPage.test.jsx` - New test file (18 tests)
-- `client/src/test/services/pages-api.test.js` - Added version API tests (6 tests)
-- `client/src/test/pages/EditPage.test.jsx` - Added version feature tests (6 tests)
-
-## Phase 6 Implementation Summary
-
-Phase 6: Search Interface has been completed with all optional enhancements.
-
-**Key Achievements**:
-- ✅ Global search bar in header with keyboard shortcut (Ctrl+K / Cmd+K)
-- ✅ Search results page with highlighting and relevance scores
-- ✅ Alphabetical index view with letter navigation and section filtering
-- ✅ Search API integration (`/api/search` and `/api/index` endpoints)
-- ✅ Search term highlighting in results
-- ✅ **Recent searches dropdown** (localStorage, max 10 items)
-- ✅ **Search suggestions as you type** (debounced, 300ms)
-- ✅ **Clear button** for search input
-- ✅ **Pagination** for search results (20 results per page)
-- ✅ **Page count per letter** in index view
-- ✅ Comprehensive test coverage
-
-**New Components**:
-- `SearchPage` - Full search results page with query handling, suggestions, and pagination
-- `IndexPage` - Alphabetical index with filters, search, and page counts
-
-**New API Functions**:
-- `searchPages(query, options)` - Search pages by query (supports limit and offset)
-- `useSearch(query, options)` - React Query hook for search
-- `fetchIndex()` - Get master index
-- `useIndex()` - React Query hook for index
-
-**Files Created/Modified**:
-- `client/src/services/api/search.js` - Search API module with pagination support
-- `client/src/pages/SearchPage.jsx` - Enhanced with suggestions, clear button, and pagination
-- `client/src/pages/IndexPage.jsx` - Enhanced with page counts per letter
-- `client/src/components/layout/Header.jsx` - Enhanced with recent searches dropdown and clear button
-- `client/src/styles.css` - Added styles for search enhancements
-- `client/src/test/pages/SearchPage.test.jsx` - Updated tests (7 tests)
-- `client/src/test/pages/IndexPage.test.jsx` - Updated tests (6 tests)
-- `services/wiki/app/routes/search_routes.py` - Added pagination support (offset parameter)
-
-## Phase 10 Implementation Summary
-
-Phase 10: Page Creation Flow has been completed.
-
-**Key Achievements**:
-- ✅ "New Page" button in header (visible to writers/admins)
-- ✅ Complete page creation workflow
-- ✅ Smooth redirect after creation
-- ✅ All metadata fields available (from Phase 8)
-- ✅ Auto-save drafts for new pages
-
-**Files Modified**:
-- `client/src/components/layout/Header.jsx` - Added "New Page" button
-- `client/src/styles.css` - Added styles for new page button
-
-## Phase 10.5 Implementation Summary
-
-Phase 10.5: Version History & Comparison has been completed.
-
-**Key Achievements**:
-- ✅ Version viewing page (PageVersionView)
-- ✅ Version comparison page (PageVersionCompare)
-- ✅ Side-by-side and inline diff views
-- ✅ Restore version functionality
-- ✅ Scroll synchronization for side-by-side view
-- ✅ Diff stats display
-- ✅ Permission-based restore button (writers/admins)
-
-**New Components**:
-- `PageVersionView` - Displays specific version content with restore option
-- `PageVersionCompare` - Compares two versions side-by-side or inline
-
-**Files Created/Modified**:
-- `client/src/pages/PageVersionView.jsx` - New version view page
-- `client/src/pages/PageVersionCompare.jsx` - New version comparison page
-- `client/src/App.jsx` - Added version view and compare routes
-- `client/src/styles.css` - Added version view and compare styles
+### Notification System
+- **Provider**: NotificationProvider context wraps app
+- **Types**: Success, error, info, warning
+- **Auto-dismiss**: Configurable timeout
+- **Manual dismiss**: Click to close
 
 ---
 
-## Phase 11 Implementation Summary
+## Related Documentation
 
-Phase 11: Page Delete and Archive Functionality has been completed.
-
-**Key Achievements**:
-- ✅ Delete page functionality with role-based permissions
-- ✅ Archive/unarchive page functionality with role-based permissions
-- ✅ Confirmation dialogs for all destructive actions
-- ✅ Permission flags (`can_delete`, `can_archive`) in API responses
-- ✅ Archived pages hidden from normal views (list, search, index)
-- ✅ Comprehensive test coverage (12 backend tests, frontend tests)
-
-**Permission Model**:
-- **Admins**: Can delete or archive any page
-- **Writers**: Can delete or archive only their own pages
-- **Viewers/Players**: No delete or archive permissions
-
-**Archive Behavior**:
-- Archived pages are hidden from:
-  - List views (`/api/pages`)
-  - Search results (`/api/search`)
-  - Index views (`/api/index`)
-- Archived pages can be viewed by:
-  - Admins (any archived page)
-  - Writers (only their own archived pages)
-- Archived pages can be restored via unarchive action
-
-**New Components**:
-- `DeleteArchiveDialog` - Reusable confirmation dialog for delete/archive/unarchive actions
-  - Different messaging for each action type
-  - Warning for delete (mentions orphaned children)
-  - Loading states during operations
-
-**New API Endpoints**:
-- `DELETE /api/pages/<page_id>` - Delete a page (existing, verified)
-- `POST /api/pages/<page_id>/archive` - Archive a page
-- `DELETE /api/pages/<page_id>/archive` - Unarchive a page
-
-**API Response Updates**:
-- `GET /api/pages/<page_id>` now includes:
-  - `can_delete` (boolean) - Whether user can delete this page
-  - `can_archive` (boolean) - Whether user can archive this page
-
-**New API Functions**:
-- `deletePage(pageId)` - Delete a page
-- `archivePage(pageId)` - Archive a page
-- `unarchivePage(pageId)` - Unarchive a page
-
-**Files Created/Modified**:
-- `client/src/components/page/DeleteArchiveDialog.jsx` - New confirmation dialog component
-- `client/src/components/page/DeleteArchiveDialog.css` - Dialog styles
-- `client/src/pages/PageView.jsx` - Added delete/archive buttons and dialogs
-- `client/src/services/api/pages.js` - Added delete/archive API functions
-- `client/src/styles.css` - Added styles for action buttons
-- `services/wiki/app/routes/page_routes.py` - Added archive/unarchive endpoints
-- `services/wiki/app/services/page_service.py` - Added `can_archive()` method
-- `services/wiki/app/services/search_index_service.py` - Exclude archived pages from search
-- `services/wiki/tests/test_api/test_page_routes.py` - Added 9 new tests for archive functionality
-
-**Backend Tests Added**:
-- `test_archive_page_success` - Successfully archive a page
-- `test_archive_page_requires_auth` - Archive requires authentication
-- `test_archive_page_insufficient_permissions` - Writers cannot archive others' pages
-- `test_admin_can_archive_any_page` - Admins can archive any page
-- `test_unarchive_page_success` - Successfully unarchive a page
-- `test_archive_already_archived_page` - Error when archiving already archived page
-- `test_unarchive_not_archived_page` - Error when unarchiving non-archived page
-- `test_get_page_includes_permission_flags` - API includes can_delete and can_archive flags
-- `test_archived_page_hidden_from_list` - Archived pages excluded from list views
-
-**Phase 11 Status: ✅ COMPLETE**
-
----
-
-## Table Implementation Summary
-
-Tables have been fully implemented with comprehensive support for creation, editing, and markdown conversion.
-
-### Frontend Implementation
-
-**TableDialog Component** (`client/src/components/editor/TableDialog.jsx`):
-- Dialog for inserting tables with custom dimensions
-- Rows: 1-20 (default: 3)
-- Columns: 1-20 (default: 3)
-- Optional header row checkbox
-- Keyboard support (Escape to close)
-- Click outside to close
-
-**EditorToolbar Table Controls** (`client/src/components/editor/EditorToolbar.jsx`):
-- **Two-row toolbar design**:
-  - Main row: Standard formatting tools
-  - Secondary row: Table-specific controls (appears when cursor is inside a table)
-- **Table detection**: Reactive detection using multiple methods:
-  - `editor.isActive('tableCell')` / `editor.isActive('tableHeader')`
-  - `editor.can().addColumnBefore()` / `editor.can().addRowBefore()` (command availability)
-  - Node tree traversal (fallback)
-- **Table controls** (second toolbar row):
-  - Add Column Before/After
-  - Delete Column
-  - Add Row Before/After
-  - Delete Row
-  - Delete Table
-- **Event listeners**: Updates on selection changes, content updates, focus, click, and keydown events
-
-**Table Styling**:
-- Sticky toolbar (stays visible while scrolling)
-- Editor max-height: `calc(100vh - 300px)` for comfortable editing
-- Table controls highlighted with accent border
-- Small button style for compact table controls
-
-### Backend Implementation
-
-**Markdown Conversion** (`services/wiki/app/utils/markdown_service.py`):
-- **GFM table syntax support**: Converts markdown tables to HTML
-  - Pattern: `| Header | Header |\n|--------|\n| Cell | Cell |`
-  - Handles multiple rows and columns
-  - Preserves header row structure
-- **Table protection**: Tables are protected from paragraph wrapping
-  - Extracted early in processing (before headers)
-  - Protected during paragraph processing
-  - Restored after all other markdown transformations
-- **HTML escaping**: Table cell content is properly escaped
-- **Test coverage**: 5 comprehensive backend tests
-
-### Markdown Round-Trip
-
-**HTML to Markdown** (`client/src/utils/markdown.js`):
-- Uses `turndown-plugin-gfm` for table conversion
-- HTML tables → GFM markdown table syntax
-- Preserves table structure and content
-
-**Markdown to HTML**:
-- **Backend**: Custom regex-based parser with table support
-- **Frontend**: `marked.js` with GFM enabled (for editor preview)
-- Both preserve table structure correctly
-
-### Key Features
-
-1. **Table Creation**:
-   - Dialog-based insertion with customizable dimensions
-   - Default 3x3 table with header row
-   - Range validation (1-20 rows/columns)
-
-2. **Table Editing**:
-   - Visual editing in Tiptap editor
-   - Resizable columns (Tiptap built-in)
-   - Full table manipulation controls
-
-3. **Table Persistence**:
-   - Tables saved as GFM markdown
-   - Full round-trip support (HTML ↔ Markdown)
-   - Tables render correctly in both editor and view modes
-
-4. **Table Rendering**:
-   - Proper HTML structure (`<table>`, `<thead>`, `<tbody>`, `<th>`, `<td>`)
-   - Styled with CSS (striped rows, hover effects, borders)
-   - Responsive design
-
-### Test Coverage
-
-**Backend Tests** (`services/wiki/tests/test_utils/test_markdown_service.py`):
-- `test_markdown_to_html_table_basic` - Basic table conversion
-- `test_markdown_to_html_table_multiple_rows` - Multiple row tables
-- `test_markdown_to_html_table_with_other_content` - Tables mixed with other content
-- `test_markdown_to_html_table_escapes_html` - HTML escaping in cells
-- `test_markdown_to_html_table_not_wrapped_in_paragraph` - Paragraph wrapping protection
-
-**Frontend Tests** (`client/src/test/utils/markdown.test.js`):
-- Table HTML to markdown conversion
-- Table markdown to HTML conversion
-
-**Integration Tests**:
-- Table creation and editing flows
-- Table persistence across save/load cycles
-
-### Files Modified/Created
-
-**Frontend**:
-- `client/src/components/editor/TableDialog.jsx` - New table insertion dialog
-- `client/src/components/editor/TableDialog.css` - Dialog styles
-- `client/src/components/editor/EditorToolbar.jsx` - Table controls and two-row toolbar
-- `client/src/utils/markdown.js` - Added `turndown-plugin-gfm` support
-- `client/src/styles.css` - Table toolbar and editor height styles
-- `client/package.json` - Added `turndown-plugin-gfm` dependency
-
-**Backend**:
-- `services/wiki/app/utils/markdown_service.py` - Table markdown conversion
-- `services/wiki/tests/test_utils/test_markdown_service.py` - Table conversion tests
-
-## Code Block Implementation Summary
-
-Code block functionality has been fully implemented and tested across both backend and frontend.
-
-**Backend Implementation:**
-- ✅ Markdown code blocks (```language\ncode```) properly converted to HTML
-- ✅ Language specifiers supported (e.g., ```python, ```javascript)
-- ✅ Whitespace and indentation preservation
-- ✅ Multi-line code block support
-- ✅ HTML entity escaping in code content
-- ✅ Code blocks not wrapped in paragraph tags
-- ✅ 7 comprehensive backend tests covering all scenarios
-
-**Frontend Implementation:**
-- ✅ Code blocks render correctly in PageView
-- ✅ Syntax highlighting via Prism.js (multiple languages)
-- ✅ Language classes applied for highlighting
-- ✅ Whitespace preserved via CSS (`white-space: pre`)
-- ✅ 4 frontend tests for code block rendering
-- ✅ Integration test for full page creation/viewing flow
-
-**Key Features:**
-- Language specifiers: Code blocks can include language identifiers (e.g., ```python)
-- Whitespace preservation: Indentation and newlines are preserved
-- HTML conversion: Code blocks converted to `<pre><code class="language-{lang}">` HTML
-- Syntax highlighting: Frontend uses Prism.js for syntax highlighting
-- Multi-line support: Code blocks can span multiple lines with proper formatting
-- HTML entity escaping: Code content is properly escaped to prevent HTML injection
-
-**Test Coverage:**
-- Backend: 7 tests in `tests/test_utils/test_markdown_service.py`
-- Frontend: 4 tests in `client/src/test/pages/PageView.test.jsx`
-- Integration: 1 test in `tests/test_api/test_page_routes.py`
+- [Wiki Service Specification](wiki-service-specification.md) - Complete feature specification
+- [Wiki User Interface Design](wiki-user-interface.md) - UI/UX design specifications
+- [Wiki Implementation Guide](wiki-implementation-guide.md) - Backend implementation guide
+- [Wiki API Documentation](api/wiki-api.md) - Complete API reference
