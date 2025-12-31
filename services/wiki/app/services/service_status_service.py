@@ -685,6 +685,14 @@ class ServiceStatusService:
             page.title = "Arcadium Service Status"
         else:
             # Create new page
+            # Use "Regression-Testing" section if created during tests (FLASK_ENV=testing)
+            import os
+
+            section = (
+                "Regression-Testing"
+                if os.environ.get("FLASK_ENV") == "testing"
+                else None
+            )
             page = Page(
                 title="Arcadium Service Status",
                 slug="service-status",
@@ -693,6 +701,7 @@ class ServiceStatusService:
                 updated_by=user_id,
                 is_system_page=True,
                 status="published",
+                section=section,
                 file_path="service-status.md",
             )
             db.session.add(page)

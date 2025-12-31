@@ -27,6 +27,7 @@ def test_get_navigation_tree(client, app, test_user_id):
             created_by=test_user_id,
             updated_by=test_user_id,
             status="published",
+            section="Regression-Testing",
             file_path="root-page.md",
         )
         db.session.add(root)
@@ -175,6 +176,7 @@ def test_get_navigation_response_structure(client, app, test_user_id):
             created_by=test_user_id,
             updated_by=test_user_id,
             status="published",
+            section="Regression-Testing",
             file_path="test-page.md",
         )
         db.session.add(page)
@@ -231,6 +233,7 @@ def test_get_breadcrumb_nested_page(client, app, test_user_id):
             created_by=test_user_id,
             updated_by=test_user_id,
             status="published",
+            section="Regression-Testing",
             file_path="root.md",
         )
         db.session.add(root)
@@ -243,6 +246,7 @@ def test_get_breadcrumb_nested_page(client, app, test_user_id):
             created_by=test_user_id,
             updated_by=test_user_id,
             status="published",
+            section="Regression-Testing",
             parent_id=root.id,
             file_path="parent.md",
         )
@@ -256,6 +260,7 @@ def test_get_breadcrumb_nested_page(client, app, test_user_id):
             created_by=test_user_id,
             updated_by=test_user_id,
             status="published",
+            section="Regression-Testing",
             parent_id=parent.id,
             file_path="child.md",
         )
@@ -321,6 +326,7 @@ def test_get_previous_next_no_siblings(client, app, test_user_id):
             created_by=test_user_id,
             updated_by=test_user_id,
             status="published",
+            section="Regression-Testing",
             file_path="only-page.md",
         )
         db.session.add(page)
@@ -413,6 +419,7 @@ def test_get_previous_next_first_sibling(client, app, test_user_id):
             created_by=test_user_id,
             updated_by=test_user_id,
             status="published",
+            section="Regression-Testing",
             file_path="parent.md",
         )
         db.session.add(parent)
@@ -425,6 +432,7 @@ def test_get_previous_next_first_sibling(client, app, test_user_id):
             created_by=test_user_id,
             updated_by=test_user_id,
             status="published",
+            section="Regression-Testing",
             parent_id=parent.id,
             order_index=1,
             file_path="first.md",
@@ -436,6 +444,7 @@ def test_get_previous_next_first_sibling(client, app, test_user_id):
             created_by=test_user_id,
             updated_by=test_user_id,
             status="published",
+            section="Regression-Testing",
             parent_id=parent.id,
             order_index=2,
             file_path="second.md",
@@ -513,6 +522,7 @@ def test_get_previous_next_excludes_drafts(client, app, test_user_id):
             created_by=test_user_id,
             updated_by=test_user_id,
             status="published",
+            section="Regression-Testing",
             file_path="parent.md",
         )
         db.session.add(parent)
@@ -525,6 +535,7 @@ def test_get_previous_next_excludes_drafts(client, app, test_user_id):
             created_by=test_user_id,
             updated_by=test_user_id,
             status="published",
+            section="Regression-Testing",
             parent_id=parent.id,
             order_index=1,
             file_path="published.md",
@@ -548,6 +559,7 @@ def test_get_previous_next_excludes_drafts(client, app, test_user_id):
             created_by=test_user_id,
             updated_by=test_user_id,
             status="published",
+            section="Regression-Testing",
             parent_id=parent.id,
             order_index=3,
             file_path="published-2.md",
@@ -585,6 +597,7 @@ def test_get_previous_next_response_structure(client, app, test_user_id):
             created_by=test_user_id,
             updated_by=test_user_id,
             status="published",
+            section="Regression-Testing",
             file_path="parent.md",
         )
         db.session.add(parent)
@@ -597,6 +610,7 @@ def test_get_previous_next_response_structure(client, app, test_user_id):
             created_by=test_user_id,
             updated_by=test_user_id,
             status="published",
+            section="Regression-Testing",
             parent_id=parent.id,
             order_index=1,
             file_path="page-1.md",
@@ -608,6 +622,7 @@ def test_get_previous_next_response_structure(client, app, test_user_id):
             created_by=test_user_id,
             updated_by=test_user_id,
             status="published",
+            section="Regression-Testing",
             parent_id=parent.id,
             order_index=2,
             file_path="page-2.md",

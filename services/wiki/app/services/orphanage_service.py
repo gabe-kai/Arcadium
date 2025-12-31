@@ -37,6 +37,12 @@ class OrphanageService:
 
         # Create orphanage page
         # First create the page normally
+        # Use "Regression-Testing" section if created during tests (FLASK_ENV=testing)
+        import os
+
+        section = (
+            "Regression-Testing" if os.environ.get("FLASK_ENV") == "testing" else None
+        )
         orphanage = PageService.create_page(
             title="Orphanage",
             content="# Orphanage\n\nThis page contains pages that have been orphaned after their parent was deleted.",
@@ -44,6 +50,7 @@ class OrphanageService:
             slug=OrphanageService.ORPHANAGE_SLUG,
             status="published",
             is_public=True,
+            section=section,
         )
 
         # Mark as system page (page is already committed by create_page)

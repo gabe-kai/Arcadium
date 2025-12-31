@@ -67,7 +67,11 @@ def test_writer_can_edit_own_page(app):
 
         # Create page as writer
         page = PageService.create_page(
-            title="Test Page", content="Content", user_id=writer_id, slug="test-page"
+            title="Test Page",
+            content="Content",
+            user_id=writer_id,
+            slug="test-page",
+            section="Regression-Testing",
         )
 
         # Writer should be able to edit own page
@@ -109,7 +113,11 @@ def test_admin_can_edit_any_page(app):
 
         # Create page as writer
         page = PageService.create_page(
-            title="Test Page", content="Content", user_id=writer_id, slug="test-page"
+            title="Test Page",
+            content="Content",
+            user_id=writer_id,
+            slug="test-page",
+            section="Regression-Testing",
         )
 
         # Admin should be able to edit
@@ -172,6 +180,7 @@ def test_admin_can_delete_any_page(app):
                 content="Content",
                 user_id=writer_id,
                 slug="test-page",
+                section="Regression-Testing",
             )
 
             # Admin should be able to delete
@@ -212,6 +221,7 @@ def test_draft_visibility_viewer(app):
             user_id=writer_id,
             slug="published-page",
             status="published",
+            section="Regression-Testing",
         )
 
         # List pages as viewer (should not see drafts)

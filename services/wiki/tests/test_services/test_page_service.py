@@ -77,7 +77,10 @@ def test_create_page_with_parent(app):
         user_id = uuid.uuid4()
 
         parent = PageService.create_page(
-            title="Parent Page", content="Parent content", user_id=user_id
+            title="Parent Page",
+            content="Parent content",
+            user_id=user_id,
+            section="Regression-Testing",
         )
 
         child = PageService.create_page(
@@ -85,6 +88,7 @@ def test_create_page_with_parent(app):
             content="Child content",
             user_id=user_id,
             parent_id=parent.id,
+            section="Regression-Testing",
         )
 
         assert child.parent_id == parent.id

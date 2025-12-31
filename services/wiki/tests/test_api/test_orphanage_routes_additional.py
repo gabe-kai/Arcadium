@@ -201,6 +201,7 @@ def test_get_orphanage_large_list(client, app, test_user_id):
                 created_by=test_user_id,
                 updated_by=test_user_id,
                 status="published",
+                section="Regression-Testing",
                 parent_id=orphanage.id,
                 is_orphaned=True,
                 file_path=f"orphan-{i}.md",

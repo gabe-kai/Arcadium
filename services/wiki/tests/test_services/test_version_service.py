@@ -160,6 +160,7 @@ def test_calculate_diff(app):
             content="Line 1\nLine 2\nLine 3",
             user_id=user_id,
             slug="test-page",
+            section="Regression-Testing",
         )
 
         # Update page (PageService creates version 2 with diff)

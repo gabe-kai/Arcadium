@@ -541,6 +541,7 @@ def test_archive_page_insufficient_permissions(
             created_by=test_user_id,
             updated_by=test_user_id,
             status="published",
+            section="Regression-Testing",
             file_path="other-user-page.md",
         )
         db.session.add(page)

@@ -73,6 +73,8 @@
   - Folder icons (📁) for sections, document icons (📄) for pages
   - Section view is default when page loads
   - Preference persisted in localStorage
+  - **Default Section States**: "Regression-Testing" section is collapsed by default (all other sections expanded by default)
+  - Sections auto-expand when navigating to a page within them
 
 **Visual Design**:
 - Clean, minimal tree view

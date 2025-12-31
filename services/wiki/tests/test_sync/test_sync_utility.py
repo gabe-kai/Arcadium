@@ -393,9 +393,18 @@ def test_sync_all(temp_pages_dir, app, sync_utility, admin_user_id):
         os.makedirs(os.path.join(temp_pages_dir, "section1"), exist_ok=True)
 
         files_content = [
-            ("page1.md", 'title: "Page 1"\nslug: "page-1"'),
-            ("section1/page2.md", 'title: "Page 2"\nslug: "page-2"'),
-            ("page3.md", 'title: "Page 3"\nslug: "page-3"'),
+            (
+                "page1.md",
+                'title: "Page 1"\nslug: "page-1"\nsection: "Regression-Testing"',
+            ),
+            (
+                "section1/page2.md",
+                'title: "Page 2"\nslug: "page-2"\nsection: "Regression-Testing"',
+            ),
+            (
+                "page3.md",
+                'title: "Page 3"\nslug: "page-3"\nsection: "Regression-Testing"',
+            ),
         ]
 
         for rel_path, frontmatter in files_content:
@@ -428,13 +437,17 @@ def test_sync_directory(temp_pages_dir, app, sync_utility, admin_user_id):
         with open(
             os.path.join(temp_pages_dir, "section1", "page1.md"), "w", encoding="utf-8"
         ) as f:
-            f.write('---\ntitle: "Page 1"\nslug: "page-1"\n---\n\n# Page 1')
+            f.write(
+                '---\ntitle: "Page 1"\nslug: "page-1"\nsection: "Regression-Testing"\n---\n\n# Page 1'
+            )
 
         # Files in section2 (should not be synced)
         with open(
             os.path.join(temp_pages_dir, "section2", "page2.md"), "w", encoding="utf-8"
         ) as f:
-            f.write('---\ntitle: "Page 2"\nslug: "page-2"\n---\n\n# Page 2')
+            f.write(
+                '---\ntitle: "Page 2"\nslug: "page-2"\nsection: "Regression-Testing"\n---\n\n# Page 2'
+            )
 
         stats = sync_utility.sync_directory("section1")
 
