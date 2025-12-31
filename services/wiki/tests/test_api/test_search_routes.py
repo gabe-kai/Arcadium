@@ -73,7 +73,7 @@ def test_search_section_filter(client, app, test_user_id):
             created_by=test_user_id,
             updated_by=test_user_id,
             status="published",
-            section="test-section",
+            section="Regression-Testing/test-section",
             file_path="section-page.md",
         )
         db.session.add(page)
@@ -83,13 +83,15 @@ def test_search_section_filter(client, app, test_user_id):
         SearchIndexService.index_page(page.id, page.content, page.title)
 
     # Search with section filter
-    response = client.get("/api/search?q=section&section=test-section")
+    response = client.get(
+        "/api/search?q=section&section=Regression-Testing/test-section"
+    )
     assert response.status_code == 200
     data = response.get_json()
     assert "results" in data
     # Results should only include pages from the specified section
     for result in data["results"]:
-        assert result.get("section") == "test-section"
+        assert result.get("section") == "Regression-Testing/test-section"
 
 
 def test_search_draft_filtering_viewer(client, app, test_user_id):
@@ -209,6 +211,7 @@ def test_search_with_pagination(client, app, test_user_id):
                 status="published",
                 created_by=test_user_id,
                 updated_by=test_user_id,
+                section="Regression-Testing",
                 file_path=f"test-page-{i}.md",
             )
             db.session.add(page)
@@ -257,6 +260,7 @@ def test_search_pagination_edge_cases(client, app, test_user_id):
                 status="published",
                 created_by=test_user_id,
                 updated_by=test_user_id,
+                section="Regression-Testing",
                 file_path=f"test-page-{i}.md",
             )
             db.session.add(page)

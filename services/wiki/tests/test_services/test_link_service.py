@@ -109,7 +109,11 @@ def test_update_page_links_removes_old_links(app):
         )
 
         page3 = PageService.create_page(
-            title="Page 3", content="Content 3", user_id=user_id, slug="page-3"
+            title="Page 3",
+            content="Content 3",
+            user_id=user_id,
+            slug="page-3",
+            section="Regression-Testing",
         )
 
         # First update: link to page2
@@ -151,7 +155,11 @@ def test_get_outgoing_links(app):
         )
 
         page3 = PageService.create_page(
-            title="Page 3", content="Content 3", user_id=user_id, slug="page-3"
+            title="Page 3",
+            content="Content 3",
+            user_id=user_id,
+            slug="page-3",
+            section="Regression-Testing",
         )
 
         # Create links
@@ -189,7 +197,11 @@ def test_get_incoming_links(app):
         )
 
         page3 = PageService.create_page(
-            title="Page 3", content="Content 3", user_id=user_id, slug="page-3"
+            title="Page 3",
+            content="Content 3",
+            user_id=user_id,
+            slug="page-3",
+            section="Regression-Testing",
         )
 
         # Create links to page2

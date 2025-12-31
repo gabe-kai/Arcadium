@@ -79,6 +79,8 @@ This guide outlines the implementation status and details for the Wiki User Inte
   - Folder icons for sections, document icons for pages
   - Section view is default when page loads
   - Preference persisted in localStorage
+  - **Default Section States**: "Regression-Testing" section is collapsed by default (all other sections expanded by default)
+  - Sections auto-expand when navigating to a page within them
 - **Tree Search** - Search/filter within tree with auto-expand matching branches
 - **API Integration**: `useNavigationTree` hook with 5-minute cache
 

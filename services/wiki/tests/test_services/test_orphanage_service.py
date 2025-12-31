@@ -234,11 +234,17 @@ def test_bulk_reassign_pages(app):
             user_id = uuid.uuid4()
 
             old_parent = PageService.create_page(
-                title="Old Parent", content="Content", user_id=user_id
+                title="Old Parent",
+                content="Content",
+                user_id=user_id,
+                section="Regression-Testing",
             )
 
             new_parent = PageService.create_page(
-                title="New Parent", content="Content", user_id=user_id
+                title="New Parent",
+                content="Content",
+                user_id=user_id,
+                section="Regression-Testing",
             )
 
             child1 = PageService.create_page(
@@ -246,6 +252,7 @@ def test_bulk_reassign_pages(app):
                 content="Content",
                 user_id=user_id,
                 parent_id=old_parent.id,
+                section="Regression-Testing",
             )
 
             child2 = PageService.create_page(
@@ -253,6 +260,7 @@ def test_bulk_reassign_pages(app):
                 content="Content",
                 user_id=user_id,
                 parent_id=old_parent.id,
+                section="Regression-Testing",
             )
 
             # Orphan children
@@ -281,15 +289,26 @@ def test_clear_orphanage(app):
             user_id = uuid.uuid4()
 
             parent = PageService.create_page(
-                title="Parent", content="Content", user_id=user_id
+                title="Parent",
+                content="Content",
+                user_id=user_id,
+                section="Regression-Testing",
             )
 
             child1 = PageService.create_page(
-                title="Child 1", content="Content", user_id=user_id, parent_id=parent.id
+                title="Child 1",
+                content="Content",
+                user_id=user_id,
+                parent_id=parent.id,
+                section="Regression-Testing",
             )
 
             child2 = PageService.create_page(
-                title="Child 2", content="Content", user_id=user_id, parent_id=parent.id
+                title="Child 2",
+                content="Content",
+                user_id=user_id,
+                parent_id=parent.id,
+                section="Regression-Testing",
             )
 
             # Orphan children
@@ -323,11 +342,17 @@ def test_get_orphanage_stats(app):
             user_id = uuid.uuid4()
 
             parent1 = PageService.create_page(
-                title="Parent 1", content="Content", user_id=user_id
+                title="Parent 1",
+                content="Content",
+                user_id=user_id,
+                section="Regression-Testing",
             )
 
             parent2 = PageService.create_page(
-                title="Parent 2", content="Content", user_id=user_id
+                title="Parent 2",
+                content="Content",
+                user_id=user_id,
+                section="Regression-Testing",
             )
 
             child1 = PageService.create_page(
@@ -335,6 +360,7 @@ def test_get_orphanage_stats(app):
                 content="Content",
                 user_id=user_id,
                 parent_id=parent1.id,
+                section="Regression-Testing",
             )
 
             child2 = PageService.create_page(
@@ -342,6 +368,7 @@ def test_get_orphanage_stats(app):
                 content="Content",
                 user_id=user_id,
                 parent_id=parent1.id,
+                section="Regression-Testing",
             )
 
             child3 = PageService.create_page(
@@ -349,6 +376,7 @@ def test_get_orphanage_stats(app):
                 content="Content",
                 user_id=user_id,
                 parent_id=parent2.id,
+                section="Regression-Testing",
             )
 
             # Orphan children

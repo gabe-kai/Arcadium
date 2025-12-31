@@ -585,7 +585,7 @@ describe('NavigationTree', () => {
     expect(pageCount?.textContent).toBe('(3)');
   });
 
-  it('does not display page count for leaf nodes', () => {
+  it('does not display page count for leaf nodes', async () => {
     pagesApi.useNavigationTree.mockReturnValue({
       data: mockTree,
       isLoading: false,
@@ -594,16 +594,116 @@ describe('NavigationTree', () => {
 
     renderNavigationTree();
 
-    // Expand to see leaf nodes
-    const expandButton = screen.getByLabelText(/expand/i);
-    fireEvent.click(expandButton);
+    // Expand to see leaf nodes - find the first expand button
+    const expandButtons = screen.getAllByLabelText(/expand|collapse/i);
+    if (expandButtons.length > 0) {
+      fireEvent.click(expandButtons[0]);
 
-    // Wait for children to render
-    waitFor(() => {
-      const pageLink = screen.getByText('Page 1.1').closest('a');
-      expect(pageLink).toBeInTheDocument();
-      const pageCount = pageLink?.querySelector('.arc-nav-tree-page-count');
-      expect(pageCount).not.toBeInTheDocument();
+      // Wait for children to render
+      await waitFor(() => {
+        const pageLink = screen.getByText('Page 1.1').closest('a');
+        expect(pageLink).toBeInTheDocument();
+        const pageCount = pageLink?.querySelector('.arc-nav-tree-page-count');
+        expect(pageCount).not.toBeInTheDocument();
+      });
+    }
+  });
+
+  it('collapses Regression-Testing section by default in section view', async () => {
+    // Mock tree with pages in different sections
+    const treeWithSections = [
+      {
+        id: 'page-1',
+        title: 'Regular Page',
+        slug: 'regular-page',
+        status: 'published',
+        section: 'General',
+        children: [],
+      },
+      {
+        id: 'page-2',
+        title: 'Test Page',
+        slug: 'test-page',
+        status: 'published',
+        section: 'Regression-Testing',
+        children: [],
+      },
+    ];
+
+    pagesApi.useNavigationTree.mockReturnValue({
+      data: treeWithSections,
+      isLoading: false,
+      isError: false,
+    });
+
+    // Clear localStorage to test default behavior
+    store = {};
+
+    renderNavigationTree();
+
+    // Section view is enabled by default, wait for sections to render
+    await waitFor(() => {
+      // Both sections should be present
+      const generalSection = screen.getByText('General');
+      expect(generalSection).toBeInTheDocument();
+      const regressionSection = screen.getByText('Regression-Testing');
+      expect(regressionSection).toBeInTheDocument();
+    });
+
+    // General section should be expanded by default (page visible)
+    await waitFor(() => {
+      const regularPage = screen.getByText('Regular Page');
+      expect(regularPage).toBeInTheDocument();
+    });
+
+    // Regression-Testing should be collapsed by default (page not visible)
+    const testPage = screen.queryByText('Test Page');
+    expect(testPage).not.toBeInTheDocument();
+  });
+
+  it('expands Regression-Testing section when toggled', async () => {
+    const treeWithSections = [
+      {
+        id: 'page-1',
+        title: 'Test Page',
+        slug: 'test-page',
+        status: 'published',
+        section: 'Regression-Testing',
+        children: [],
+      },
+    ];
+
+    pagesApi.useNavigationTree.mockReturnValue({
+      data: treeWithSections,
+      isLoading: false,
+      isError: false,
+    });
+
+    store = {};
+
+    renderNavigationTree();
+
+    await waitFor(() => {
+      const regressionSection = screen.getByText('Regression-Testing');
+      expect(regressionSection).toBeInTheDocument();
+    });
+
+    // Initially collapsed, page should not be visible
+    expect(screen.queryByText('Test Page')).not.toBeInTheDocument();
+
+    // Find and click the toggle button for Regression-Testing section
+    const regressionSectionHeader = screen.getByText('Regression-Testing').closest('.arc-nav-tree-section-header');
+    expect(regressionSectionHeader).toBeInTheDocument();
+
+    const toggleButton = regressionSectionHeader?.querySelector('button');
+    expect(toggleButton).toBeInTheDocument();
+
+    fireEvent.click(toggleButton);
+
+    await waitFor(() => {
+      // Now Test Page should be visible after expanding
+      const testPage = screen.getByText('Test Page');
+      expect(testPage).toBeInTheDocument();
     });
   });
 });

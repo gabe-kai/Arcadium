@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate, Link, useLocation } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Layout } from '../components/layout/Layout';
 import { Sidebar } from '../components/layout/Sidebar';
@@ -18,9 +18,14 @@ import { useNotificationContext } from '../components/common/NotificationProvide
 export function EditPage() {
   const { pageId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const queryClient = useQueryClient();
   const { showSuccess, showError } = useNotificationContext();
   const isNewPage = !pageId || pageId === 'new';
+
+  // Check if we have default values from navigation state (e.g., creating home page)
+  const defaultSlug = location.state?.defaultSlug;
+  const defaultTitle = location.state?.defaultTitle;
 
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
@@ -117,7 +122,7 @@ export function EditPage() {
     };
   }, [metadata, content, hasUnsavedChanges, isNewPage, pageId]);
 
-  // Load draft from localStorage on mount
+  // Load draft from localStorage on mount, or use default values
   useEffect(() => {
     if (isNewPage) {
       const draftKey = 'arcadium_draft_new';
@@ -125,18 +130,54 @@ export function EditPage() {
         const draftJson = localStorage.getItem(draftKey);
         if (draftJson) {
           const draft = JSON.parse(draftJson);
-          setTitle(draft.title || '');
+          setTitle(draft.title || defaultTitle || '');
           setContent(draft.content || '');
           if (draft.metadata) {
-            setMetadata(draft.metadata);
+            setMetadata({
+              ...draft.metadata,
+              slug: draft.metadata.slug || defaultSlug || '',
+              title: draft.metadata.title || defaultTitle || '',
+            });
+          } else if (defaultTitle || defaultSlug) {
+            setMetadata({
+              title: defaultTitle || '',
+              slug: defaultSlug || '',
+              parent_id: null,
+              section: null,
+              order: null,
+              status: 'draft',
+            });
           }
           setHasUnsavedChanges(true);
+        } else if (defaultTitle || defaultSlug) {
+          // No draft, but we have default values
+          setTitle(defaultTitle || '');
+          setMetadata({
+            title: defaultTitle || '',
+            slug: defaultSlug || '',
+            parent_id: null,
+            section: null,
+            order: null,
+            status: 'draft',
+          });
         }
       } catch (e) {
         console.warn('Failed to load draft from localStorage:', e);
+        // If error loading draft, still set defaults
+        if (defaultTitle || defaultSlug) {
+          setTitle(defaultTitle || '');
+          setMetadata({
+            title: defaultTitle || '',
+            slug: defaultSlug || '',
+            parent_id: null,
+            section: null,
+            order: null,
+            status: 'draft',
+          });
+        }
       }
     }
-  }, [isNewPage]);
+  }, [isNewPage, defaultTitle, defaultSlug]);
 
   // Create page mutation
   const createMutation = useMutation({
@@ -144,8 +185,14 @@ export function EditPage() {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['page', data.id] });
       queryClient.invalidateQueries({ queryKey: ['navigationTree'] });
+      queryClient.invalidateQueries({ queryKey: ['homePageId'] }); // Invalidate home page ID cache
       showSuccess('Page created successfully');
-      navigate(`/pages/${data.id}`);
+      // If this is the home page, navigate to home, otherwise to the page
+      if (data.slug === 'home') {
+        navigate('/');
+      } else {
+        navigate(`/pages/${data.id}`);
+      }
     },
     onError: (error) => {
       if (error.response?.status === 401) {
@@ -160,13 +207,25 @@ export function EditPage() {
   // Update page mutation
   const updateMutation = useMutation({
     mutationFn: ({ pageId, pageData }) => updatePage(pageId, pageData),
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['page', pageId] });
       queryClient.invalidateQueries({ queryKey: ['navigationTree'] });
+      // Invalidate home page cache if this page is or becomes the home page
+      const newSlug = metadata.slug; // Use the slug from the request metadata
+      const wasHomePage = page?.slug === 'home';
+      const isHomePage = newSlug === 'home';
+      if (wasHomePage || isHomePage) {
+        queryClient.invalidateQueries({ queryKey: ['homePageId'] });
+      }
       setHasUnsavedChanges(false);
       showSuccess('Page saved successfully');
       // Navigate to view mode after successful save
-      navigate(`/pages/${pageId}`);
+      // If this is the home page (slug: "home"), navigate to home, otherwise to the page
+      if (isHomePage) {
+        navigate('/');
+      } else {
+        navigate(`/pages/${pageId}`);
+      }
     },
     onError: (error) => {
       if (error.response?.status === 401) {

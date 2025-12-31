@@ -50,6 +50,7 @@ def test_slug_uniqueness(app):
             slug="test-slug",  # Duplicate slug
             file_path="data/pages/test-slug-2.md",
             content="Content",
+            section="Regression-Testing",
             created_by=user_id,
             updated_by=user_id,
         )
@@ -107,7 +108,7 @@ def test_section_independence(app):
             slug="test",
             file_path="data/pages/test.md",
             content="Content",
-            section="game-mechanics",
+            section="Regression-Testing/game-mechanics",
             created_by=user_id,
             updated_by=user_id,
         )
@@ -115,5 +116,5 @@ def test_section_independence(app):
         db.session.commit()
 
         # Section can be different from parent's section
-        assert page.section == "game-mechanics"
+        assert page.section == "Regression-Testing/game-mechanics"
         assert page.parent_id is None  # No parent, but has section

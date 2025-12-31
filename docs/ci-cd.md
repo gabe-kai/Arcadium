@@ -49,6 +49,7 @@ The project uses **GitHub Actions** for CI/CD. Currently, CI is configured for t
 5. **Runs tests:**
    - Executes `pytest` from `services/wiki` directory
    - Uses PostgreSQL test database (avoids SQLite UUID issues)
+   - **Test Page Organization**: All pages created during test execution are automatically assigned to the "Regression-Testing" section for organization
    - Generates test reports:
      - JUnit XML (`test-results.xml`)
      - HTML report (`test-report.html`)

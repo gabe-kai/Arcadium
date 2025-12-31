@@ -87,7 +87,7 @@ def test_get_dashboard_stats_basic(client, app, test_admin_id):
             updated_by=user_id,
             content_size_kb=10.0,
             word_count=100,
-            section="rules",
+            section="Regression-Testing/rules",
             file_path=f"{slug1}.md",
         )
         page2 = Page(
@@ -98,7 +98,7 @@ def test_get_dashboard_stats_basic(client, app, test_admin_id):
             updated_by=user_id,
             content_size_kb=20.0,
             word_count=200,
-            section="lore",
+            section="Regression-Testing/lore",
             file_path=f"{slug2}.md",
         )
         db.session.add(page1)
@@ -118,7 +118,9 @@ def test_get_dashboard_stats_basic(client, app, test_admin_id):
 
     expected_total_pages = base_pages + 2
     expected_total_comments = base_comments + 1
-    expected_total_sections = len(base_sections.union({"rules", "lore"}))
+    expected_total_sections = len(
+        base_sections.union({"Regression-Testing/rules", "Regression-Testing/lore"})
+    )
 
     with mock_auth(test_admin_id, "admin"):
         headers = auth_headers(test_admin_id, "admin")
@@ -266,6 +268,7 @@ def test_get_oversized_pages_and_update_status(client, app, test_admin_id):
             updated_by=user_id,
             content_size_kb=800.0,
             word_count=6000,
+            section="Regression-Testing",
             file_path="oversized.md",
         )
         db.session.add(page)

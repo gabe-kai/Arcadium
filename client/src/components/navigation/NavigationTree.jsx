@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useNavigationTree } from '../../services/api/pages';
 
 const EXPANDED_STATE_KEY = 'arcadium_nav_expanded';
 const SECTION_VIEW_KEY = 'arcadium_nav_section_view';
+const EXPANDED_SECTIONS_KEY = 'arcadium_nav_expanded_sections';
 
 /**
  * NavigationTree component displays hierarchical page navigation
@@ -40,6 +41,19 @@ export function NavigationTree() {
       return [];
     }
   });
+  const [expandedSections, setExpandedSections] = useState(() => {
+    // Load expanded sections from localStorage
+    try {
+      const saved = localStorage.getItem(EXPANDED_SECTIONS_KEY);
+      if (saved) {
+        return JSON.parse(saved);
+      }
+      // Default: expand all sections (null means "expand all by default")
+      return null;
+    } catch {
+      return null;
+    }
+  });
 
   // Save expanded state to localStorage whenever it changes
   useEffect(() => {
@@ -49,6 +63,15 @@ export function NavigationTree() {
       // Ignore localStorage errors
     }
   }, [expandedNodes]);
+
+  // Save expanded sections to localStorage whenever it changes
+  useEffect(() => {
+    try {
+      localStorage.setItem(EXPANDED_SECTIONS_KEY, JSON.stringify(expandedSections));
+    } catch {
+      // Ignore localStorage errors
+    }
+  }, [expandedSections]);
 
   // Save section view preference to localStorage whenever it changes
   useEffect(() => {
@@ -81,7 +104,7 @@ export function NavigationTree() {
     return pages;
   };
 
-  // Group pages by section
+  // Group pages by section, preserving hierarchy
   const groupedBySection = useMemo(() => {
     if (!tree || !sectionView) return null;
 
@@ -107,12 +130,46 @@ export function NavigationTree() {
       groups[sectionKey].push(page);
     });
 
-    // Sort pages within each section by title
+    // Build tree structure for each section (preserve parent-child relationships)
+    const sectionTrees = {};
     Object.keys(groups).forEach((section) => {
-      groups[section].sort((a, b) => a.title.localeCompare(b.title));
+      const pages = groups[section];
+      const pageMap = new Map();
+      const roots = [];
+
+      // Create map of all pages
+      pages.forEach((page) => {
+        pageMap.set(page.id, { ...page, children: [] });
+      });
+
+      // Build tree structure
+      pages.forEach((page) => {
+        const node = pageMap.get(page.id);
+        if (page.parent_id && pageMap.has(page.parent_id)) {
+          // Has parent in same section
+          const parent = pageMap.get(page.parent_id);
+          parent.children.push(node);
+        } else {
+          // Root page in this section
+          roots.push(node);
+        }
+      });
+
+      // Sort roots and children by title
+      const sortNodes = (nodes) => {
+        nodes.sort((a, b) => a.title.localeCompare(b.title));
+        nodes.forEach((node) => {
+          if (node.children.length > 0) {
+            sortNodes(node.children);
+          }
+        });
+      };
+      sortNodes(roots);
+
+      sectionTrees[section] = roots;
     });
 
-    return groups;
+    return sectionTrees;
   }, [tree, sectionView]);
 
   // Filter tree based on search query
@@ -149,17 +206,61 @@ export function NavigationTree() {
     const query = searchQuery.toLowerCase();
     const filtered = {};
 
+    // Recursively filter tree nodes
+    const filterTree = (nodes) => {
+      const result = [];
+      nodes.forEach((node) => {
+        const matches = node.title.toLowerCase().includes(query);
+        const filteredChildren = node.children && node.children.length > 0
+          ? filterTree(node.children)
+          : [];
+
+        if (matches || filteredChildren.length > 0) {
+          result.push({
+            ...node,
+            children: filteredChildren,
+          });
+        }
+      });
+      return result;
+    };
+
     Object.keys(groupedBySection).forEach((section) => {
-      const matchingPages = groupedBySection[section].filter((page) =>
-        page.title.toLowerCase().includes(query)
-      );
-      if (matchingPages.length > 0) {
-        filtered[section] = matchingPages;
+      const filteredPages = filterTree(groupedBySection[section]);
+      if (filteredPages.length > 0) {
+        filtered[section] = filteredPages;
       }
     });
 
     return filtered;
   }, [groupedBySection, searchQuery]);
+
+  // Toggle section expansion (defined after groupedBySection)
+  const toggleSection = useCallback((sectionName) => {
+    setExpandedSections((prev) => {
+      // If prev is null, initialize with all sections except the one being toggled
+      if (prev === null) {
+        // Get all section names from current groupedBySection
+        const allSections = groupedBySection ? Object.keys(groupedBySection) : [];
+        return allSections.filter((name) => name !== sectionName);
+      }
+      // Otherwise toggle normally
+      return prev.includes(sectionName)
+        ? prev.filter((name) => name !== sectionName)
+        : [...prev, sectionName];
+    });
+  }, [groupedBySection]);
+
+  // Initialize expanded sections to all sections on first load (if null)
+  // Exception: "Regression-Testing" section is collapsed by default
+  useEffect(() => {
+    if (expandedSections === null && groupedBySection) {
+      const allSections = Object.keys(groupedBySection);
+      // Exclude "Regression-Testing" from default expanded sections
+      const defaultExpanded = allSections.filter((section) => section !== 'Regression-Testing');
+      setExpandedSections(defaultExpanded);
+    }
+  }, [expandedSections, groupedBySection]);
 
   // Auto-expand path to current page
   useEffect(() => {
@@ -188,7 +289,41 @@ export function NavigationTree() {
         return Array.from(merged);
       });
     }
-  }, [tree, currentPageId]);
+
+    // Also expand the section containing the current page
+    if (sectionView && groupedBySection) {
+      for (const [section, pages] of Object.entries(groupedBySection)) {
+        const findInSection = (nodes) => {
+          for (const node of nodes) {
+            if (node.id === currentPageId) {
+              return true;
+            }
+            if (node.children && node.children.length > 0) {
+              if (findInSection(node.children)) {
+                return true;
+              }
+            }
+          }
+          return false;
+        };
+        if (findInSection(pages)) {
+          setExpandedSections((prev) => {
+            if (prev === null) {
+              // Initialize with all sections
+              const allSections = Object.keys(groupedBySection);
+              return allSections;
+            }
+            if (!prev.includes(section)) {
+              return [...prev, section];
+            }
+            return prev;
+          });
+          // Also expand all parent nodes in the path
+          break;
+        }
+      }
+    }
+  }, [tree, currentPageId, sectionView, groupedBySection]);
 
   // Auto-expand nodes when searching
   useEffect(() => {
@@ -268,8 +403,12 @@ export function NavigationTree() {
                 <SectionGroup
                   key={section}
                   section={section}
-                  pages={filteredGroups[section]}
+                  pages={filteredGroups[section] || []}
                   currentPageId={currentPageId}
+                  isExpanded={expandedSections === null || (expandedSections && expandedSections.includes(section))}
+                  onToggle={() => toggleSection(section)}
+                  expandedNodes={expandedNodes}
+                  onToggleNode={toggleNode}
                 />
               ))}
           </ul>
@@ -313,39 +452,55 @@ function countDescendantPages(node) {
 /**
  * SectionGroup component for displaying pages grouped by section
  */
-function SectionGroup({ section, pages, currentPageId }) {
+function SectionGroup({ section, pages, currentPageId, isExpanded, onToggle, expandedNodes, onToggleNode }) {
+  // Count total pages including children
+  const countTotalPages = (nodes) => {
+    let count = 0;
+    nodes.forEach((node) => {
+      count += 1;
+      if (node.children && node.children.length > 0) {
+        count += countTotalPages(node.children);
+      }
+    });
+    return count;
+  };
+
+  const totalCount = countTotalPages(pages);
+
   return (
     <li className="arc-nav-tree-item">
       <div className="arc-nav-tree-section-header">
+        <button
+          type="button"
+          className="arc-nav-tree-toggle"
+          onClick={onToggle}
+          aria-expanded={isExpanded}
+          aria-label={isExpanded ? 'Collapse section' : 'Expand section'}
+        >
+          <span className="arc-nav-tree-toggle-icon">
+            {isExpanded ? '▼' : '▶'}
+          </span>
+        </button>
         <span className="arc-nav-tree-icon" aria-hidden="true">
           📁
         </span>
         <span className="arc-nav-tree-section-name">{section}</span>
-        <span className="arc-nav-tree-section-count">({pages.length})</span>
+        <span className="arc-nav-tree-section-count">({totalCount})</span>
       </div>
-      <ul className="arc-nav-tree-list arc-nav-tree-list-section">
-        {pages.map((page) => (
-          <li key={page.id} className="arc-nav-tree-item">
-            <div
-              className={`arc-nav-tree-node ${currentPageId === page.id ? 'arc-nav-tree-node-current' : ''}`}
-            >
-              <span className="arc-nav-tree-spacer" />
-              <Link
-                to={`/pages/${page.id}`}
-                className={`arc-nav-tree-link ${currentPageId === page.id ? 'arc-nav-tree-link-current' : ''}`}
-              >
-                <span className="arc-nav-tree-icon" aria-hidden="true">
-                  📄
-                </span>
-                <span className="arc-nav-tree-title">{page.title}</span>
-                {page.status === 'draft' && (
-                  <span className="arc-nav-tree-draft-badge" title="Draft">D</span>
-                )}
-              </Link>
-            </div>
-          </li>
-        ))}
-      </ul>
+      {isExpanded && (
+        <ul className="arc-nav-tree-list arc-nav-tree-list-section">
+          {pages.map((page) => (
+            <TreeNode
+              key={page.id}
+              node={page}
+              currentPageId={currentPageId}
+              expandedNodes={expandedNodes}
+              onToggle={onToggleNode}
+              level={0}
+            />
+          ))}
+        </ul>
+      )}
     </li>
   );
 }

@@ -138,11 +138,19 @@ def test_update_page_slug_to_existing(app):
 
         # Create two pages
         PageService.create_page(
-            title="Page 1", content="Content 1", user_id=user_id, slug="page-1"
+            title="Page 1",
+            content="Content 1",
+            user_id=user_id,
+            slug="page-1",
+            section="Regression-Testing",
         )
 
         page2 = PageService.create_page(
-            title="Page 2", content="Content 2", user_id=user_id, slug="page-2"
+            title="Page 2",
+            content="Content 2",
+            user_id=user_id,
+            slug="page-2",
+            section="Regression-Testing",
         )
 
         # Try to change page2's slug to page1's slug
@@ -202,7 +210,11 @@ def test_update_page_no_changes(app):
         user_id = uuid.uuid4()
 
         page = PageService.create_page(
-            title="Test Page", content="Content", user_id=user_id, slug="test-page"
+            title="Test Page",
+            content="Content",
+            user_id=user_id,
+            slug="test-page",
+            section="Regression-Testing",
         )
 
         original_updated_at = page.updated_at
@@ -248,6 +260,7 @@ def test_list_pages_with_many_pages(app):
                 content=f"Content {i}",
                 user_id=user_id,
                 slug=f"page-{i}",
+                section="Regression-Testing",
             )
 
         # Should be able to list all
@@ -276,12 +289,12 @@ def test_create_page_with_all_fields(app):
             user_id=user_id,
             slug="child",
             parent_id=parent.id,
-            section="test-section",  # Use the section we're testing
+            section="Regression-Testing/test-section",  # Use the section we're testing
             status="draft",
         )
 
         assert page.parent_id == parent.id
-        assert page.section == "test-section"
+        assert page.section == "Regression-Testing/test-section"
         assert page.status == "draft"
 
         # Update order_index separately

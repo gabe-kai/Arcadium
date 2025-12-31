@@ -112,6 +112,7 @@ def test_extract_heading_section_multiple_same_level(client, app, test_writer_id
             created_by=test_writer_id,
             updated_by=test_writer_id,
             status="published",
+            section="Regression-Testing",
             file_path="source-page.md",
         )
         db.session.add(page)
@@ -145,6 +146,7 @@ def test_extract_heading_section_nested_headings(client, app, test_writer_id):
             created_by=test_writer_id,
             updated_by=test_writer_id,
             status="published",
+            section="Regression-Testing",
             file_path="source-page.md",
         )
         db.session.add(page)
@@ -183,6 +185,7 @@ def test_extract_heading_section_last_section(client, app, test_writer_id):
             created_by=test_writer_id,
             updated_by=test_writer_id,
             status="published",
+            section="Regression-Testing",
             file_path="source-page.md",
         )
         db.session.add(page)
@@ -216,6 +219,7 @@ def test_promote_section_invalid_promote_as(client, app, test_writer_id):
             created_by=test_writer_id,
             updated_by=test_writer_id,
             status="published",
+            section="Regression-Testing",
             file_path="source-page.md",
         )
         db.session.add(page)
@@ -358,6 +362,7 @@ def test_extract_heading_with_section(client, app, test_writer_id):
             created_by=test_writer_id,
             updated_by=test_writer_id,
             status="published",
+            section="Regression-Testing",
             file_path="source-page.md",
         )
         db.session.add(page)
@@ -372,7 +377,7 @@ def test_extract_heading_with_section(client, app, test_writer_id):
                 "heading_level": 2,
                 "new_title": "Extracted",
                 "new_slug": "extracted",
-                "section": "test-section",
+                "section": "Regression-Testing/test-section",
             },
             headers=auth_headers(test_writer_id, "writer"),
         )
@@ -382,7 +387,7 @@ def test_extract_heading_with_section(client, app, test_writer_id):
         with app.app_context():
             new_page = db.session.query(Page).filter_by(slug="extracted").first()
             assert new_page is not None
-            assert new_page.section == "test-section"
+            assert new_page.section == "Regression-Testing/test-section"
 
 
 def test_extract_selection_page_not_found(client, app, test_writer_id):
@@ -447,6 +452,7 @@ def test_extract_heading_case_insensitive(client, app, test_writer_id):
             created_by=test_writer_id,
             updated_by=test_writer_id,
             status="published",
+            section="Regression-Testing",
             file_path="source-page.md",
         )
         db.session.add(page)

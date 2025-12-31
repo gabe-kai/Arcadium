@@ -271,6 +271,12 @@ tests/
 └── test_utils/         # Utility function tests
 ```
 
+**Test Page Organization:**
+- All pages created during test execution are automatically assigned to the "Regression-Testing" section
+- Test fixtures and test code explicitly set `section="Regression-Testing"` when creating pages
+- System pages (orphanage, service-status) created during tests also receive this section assignment
+- This keeps test data organized and separate from production content
+
 ### Running Tests
 
 ```bash
@@ -397,6 +403,15 @@ def app():
 ```
 
 **Note:** This approach avoids `db.drop_all()` which can cause timeout issues with PostgreSQL. Tests use transaction rollback for isolation instead of dropping tables.
+
+### Test Page Organization
+
+**Test pages created during CI/CD workflows** are automatically assigned to the "Regression-Testing" section for organization. This ensures:
+- Test pages are clearly separated from production content
+- Easy identification and cleanup of test data
+- Consistent organization across test runs
+
+All test fixtures and test code explicitly assign `section="Regression-Testing"` when creating pages. System pages (like `orphanage` and `service-status`) created during tests also receive this section assignment.
 
 ### SQLAlchemy Object Detachment
 
@@ -580,6 +595,15 @@ pytest -v -s --tb=short tests/
 - `POST /api/upload/image` - Upload image
 
 ---
+
+## Test Page Organization
+
+**All test pages created during CI/CD workflows** are automatically assigned to the "Regression-Testing" section. This organization:
+- Keeps test data separate from production content
+- Makes test pages easy to identify and manage
+- Ensures consistent organization across test runs
+
+**Migration Script**: A one-time migration script (`scripts/migrate_pages_to_regression_testing.py`) was used to move existing test pages to the "Regression-Testing" section. This script is preserved for reference but is no longer needed as all new test pages are automatically assigned to this section.
 
 ## File Sync Utility
 

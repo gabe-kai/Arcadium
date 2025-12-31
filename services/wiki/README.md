@@ -260,6 +260,15 @@ def hello():
 pytest
 ```
 
+### Test Page Organization
+
+**All pages created during test execution** are automatically assigned to the "Regression-Testing" section. This ensures:
+- Test pages are clearly separated from production content
+- Easy identification and cleanup of test data
+- Consistent organization across test runs
+
+Test fixtures and test code explicitly assign `section="Regression-Testing"` when creating pages. System pages (like `orphanage` and `service-status`) created during tests also receive this section assignment.
+
 ### Pre-commit Hook
 
 The Wiki Service tests are automatically run before each commit via a pre-commit hook. This ensures tests pass before code is committed, catching failures early in the development cycle.
