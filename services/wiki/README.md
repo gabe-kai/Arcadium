@@ -67,11 +67,66 @@ flask db upgrade
 ```
 
 4. Start the service:
+
+**Development mode (default):**
 ```bash
 flask run
 ```
 
+**Production mode:**
+```bash
+# Set FLASK_ENV to production
+export FLASK_ENV=production  # Linux/Mac
+# or
+set FLASK_ENV=production     # Windows CMD
+# or
+$env:FLASK_ENV="production"  # Windows PowerShell
+
+flask run
+```
+
+**Using a production WSGI server (recommended for production):**
+```bash
+# Install gunicorn
+pip install gunicorn
+
+# Run with gunicorn
+gunicorn -w 4 -b 0.0.0.0:5000 "app:create_app()"
+```
+
 The service will be available at `http://localhost:5000` by default.
+
+### Production vs Development Mode
+
+**Key Differences:**
+
+| Feature | Development | Production |
+|---------|-------------|------------|
+| **DEBUG mode** | `True` - Shows detailed error pages | `False` - Generic error pages for security |
+| **Auto-reloader** | Enabled (restarts on code changes) | Disabled |
+| **Error details** | Full stack traces in browser | Generic error messages |
+| **Performance** | Optimized for development | Optimized for production |
+| **Service Status Scheduler** | Runs (auto-updates status page) | Runs (auto-updates status page) |
+| **Database pooling** | Same settings | Same settings |
+| **CORS origins** | `localhost:3000` only | `localhost:3000` only (may need updating) |
+
+**Important Production Considerations:**
+
+1. **SECRET_KEY**: Must be set in environment variables (not the default dev key)
+   ```bash
+   export SECRET_KEY="your-secure-random-secret-key-here"
+   ```
+
+2. **CORS Origins**: Update CORS settings in `app/__init__.py` to allow your production frontend domain
+
+3. **Database**: Ensure production database credentials are set in `.env` or environment variables
+
+4. **Use a WSGI Server**: The Flask development server (`flask run`) is not suitable for production. Use:
+   - **Gunicorn** (recommended): `gunicorn -w 4 -b 0.0.0.0:5000 "app:create_app()"`
+   - **uWSGI**: `uwsgi --http :5000 --module app:create_app()`
+   - **Waitress**: `waitress-serve --host=0.0.0.0 --port=5000 app:create_app()`
+
+5. **Environment Variables**: Set `FLASK_ENV=production` in your production environment
 
 ## Content Format
 
