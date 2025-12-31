@@ -907,8 +907,9 @@ def delete_page(page_id):
         }
 
         # Add orphaned pages info (always include, even if empty)
+        # orphaned_pages_list contains dicts from PageService.delete_page
         response_data["orphaned_pages"] = [
-            {"id": str(p.id), "title": p.title, "moved_to_orphanage": True}
+            {"id": p["id"], "title": p["title"], "moved_to_orphanage": True}
             for p in orphaned_pages_list
         ]
 

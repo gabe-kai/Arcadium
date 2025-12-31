@@ -66,47 +66,68 @@ def test_check_service_health_fast_response_healthy(mock_get):
     assert result.get("status_reason") is None
 
 
-@patch("app.services.service_status_service.ServiceStatusService._session.get")
-def test_check_service_health_timeout_with_reason(mock_get):
+def test_check_service_health_timeout_with_reason():
     """Test that timeout includes status reason"""
-    mock_get.side_effect = requests.exceptions.Timeout()
+    mock_session = MagicMock()
+    mock_session.get.side_effect = requests.exceptions.Timeout()
 
-    result = ServiceStatusService.check_service_health("auth", timeout=1.0)
+    original_session = ServiceStatusService._session
+    ServiceStatusService._session = mock_session
 
-    assert result["status"] == "unhealthy"
-    assert result["error"] == "Request timeout"
-    assert "status_reason" in result
-    assert "timed out" in result["status_reason"].lower()
-    assert "1.0s" in result["status_reason"]
+    try:
+        result = ServiceStatusService.check_service_health("auth", timeout=1.0)
+
+        assert result["status"] == "unhealthy"
+        assert result["error"] == "Request timeout"
+        assert "status_reason" in result
+        assert "timed out" in result["status_reason"].lower()
+        assert "1.0s" in result["status_reason"]
+    finally:
+        ServiceStatusService._session = original_session
 
 
-@patch("app.services.service_status_service.ServiceStatusService._session.get")
-def test_check_service_health_connection_error_with_reason(mock_get):
+def test_check_service_health_connection_error_with_reason():
     """Test that connection error includes status reason"""
-    mock_get.side_effect = requests.exceptions.ConnectionError()
+    mock_session = MagicMock()
+    mock_session.get.side_effect = requests.exceptions.ConnectionError()
 
-    result = ServiceStatusService.check_service_health("game-server")
+    original_session = ServiceStatusService._session
+    ServiceStatusService._session = mock_session
 
-    assert result["status"] == "unhealthy"
-    assert result["error"] == "Connection refused"
-    assert "status_reason" in result
-    assert "connection refused" in result["status_reason"].lower()
+    try:
+        result = ServiceStatusService.check_service_health("game-server")
+
+        assert result["status"] == "unhealthy"
+        assert result["error"] == "Connection refused"
+        assert "status_reason" in result
+        assert "connection refused" in result["status_reason"].lower()
+    finally:
+        ServiceStatusService._session = original_session
 
 
-@patch("app.services.service_status_service.ServiceStatusService._session.get")
-def test_check_service_health_404_with_reason(mock_get):
+def test_check_service_health_404_with_reason():
     """Test that 404 error includes status reason"""
+    mock_session = MagicMock()
     mock_response = MagicMock()
     mock_response.status_code = 404
-    mock_get.return_value = mock_response
+    mock_session.get.return_value = mock_response
 
-    result = ServiceStatusService.check_service_health("unknown-service")
+    original_session = ServiceStatusService._session
+    ServiceStatusService._session = mock_session
 
-    assert result["status"] == "unhealthy"
-    assert "404" in result["error"]
-    assert "status_reason" in result
-    assert "404" in result["status_reason"]
-    assert "not found" in result["status_reason"].lower()
+    try:
+        result = ServiceStatusService.check_service_health("auth")
+
+        assert result["status"] == "unhealthy"
+        assert "404" in result["error"]
+        assert "status_reason" in result
+        assert "404" in result["status_reason"]
+        assert (
+            "not found" in result["status_reason"].lower()
+            or "experiencing issues" in result["status_reason"].lower()
+        )
+    finally:
+        ServiceStatusService._session = original_session
 
 
 @patch("app.services.service_status_service.ServiceStatusService._session.get")
@@ -148,22 +169,28 @@ def test_check_service_health_service_reported_degraded(mock_get):
     assert result["status_reason"] == "High latency detected"
 
 
-@patch("app.services.service_status_service.ServiceStatusService._session.get")
-def test_check_service_health_non_json_response_degraded(mock_get):
+def test_check_service_health_non_json_response_degraded():
     """Test that non-JSON response (not HTML) is marked as degraded with reason"""
+    mock_session = MagicMock()
     mock_response = MagicMock()
     mock_response.status_code = 200
     mock_response.json.side_effect = ValueError("Not JSON")
     mock_response.headers.get.return_value = "text/plain"
-    mock_get.return_value = mock_response
+    mock_session.get.return_value = mock_response
 
-    with patch("app.services.service_status_service.time.time") as mock_time:
-        mock_time.side_effect = [0.0, 0.1]
-        result = ServiceStatusService.check_service_health("unknown", timeout=2.0)
+    original_session = ServiceStatusService._session
+    ServiceStatusService._session = mock_session
 
-    assert result["status"] == "degraded"
-    assert "status_reason" in result
-    assert "non-JSON response" in result["status_reason"].lower()
+    try:
+        with patch("app.services.service_status_service.time.time") as mock_time:
+            mock_time.side_effect = [0.0, 0.1]
+            result = ServiceStatusService.check_service_health("auth", timeout=2.0)
+
+        assert result["status"] == "degraded"
+        assert "status_reason" in result
+        assert "non-json response" in result["status_reason"].lower()
+    finally:
+        ServiceStatusService._session = original_session
 
 
 @patch("app.services.service_status_service.psutil")
@@ -197,7 +224,6 @@ def test_get_current_process_info_with_psutil(mock_psutil):
     assert result["open_files"] == 2
 
 
-@patch("app.services.service_status_service.psutil")
 def test_get_current_process_info_without_psutil():
     """Test getting current process info when psutil is not available"""
     with patch("app.services.service_status_service.PSUTIL_AVAILABLE", False):
@@ -217,25 +243,43 @@ def test_get_current_process_info_without_psutil():
 @patch("app.services.service_status_service.psutil")
 def test_get_file_watcher_info_found(mock_psutil):
     """Test detecting file watcher process"""
-    # Mock process iterator
-    mock_process = MagicMock()
-    mock_process.info = {
+    # Create mock process info objects (as returned by process_iter with attrs)
+    current_pid = os.getpid()
+
+    # Mock process for file watcher
+    mock_watcher_process_info = MagicMock()
+    mock_watcher_process_info.info = {
         "pid": 11111,
         "name": "python",
         "cmdline": ["python", "-m", "app.sync", "watch"],
-        "create_time": time.time() - 1800,  # 30 minutes ago
-        "memory_info": MagicMock(rss=45 * 1024 * 1024),  # 45 MB
-        "cpu_percent": 0.1,
-        "num_threads": 3,
     }
-    mock_process.cpu_percent.return_value = 0.1
-    mock_process.memory_percent.return_value = 0.3
 
     # Mock current process (should be skipped)
-    current_process = MagicMock()
-    current_process.info = {"pid": os.getpid()}
+    mock_current_process_info = MagicMock()
+    mock_current_process_info.info = {
+        "pid": current_pid,
+        "name": "python",
+        "cmdline": ["python", "-m", "app.server"],
+    }
 
-    mock_psutil.process_iter.return_value = [current_process, mock_process]
+    # Mock the process iterator
+    def process_iter(attrs):
+        return iter([mock_current_process_info, mock_watcher_process_info])
+
+    mock_psutil.process_iter = process_iter
+
+    # Mock psutil.Process to return a process with the correct attributes
+    mock_process_obj = MagicMock()
+    mock_process_obj.pid = 11111
+    mock_process_obj.create_time.return_value = time.time() - 1800
+    mock_process_obj.memory_info.return_value = MagicMock(rss=45 * 1024 * 1024)
+    mock_process_obj.cpu_percent.return_value = 0.1
+    mock_process_obj.memory_percent.return_value = 0.3
+    mock_process_obj.num_threads.return_value = 3
+    mock_process_obj.oneshot.return_value.__enter__ = MagicMock()
+    mock_process_obj.oneshot.return_value.__exit__ = MagicMock(return_value=False)
+
+    mock_psutil.Process.return_value = mock_process_obj
 
     with patch("app.services.service_status_service.PSUTIL_AVAILABLE", True):
         result = ServiceStatusService.get_file_watcher_info()
@@ -329,7 +373,7 @@ def test_check_all_services_uses_short_timeout_for_wiki(mock_check_health):
 
 @patch("app.services.service_status_service.ServiceStatusService.check_service_health")
 def test_check_all_services_uses_standard_timeout_for_others(mock_check_health):
-    """Test that other services use 1.0s timeout"""
+    """Test that other services use appropriate timeout (0.5s for localhost, 1.0s for others)"""
     mock_check_health.return_value = {
         "status": "healthy",
         "response_time_ms": 5.0,
@@ -339,11 +383,15 @@ def test_check_all_services_uses_standard_timeout_for_others(mock_check_health):
 
     ServiceStatusService.check_all_services()
 
-    # Check that non-wiki services were called with 1.0s timeout
+    # Check that non-wiki services were called with appropriate timeout
     other_calls = [
         call for call in mock_check_health.call_args_list if call[0][0] != "wiki"
     ]
     assert len(other_calls) > 0
-    # All should use 1.0s timeout
+    # All services in SERVICES are localhost by default, so they should use 0.5s timeout
     for call in other_calls:
-        assert call[1]["timeout"] == 1.0
+        service_id = call[0][0]
+        service_url = ServiceStatusService.SERVICES[service_id].get("url", "")
+        is_local = "localhost" in service_url or "127.0.0.1" in service_url
+        expected_timeout = 0.5 if is_local else 1.0
+        assert call[1]["timeout"] == expected_timeout

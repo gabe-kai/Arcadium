@@ -110,6 +110,11 @@ class OrphanageService:
             uuid.UUID("00000000-0000-0000-0000-000000000001")
         )
 
+        # Only retain orphaned_from if the parent still exists (avoid FK issues when deleted)
+        from app import db as _db_check
+
+        parent_exists = _db_check.session.get(Page, deleted_parent_id) is not None
+
         orphaned_pages = []
 
         # If pages are provided, use them directly; otherwise query by ID
@@ -139,9 +144,8 @@ class OrphanageService:
 
                 # Update page attributes directly
                 page.is_orphaned = True
-                # Set orphaned_from to None since the parent was deleted and can't be referenced
-                # The foreign key constraint prevents referencing a deleted page
-                page.orphaned_from = None
+                # Track which parent it was orphaned from only if parent still exists
+                page.orphaned_from = deleted_parent_id if parent_exists else None
                 page.parent_id = orphanage.id
 
                 # Recalculate file path (now under orphanage)
@@ -187,7 +191,10 @@ class OrphanageService:
                             """
                             UPDATE pages
                             SET is_orphaned = :is_orphaned,
-                                orphaned_from = NULL,
+                                orphaned_from = CASE
+                                    WHEN :parent_exists THEN CAST(:deleted_parent_id AS uuid)
+                                    ELSE NULL
+                                END,
                                 parent_id = CAST(:parent_id AS uuid)
                             WHERE id = CAST(:page_id AS uuid)
                         """
@@ -195,6 +202,8 @@ class OrphanageService:
                         {
                             "is_orphaned": True,
                             "parent_id": orphanage_id_str,
+                            "deleted_parent_id": str(deleted_parent_id),
+                            "parent_exists": parent_exists,
                             "page_id": page_id_str,
                         },
                     )

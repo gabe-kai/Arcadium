@@ -57,14 +57,17 @@ This project uses [pre-commit](https://pre-commit.com/) to ensure code quality a
 # Install pre-commit (if not already installed)
 pip install pre-commit
 
-# Install git hooks
+# Install pre-commit hooks (runs on git commit)
 pre-commit install
+
+# Install pre-push hook (runs tests before git push)
+bash scripts/install-pre-push-hook.sh
 
 # Run hooks on all files (optional, for initial setup)
 pre-commit run --all-files
 ```
 
-**Hooks included:**
+**Pre-commit Hooks (run on `git commit`):**
 - **Trailing whitespace** - Removes trailing whitespace
 - **End of file fixer** - Ensures files end with newline
 - **Mixed line ending** - Normalizes line endings
@@ -74,7 +77,12 @@ pre-commit run --all-files
 - **Black** - Python code formatter
 - **isort** - Python import sorter
 
-The hooks will run automatically on `git commit`. To skip hooks (not recommended), use `git commit --no-verify`.
+**Pre-push Hook (runs on `git push`):**
+- **Wiki Service Tests** - Runs full test suite before pushing to catch failures early
+
+The pre-commit hooks will run automatically on `git commit`. To skip hooks (not recommended), use `git commit --no-verify`.
+
+The pre-push hook will run automatically on `git push`. To skip the test check (not recommended), use `git push --no-verify`.
 
 ### Database Setup
 

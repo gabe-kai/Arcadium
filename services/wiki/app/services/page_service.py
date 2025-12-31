@@ -354,9 +354,15 @@ class PageService:
                 child_ids, page_id, pages=children
             )  # page_id is the deleted parent
 
+        # Convert orphaned pages to dicts for safe serialization
+        orphaned_pages_list = [
+            {"id": str(p.id), "title": p.title, "slug": p.slug}
+            for p in orphaned_page_objects
+        ]
+
         return {
             "deleted_page": page_info,
-            "orphaned_pages": orphaned_page_objects,  # Return Page objects, not dicts
+            "orphaned_pages": orphaned_pages_list,
         }
 
     @staticmethod

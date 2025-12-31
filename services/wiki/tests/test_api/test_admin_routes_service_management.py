@@ -316,20 +316,25 @@ def test_update_service_status_notes_success(client, app, test_admin_id):
 
     # Verify notes were saved
     with app.app_context():
-        config = WikiConfig.query.filter_by(key="service_status_notes").first()
+        import json
+
+        config = WikiConfig.query.filter_by(key="service_status_notes_auth").first()
         assert config is not None
-        notes = config.value
-        assert "auth" in notes
-        assert notes["auth"]["notes"] == "Planned maintenance window"
+        notes = json.loads(config.value)  # Parse JSON string
+        assert notes["notes"] == "Planned maintenance window"
+        assert notes["eta"] == "2024-01-01T15:00:00Z"
 
 
 def test_update_service_status_notes_updates_existing(client, app, test_admin_id):
     """Update service status notes should update existing notes"""
     # Create initial notes
     with app.app_context():
+        import json
+
         config = WikiConfig(
-            key="service_status_notes",
-            value={"auth": {"notes": "Old notes"}},
+            key="service_status_notes_auth",
+            value=json.dumps({"notes": "Old notes"}),  # Store as JSON string
+            updated_by=test_admin_id,
         )
         db.session.add(config)
         db.session.commit()
@@ -349,7 +354,10 @@ def test_update_service_status_notes_updates_existing(client, app, test_admin_id
 
     # Verify notes were updated
     with app.app_context():
-        config = WikiConfig.query.filter_by(key="service_status_notes").first()
-        notes = config.value
-        assert notes["auth"]["notes"] == "New notes"
-        assert notes["auth"]["eta"] == "2024-01-01T15:00:00Z"
+        import json
+
+        config = WikiConfig.query.filter_by(key="service_status_notes_auth").first()
+        assert config is not None
+        notes = json.loads(config.value)  # Parse JSON string
+        assert notes["notes"] == "New notes"
+        assert notes["eta"] == "2024-01-01T15:00:00Z"

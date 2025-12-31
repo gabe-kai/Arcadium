@@ -1,5 +1,6 @@
 """Tests for admin dashboard and configuration endpoints."""
 
+import uuid
 from datetime import datetime, timedelta, timezone
 from unittest.mock import MagicMock, patch
 
@@ -65,28 +66,39 @@ def test_get_dashboard_stats_basic(client, app, test_admin_id):
     """Dashboard stats should return counts for pages and comments."""
     user_id = test_admin_id
     with app.app_context():
+        # Capture baseline counts so assertions are resilient to existing data
+        base_pages = db.session.query(Page).count()
+        base_comments = db.session.query(Comment).count()
+        base_sections = set(
+            s for (s,) in db.session.query(Page.section).distinct() if s is not None
+        )
+
+        # Use unique slugs to avoid conflicts/locks with existing data
+        slug1 = f"page-1-{uuid.uuid4()}"
+        slug2 = f"page-2-{uuid.uuid4()}"
+
         # Create pages
         page1 = Page(
             title="Page 1",
-            slug="page-1",
+            slug=slug1,
             content="# One",
             created_by=user_id,
             updated_by=user_id,
             content_size_kb=10.0,
             word_count=100,
             section="rules",
-            file_path="page-1.md",
+            file_path=f"{slug1}.md",
         )
         page2 = Page(
             title="Page 2",
-            slug="page-2",
+            slug=slug2,
             content="# Two",
             created_by=user_id,
             updated_by=user_id,
             content_size_kb=20.0,
             word_count=200,
             section="lore",
-            file_path="page-2.md",
+            file_path=f"{slug2}.md",
         )
         db.session.add(page1)
         db.session.add(page2)
@@ -103,14 +115,18 @@ def test_get_dashboard_stats_basic(client, app, test_admin_id):
         db.session.add(comment)
         db.session.commit()
 
+    expected_total_pages = base_pages + 2
+    expected_total_comments = base_comments + 1
+    expected_total_sections = len(base_sections.union({"rules", "lore"}))
+
     with mock_auth(test_admin_id, "admin"):
         headers = auth_headers(test_admin_id, "admin")
         resp = client.get("/api/admin/dashboard/stats", headers=headers)
         assert resp.status_code == 200
         data = resp.get_json()
-        assert data["total_pages"] == 2
-        assert data["total_sections"] == 2  # rules, lore
-        assert data["total_comments"] == 1
+        assert data["total_pages"] == expected_total_pages
+        assert data["total_sections"] == expected_total_sections  # includes rules, lore
+        assert data["total_comments"] == expected_total_comments
         assert "storage_usage_mb" in data
         assert "total_users" in data
         assert "recent_activity" in data
@@ -234,6 +250,12 @@ def test_get_oversized_pages_and_update_status(client, app, test_admin_id):
     """Get oversized pages and update their status."""
     user_id = test_admin_id
     with app.app_context():
+        # Clean up any existing oversized pages and notifications first
+        db.session.query(OversizedPageNotification).delete()
+        # Only delete pages that might interfere (oversized ones)
+        db.session.query(Page).filter(Page.content_size_kb > 500.0).delete()
+        db.session.commit()
+
         # Create a page
         page = Page(
             title="Oversized",
@@ -300,12 +322,12 @@ def test_get_service_status_requires_auth(client):
     assert resp.status_code == 401
 
 
-def test_get_service_status_requires_admin(client, app, test_writer_id):
-    """Service status endpoint should require admin role"""
+def test_get_service_status_allows_authenticated_users(client, app, test_writer_id):
+    """Service status endpoint should allow any authenticated user (not just admin)"""
     with mock_auth(test_writer_id, "writer"):
         headers = auth_headers(test_writer_id, "writer")
         resp = client.get("/api/admin/service-status", headers=headers)
-        assert resp.status_code == 403
+        assert resp.status_code == 200  # Now allows authenticated users
 
 
 @patch("app.routes.admin_routes.ServiceStatusService.check_all_services")
@@ -435,12 +457,14 @@ def test_refresh_service_status_page_requires_auth(client):
     assert resp.status_code == 401
 
 
-def test_refresh_service_status_page_requires_admin(client, app, test_writer_id):
-    """Refresh service status page should require admin role"""
+def test_refresh_service_status_page_allows_authenticated_users(
+    client, app, test_writer_id
+):
+    """Refresh service status page should allow any authenticated user (not just admin)"""
     with mock_auth(test_writer_id, "writer"):
         headers = auth_headers(test_writer_id, "writer")
         resp = client.post("/api/admin/service-status/refresh", headers=headers)
-        assert resp.status_code == 403
+        assert resp.status_code == 200  # Now allows authenticated users
 
 
 @patch("app.services.service_status_service.requests.get")
@@ -526,6 +550,11 @@ def test_configure_upload_size_negative_value(client, app, test_admin_id):
 def test_configure_upload_size_updates_existing(client, app, test_admin_id):
     """Configure upload size should update existing config."""
     with app.app_context():
+        # Ensure no duplicate keys from prior runs
+        db.session.query(WikiConfig).filter(
+            WikiConfig.key.in_(["upload_max_size_mb", "upload_max_size_is_custom"])
+        ).delete(synchronize_session=False)
+        db.session.commit()
         # Create initial config
         config = WikiConfig(
             key="upload_max_size_mb", value="10.0", updated_by=test_admin_id

@@ -228,9 +228,10 @@ author: AI Assistant
     )
     from app import db
 
-    db.session.add(page)
-    db.session.commit()
-    page_id = str(page.id)
+    with app.app_context():
+        db.session.add(page)
+        db.session.commit()
+        page_id = str(page.id)
 
     with mock_auth(test_writer_id, "writer"):
         # Update page content (frontend would strip frontmatter, then add it back)

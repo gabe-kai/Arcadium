@@ -98,32 +98,29 @@ def test_markdown_file_handler_schedule_sync():
 
 def test_markdown_file_handler_sync_file():
     """Test syncing a file"""
-    mock_sync = MagicMock(spec=SyncUtility)
-    mock_sync.pages_dir = "data/pages"
-
-    # Create a mock page
-    mock_page = MagicMock()
-    mock_page.slug = "test-page"
-
-    # Mock sync_file to return created status
-    mock_sync.sync_file.return_value = (mock_page, True)
-
-    mock_app = MagicMock()
-    mock_app.app_context.return_value.__enter__ = MagicMock()
-    mock_app.app_context.return_value.__exit__ = MagicMock(return_value=False)
-
-    handler = MarkdownFileHandler(
-        sync_utility=mock_sync, debounce_seconds=1.0, app=mock_app
-    )
-
     with tempfile.TemporaryDirectory() as tmpdir:
+        mock_sync = MagicMock(spec=SyncUtility)
+        mock_sync.pages_dir = tmpdir  # Set to tmpdir so file exists check works
+
+        # Create a mock page
+        mock_page = MagicMock()
+        mock_page.slug = "test-page"
+
+        # Mock sync_file to return created status
+        mock_sync.sync_file.return_value = (mock_page, True)
+
+        mock_app = MagicMock()
+        mock_app.app_context.return_value.__enter__ = MagicMock()
+        mock_app.app_context.return_value.__exit__ = MagicMock(return_value=False)
+
+        handler = MarkdownFileHandler(
+            sync_utility=mock_sync, debounce_seconds=1.0, app=mock_app
+        )
+
         # Create test file
         test_file = os.path.join(tmpdir, "test.md")
         with open(test_file, "w") as f:
             f.write("# Test")
-
-        # Mock pages_dir to point to tmpdir
-        handler.pages_dir = tmpdir
 
         # Sync the file
         handler._sync_file("test.md")

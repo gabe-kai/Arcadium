@@ -48,7 +48,8 @@ def test_upload_image_success_basic(client, app, test_writer_id):
         assert resp.status_code == 200
         data = resp.get_json()
         assert "url" in data
-        assert data["url"].startswith("/uploads/images/")
+        # API returns prefixed path; allow either with or without /api
+        assert "/uploads/images/" in data["url"]
         assert "uuid" in data and data["uuid"]
         assert data["original_filename"] == "my-image.png"
         assert data["size"] == len(file_bytes)

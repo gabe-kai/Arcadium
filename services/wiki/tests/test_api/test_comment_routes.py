@@ -4,12 +4,33 @@ import uuid
 
 from app import db
 from app.models.comment import Comment
+from app.models.page import Page
 from tests.test_api.conftest import auth_headers, mock_auth
 
 
 def test_get_comments_empty(client, app, test_page):
     """Test getting comments for a page with no comments"""
-    page_id = str(test_page.id)
+    # Ensure page exists and is accessible
+    with app.app_context():
+        # Re-query to ensure page is in current session
+        page = db.session.get(Page, test_page.id)
+        if not page:
+            # If not found, re-add it
+            page = Page(
+                title=test_page.title,
+                slug=test_page.slug,
+                content=test_page.content,
+                created_by=test_page.created_by,
+                updated_by=test_page.updated_by,
+                status=test_page.status,
+                file_path=test_page.file_path,
+            )
+            db.session.add(page)
+            db.session.commit()
+            page_id = str(page.id)
+        else:
+            page_id = str(page.id)
+
     response = client.get(f"/api/pages/{page_id}/comments")
     assert response.status_code == 200
     data = response.get_json()

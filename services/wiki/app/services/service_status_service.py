@@ -132,6 +132,7 @@ class ServiceStatusService:
                 "status": "unhealthy",
                 "response_time_ms": 0,
                 "error": f"Unknown service: {service_id}",
+                "status_reason": f"Unknown service: {service_id}",
                 "details": {},
             }
 
@@ -263,6 +264,7 @@ class ServiceStatusService:
                 "status": "unhealthy",
                 "response_time_ms": timeout * 1000,
                 "error": "Request timeout",
+                "status_reason": f"Request timed out after {timeout}s",
                 "details": {},
             }
         except requests.exceptions.ConnectionError:
@@ -270,6 +272,7 @@ class ServiceStatusService:
                 "status": "unhealthy",
                 "response_time_ms": round((time.time() - start_time) * 1000, 2),
                 "error": "Connection refused",
+                "status_reason": "Connection refused - service may be down or unreachable",
                 "details": {},
             }
         except Exception as e:
@@ -307,7 +310,7 @@ class ServiceStatusService:
                 "memory_percent": 0.0,
                 "threads": 0,
                 "open_files": 0,
-                "error": "psutil not available - install with: pip install psutil",
+                "note": "psutil not available - install with: pip install psutil",
             }
 
         try:

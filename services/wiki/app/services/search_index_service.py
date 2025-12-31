@@ -397,6 +397,8 @@ class SearchIndexService:
                     "status": page.status,
                     "snippet": snippet,
                     "relevance_score": round(relevance_score, 2),
+                    "score": result.get("score", 0),
+                    "matches": result.get("matches", []),
                 }
             )
 

@@ -20,6 +20,7 @@ class InMemoryLogHandler(logging.Handler):
             max_entries: Maximum number of log entries to keep in memory
         """
         super().__init__()
+        self.max_entries = max_entries
         self.logs = deque(maxlen=max_entries)
         self.setFormatter(
             logging.Formatter(
@@ -39,6 +40,12 @@ class InMemoryLogHandler(logging.Handler):
                     "logger": record.name,
                     "message": formatted,
                     "raw_message": record.getMessage(),
+                    "pathname": getattr(record, "pathname", ""),
+                    "lineno": getattr(record, "lineno", 0),
+                    "funcName": getattr(record, "funcName", ""),
+                    "process": getattr(record, "process", 0),
+                    "thread": getattr(record, "thread", 0),
+                    "threadName": getattr(record, "threadName", ""),
                 }
             )
         except Exception:

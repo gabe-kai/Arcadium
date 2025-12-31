@@ -78,9 +78,13 @@ def test_admin_id():
 @pytest.fixture
 def test_page(app, test_user_id):
     """Create a test page"""
-    from sqlalchemy.orm import make_transient
-
     with app.app_context():
+        # Ensure deterministic slug across tests; remove any leftover
+        db.session.query(Page).filter(Page.slug == "test-page").delete(
+            synchronize_session=False
+        )
+        db.session.commit()
+
         page = Page(
             title="Test Page",
             slug="test-page",
@@ -92,20 +96,21 @@ def test_page(app, test_user_id):
         )
         db.session.add(page)
         db.session.commit()
-        # Access ID to ensure it's loaded
-        # Expunge to detach from session
+        # Ensure attributes remain available after session cleanup
+        db.session.refresh(page)
         db.session.expunge(page)
-        # Make transient so it's a plain Python object (ID will still be accessible)
-        make_transient(page)
         return page
 
 
 @pytest.fixture
 def test_draft_page(app, test_user_id):
     """Create a test draft page"""
-    from sqlalchemy.orm import make_transient
-
     with app.app_context():
+        db.session.query(Page).filter(Page.slug == "draft-page").delete(
+            synchronize_session=False
+        )
+        db.session.commit()
+
         page = Page(
             title="Draft Page",
             slug="draft-page",
@@ -117,11 +122,8 @@ def test_draft_page(app, test_user_id):
         )
         db.session.add(page)
         db.session.commit()
-        # Access ID to ensure it's loaded
-        # Expunge to detach from session
+        db.session.refresh(page)
         db.session.expunge(page)
-        # Make transient so it's a plain Python object (ID will still be accessible)
-        make_transient(page)
         return page
 
 

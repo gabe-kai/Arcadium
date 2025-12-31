@@ -101,11 +101,11 @@ class TestingConfig(Config):
     # but with smaller pool to avoid connection issues
     SQLALCHEMY_ENGINE_OPTIONS = {
         "pool_size": 5,  # Small pool for tests
-        "max_overflow": 5,  # Limited overflow for tests
+        "max_overflow": 10,  # Allow some overflow for concurrent operations
         "pool_timeout": 10,  # Reasonable timeout for tests
-        "pool_pre_ping": True,
+        "pool_pre_ping": False,  # Disable pre-ping to avoid connection verification delays
         "connect_args": {
-            "connect_timeout": 10,  # Connection timeout in seconds
+            "connect_timeout": 10,  # Connection timeout for tests
             # Disable statement timeout for test DDL to avoid DROP/CREATE timeouts
             "options": "-c statement_timeout=0",
         },
