@@ -134,12 +134,14 @@ def test_refresh_service_status_allows_authenticated_users(
 
     # Writer (non-admin) should be able to refresh
     with app.app_context():
-        with mock_auth(test_writer_id, "writer"):
-            headers = auth_headers(test_writer_id, "writer")
-            resp = client.post("/api/admin/service-status/refresh", headers=headers)
-            assert resp.status_code == 200
-            data = resp.get_json()
-            assert data["success"] is True
+        # Use client context to preserve request/app context during the call
+        with client:
+            with mock_auth(test_writer_id, "writer"):
+                headers = auth_headers(test_writer_id, "writer")
+                resp = client.post("/api/admin/service-status/refresh", headers=headers)
+                assert resp.status_code == 200
+                data = resp.get_json()
+                assert data["success"] is True
 
 
 def test_get_service_logs_requires_auth(client):
