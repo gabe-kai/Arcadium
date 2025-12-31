@@ -223,6 +223,8 @@ pre-commit install --hook-type pre-commit
 
 **Note:** The pre-commit hook runs the full test suite. For faster feedback during development, you can run `pytest` manually on specific test files.
 
+**Note:** Tests run only at commit time (not on push) to avoid running them twice. This provides early feedback while keeping the commit workflow efficient.
+
 ### Running Tests with CI Configuration
 
 To verify tests will pass in CI before pushing:
