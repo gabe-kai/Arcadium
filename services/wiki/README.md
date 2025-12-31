@@ -226,9 +226,10 @@ pytest
 
 **Prerequisites:**
 - PostgreSQL running locally with test database `arcadium_testing_wiki`
+- `.env` file configured with database credentials (`DATABASE_URL` or `arcadium_user`/`arcadium_pass`)
 - All dependencies installed from root `requirements.txt`
 
-**Note:** Tests use PostgreSQL (not SQLite) to avoid UUID compatibility issues and match production behavior.
+**Note:** Tests use PostgreSQL (not SQLite) to avoid UUID compatibility issues and match production behavior. The test database URL is automatically constructed from your `.env` credentials if `TEST_DATABASE_URL` is not explicitly set.
 
 ### CI/CD
 

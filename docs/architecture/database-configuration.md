@@ -129,7 +129,17 @@ Credentials:
 
 ## Testing Configuration
 
-By default, tests use SQLite in-memory databases for faster execution. To use PostgreSQL for testing, set the `TEST_DATABASE_URL` environment variable.
+**All tests use PostgreSQL** to match production behavior and avoid compatibility issues (e.g., UUID handling). The test database is automatically configured from `.env` credentials:
+
+- If `TEST_DATABASE_URL` is set, it will be used directly
+- Otherwise, `TEST_DATABASE_URL` is constructed from `DATABASE_URL` by changing the database name to `arcadium_testing_<service_name>`
+- If neither is available, it falls back to constructing from `arcadium_user` and `arcadium_pass` with the test database name
+
+**Test Database Naming:**
+- Test databases use the `arcadium_testing_<service_name>` naming convention
+- Example: `arcadium_testing_wiki` for the Wiki Service
+
+**Note:** The configuration automatically filters out PostgreSQL-specific engine options (like `pool_size`, `max_overflow`) when SQLite is detected, but tests always use PostgreSQL.
 
 ## Production Configuration
 

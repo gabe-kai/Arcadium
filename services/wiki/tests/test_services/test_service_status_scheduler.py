@@ -336,9 +336,43 @@ def test_scheduler_skipped_in_testing_mode():
 
 def test_scheduler_started_in_development_mode():
     """Test that scheduler is started in development mode"""
+    import os
+    from pathlib import Path
+
     from app import create_app
+    from dotenv import load_dotenv
+
+    # Load .env to get database credentials
+    env_path = Path(__file__).parent.parent.parent / ".env"
+    if env_path.exists():
+        load_dotenv(env_path)
+
+    # Use test database for this test to avoid affecting development data
+    # Get test database URL from environment or construct from DATABASE_URL
+    test_db_url = os.environ.get("TEST_DATABASE_URL")
+    if not test_db_url:
+        db_url = os.environ.get("DATABASE_URL")
+        if db_url:
+            from urllib.parse import urlparse, urlunparse
+
+            parsed = urlparse(db_url)
+            test_db_name = os.environ.get("TEST_DB_NAME", "arcadium_testing_wiki")
+            test_db_url = urlunparse(parsed._replace(path=f"/{test_db_name}"))
+        else:
+            # Construct from individual variables
+            db_user = os.environ.get("arcadium_user")
+            db_pass = os.environ.get("arcadium_pass")
+            db_host = os.environ.get("DB_HOST", "localhost")
+            db_port = os.environ.get("DB_PORT", "5432")
+            test_db_name = os.environ.get("TEST_DB_NAME", "arcadium_testing_wiki")
+            if db_user and db_pass:
+                test_db_url = f"postgresql://{db_user}:{db_pass}@{db_host}:{db_port}/{test_db_name}"
 
     app = create_app("development")
+
+    # Override database URL to use test database
+    if test_db_url:
+        app.config["SQLALCHEMY_DATABASE_URI"] = test_db_url
 
     # Scheduler should be started in development mode
     assert hasattr(app, "service_status_scheduler")
