@@ -3,6 +3,7 @@ File watcher service for automatic syncing of markdown files.
 
 This module provides a file system watcher that monitors the wiki pages directory
 and automatically syncs markdown files to the database when they are created or modified.
+On file deletion, it performs a full sync to reset the database to match the file system state.
 
 Usage:
     # Start the watcher from CLI
@@ -22,6 +23,7 @@ Usage:
 Features:
     - Monitors data/pages/ directory recursively
     - Automatically syncs .md files on create/modify events
+    - Performs full sync after file deletions to reset database state
     - Debouncing prevents rapid-fire syncs
     - Graceful shutdown on Ctrl+C
     - Error resilient (continues watching on sync errors)
@@ -49,6 +51,10 @@ class MarkdownFileHandler(FileSystemEventHandler):
 
     Processes file creation and modification events, schedules files for syncing
     with debouncing to prevent multiple syncs of the same file in rapid succession.
+
+    On file deletion, schedules a full sync of all files to reset the database
+    to match the current file system state. This is useful for cleaning up the
+    database after tests or manual file deletions.
 
     Only handles .md files within the pages directory. Ignores directory events
     and files outside the pages directory.
@@ -84,6 +90,8 @@ class MarkdownFileHandler(FileSystemEventHandler):
         self.lock = threading.Lock()
         self.pages_dir = sync_utility.pages_dir
         self.timer: Optional[threading.Timer] = None
+        self.deletion_timer: Optional[threading.Timer] = None
+        self.deletion_pending = False
 
     def _get_relative_path(self, file_path: str) -> Optional[str]:
         """
@@ -160,6 +168,60 @@ class MarkdownFileHandler(FileSystemEventHandler):
         for file_path in files_to_sync:
             self._sync_file(file_path)
 
+    def _schedule_full_sync(self):
+        """
+        Schedule a full sync after file deletion (with debouncing).
+
+        This will sync all files from the pages directory, effectively
+        resetting the database to match the file system state.
+        """
+        with self.lock:
+            self.deletion_pending = True
+
+            # Cancel existing deletion timer if running
+            if self.deletion_timer:
+                self.deletion_timer.cancel()
+
+            # Start new debounce timer for full sync
+            self.deletion_timer = threading.Timer(
+                self.debounce_seconds
+                * 2,  # Use 2x debounce for deletions to allow multiple deletions
+                self._perform_full_sync,
+            )
+            self.deletion_timer.start()
+
+    def _perform_full_sync(self):
+        """
+        Perform a full sync of all files in the pages directory.
+
+        This is called after file deletions to reset the database
+        to match the current file system state.
+        """
+        with self.lock:
+            if not self.deletion_pending:
+                return
+            self.deletion_pending = False
+
+        # Full sync operations need Flask app context
+        if not self.app:
+            print("[WATCHER] Error: No Flask app context available for full sync")
+            return
+
+        try:
+            with self.app.app_context():
+                print("[WATCHER] Performing full sync after file deletion(s)...")
+                stats = self.sync_utility.sync_all(force=False)
+                print(
+                    f"[WATCHER] Full sync complete: "
+                    f"{stats['created']} created, "
+                    f"{stats['updated']} updated, "
+                    f"{stats['skipped']} skipped, "
+                    f"{stats.get('deleted', 0)} deleted (orphaned), "
+                    f"{stats['errors']} errors"
+                )
+        except Exception as e:
+            print(f"[WATCHER] Error during full sync after deletion: {e}")
+
     def _sync_file(self, file_path: str):
         """
         Sync a single file.
@@ -220,9 +282,9 @@ class MarkdownFileHandler(FileSystemEventHandler):
         rel_path = self._get_relative_path(event.src_path)
         if rel_path and self._should_handle(rel_path):
             print(f"[WATCHER] File deleted: {rel_path}")
-            # Note: We don't delete pages from DB when files are deleted
-            # This is intentional - file deletion doesn't cascade to database
-            # Users should delete pages through the API if needed
+            # Schedule a full sync to reset database to match file system
+            # This ensures the database reflects the current state of files
+            self._schedule_full_sync()
 
 
 class FileWatcher:

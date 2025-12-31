@@ -202,6 +202,27 @@ def hello():
 pytest
 ```
 
+### Pre-commit Hook
+
+The Wiki Service tests are automatically run before each commit via a pre-commit hook. This ensures tests pass before code is committed, catching failures early in the development cycle.
+
+**Installation:**
+```bash
+# From project root
+./scripts/install-pre-commit-tests.sh
+
+# Or manually:
+pre-commit install --hook-type pre-commit
+```
+
+**Behavior:**
+- Tests run automatically on `git commit`
+- Runs after formatting/linting checks (black, isort, ruff)
+- Uses database credentials from `services/wiki/.env`
+- To skip (not recommended): `git commit --no-verify`
+
+**Note:** The pre-commit hook runs the full test suite. For faster feedback during development, you can run `pytest` manually on specific test files.
+
 ### Running Tests with CI Configuration
 
 To verify tests will pass in CI before pushing:

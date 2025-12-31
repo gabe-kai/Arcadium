@@ -270,15 +270,93 @@ class SyncUtility:
         # Reconstruct with frontmatter
         return f"---\n{yaml_str}---\n\n{markdown_content}"
 
+    def _cleanup_orphaned_pages(self) -> int:
+        """
+        Remove pages from database whose files no longer exist.
+
+        Returns:
+            Number of pages deleted
+        """
+        import os
+
+        from app.services.file_service import FileService
+
+        # Find all pages with file_path set
+        pages_with_files = (
+            db.session.query(Page).filter(Page.file_path.isnot(None)).all()
+        )
+
+        deleted_count = 0
+        files_on_disk = set(FileScanner.scan_directory(self.pages_dir))
+
+        for page in pages_with_files:
+            # Check if file exists on disk
+            # First check if the file_path is in the files_on_disk set (exact match)
+            file_exists = page.file_path in files_on_disk
+
+            # If not found, also check if the file physically exists on disk
+            # (handles cases where file_path format might differ)
+            if not file_exists:
+                full_path = FileService.get_full_path(page.file_path)
+                file_exists = os.path.exists(full_path)
+
+            if not file_exists:
+                # File is missing, delete the page
+                try:
+                    page_id = page.id
+                    page_title = page.title
+                    page_slug = page.slug
+                    page_file_path = page.file_path
+
+                    # Delete related data
+                    from app.models.comment import Comment
+                    from app.models.index_entry import IndexEntry
+                    from app.models.page_version import PageVersion
+
+                    IndexEntry.query.filter_by(page_id=page_id).delete()
+                    Comment.query.filter_by(page_id=page_id).delete()
+                    PageVersion.query.filter_by(page_id=page_id).delete()
+
+                    # Clean up links
+                    LinkService.handle_page_deletion(page_id)
+
+                    # Delete the page
+                    db.session.delete(page)
+
+                    # Commit immediately to ensure deletion persists
+                    db.session.commit()
+
+                    deleted_count += 1
+                    current_app.logger.info(
+                        f"Deleted orphaned page: {page_title} (slug: {page_slug}, file_path: {page_file_path})"
+                    )
+                except Exception as e:
+                    current_app.logger.error(
+                        f"Error deleting orphaned page {page.id}: {e}"
+                    )
+                    import traceback
+
+                    current_app.logger.error(traceback.format_exc())
+                    db.session.rollback()
+                    continue
+
+        if deleted_count > 0:
+            current_app.logger.info(f"Cleaned up {deleted_count} orphaned page(s)")
+
+        return deleted_count
+
     def sync_all(self, force: bool = False) -> Dict[str, int]:
         """
         Sync all markdown files in pages directory.
+
+        Also removes pages from database whose files no longer exist,
+        ensuring the database matches the file system state.
 
         Args:
             force: Force sync even if files are not newer
 
         Returns:
-            Dictionary with sync statistics
+            Dictionary with sync statistics including 'deleted' count
         """
         files = FileScanner.scan_directory(self.pages_dir)
 
@@ -288,8 +366,10 @@ class SyncUtility:
             "updated": 0,
             "skipped": 0,
             "errors": 0,
+            "deleted": 0,
         }
 
+        # First, sync all existing files
         for file_path in files:
             try:
                 page, status = self.sync_file(file_path, force=force)
@@ -307,6 +387,13 @@ class SyncUtility:
                     pass  # Ignore rollback errors
                 current_app.logger.error(f"Error syncing {file_path}: {e}")
                 stats["errors"] += 1
+
+        # Then, clean up orphaned pages (pages whose files are missing)
+        try:
+            stats["deleted"] = self._cleanup_orphaned_pages()
+        except Exception as e:
+            current_app.logger.error(f"Error cleaning up orphaned pages: {e}")
+            # Don't increment errors count for cleanup failures, just log
 
         return stats
 

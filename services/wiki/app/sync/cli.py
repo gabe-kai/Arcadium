@@ -32,6 +32,7 @@ def sync_all_command(force: bool = False, admin_user_id: str = None):
         print(f"  Created: {stats['created']}")
         print(f"  Updated: {stats['updated']}")
         print(f"  Skipped: {stats['skipped']}")
+        print(f"  Deleted (orphaned): {stats.get('deleted', 0)}")
         print(f"  Errors: {stats['errors']}")
 
 
