@@ -165,6 +165,8 @@ export function EditPage() {
       queryClient.invalidateQueries({ queryKey: ['navigationTree'] });
       setHasUnsavedChanges(false);
       showSuccess('Page saved successfully');
+      // Navigate to view mode after successful save
+      navigate(`/pages/${pageId}`);
     },
     onError: (error) => {
       if (error.response?.status === 401) {

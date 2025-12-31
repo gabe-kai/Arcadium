@@ -316,6 +316,9 @@ class SearchIndexService:
             return []
 
         # Find matching index entries
+        # Since tokenize already lowercases both query and indexed terms,
+        # we can use exact matching with in_() for multiple terms
+        # This is the original approach that should work reliably
         matching_entries = IndexEntry.query.filter(
             IndexEntry.term.in_(query_terms)
         ).all()
@@ -328,13 +331,24 @@ class SearchIndexService:
             if page_id not in page_scores:
                 page_scores[page_id] = {"page_id": page_id, "score": 0, "matches": []}
 
+            # Check if this is an exact match or partial match
+            entry_term_lower = entry.term.lower()
+            is_exact_match = any(entry_term_lower == term for term in query_terms)
+
             # Calculate score based on match type
             if entry.is_keyword:
                 # Keywords are more important
-                page_scores[page_id]["score"] += 10
+                base_score = 10
             else:
                 # Full-text matches
-                page_scores[page_id]["score"] += 1
+                base_score = 1
+
+            # Boost exact matches
+            if is_exact_match:
+                page_scores[page_id]["score"] += base_score * 2
+            else:
+                # Partial match gets lower score
+                page_scores[page_id]["score"] += base_score
 
             page_scores[page_id]["matches"].append(
                 {

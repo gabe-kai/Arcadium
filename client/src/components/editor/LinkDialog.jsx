@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { searchPages } from '../../services/api/pages';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { apiClient } from '../../services/api/client';
 import './LinkDialog.css';
 
 /**
@@ -8,19 +8,45 @@ import './LinkDialog.css';
 export function LinkDialog({ isOpen, onClose, onInsert, initialUrl = '' }) {
   const [url, setUrl] = useState(initialUrl);
   const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState([]);
-  const [isSearching, setIsSearching] = useState(false);
+  const [allPages, setAllPages] = useState([]);
+  const [isLoadingPages, setIsLoadingPages] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(false);
   const [linkType, setLinkType] = useState('external'); // 'external' or 'internal'
-  const searchTimerRef = useRef(null);
   const dialogRef = useRef(null);
+  const searchInputRef = useRef(null);
+
+  // Fetch all pages when dialog opens and internal link type is selected
+  useEffect(() => {
+    if (isOpen && linkType === 'internal' && allPages.length === 0) {
+      setIsLoadingPages(true);
+      apiClient
+        .get('/pages', { params: { limit: 1000 } }) // Get up to 1000 pages
+        .then((res) => {
+          const pages = res.data.pages || [];
+          // Sort pages alphabetically by title
+          pages.sort((a, b) => (a.title || '').localeCompare(b.title || ''));
+          setAllPages(pages);
+        })
+        .catch((error) => {
+          console.error('Error fetching pages:', error);
+          setAllPages([]);
+        })
+        .finally(() => {
+          setIsLoadingPages(false);
+        });
+    }
+  }, [isOpen, linkType, allPages.length]);
 
   // Reset state when dialog opens/closes
   useEffect(() => {
     if (isOpen) {
       setUrl(initialUrl);
       setSearchQuery('');
-      setSearchResults([]);
+      setShowDropdown(false);
       setLinkType(initialUrl && !initialUrl.startsWith('http') ? 'internal' : 'external');
+    } else {
+      // Reset all pages when dialog closes to refetch fresh data next time
+      setAllPages([]);
     }
   }, [isOpen, initialUrl]);
 
@@ -38,41 +64,34 @@ export function LinkDialog({ isOpen, onClose, onInsert, initialUrl = '' }) {
     }
   }, [isOpen, onClose]);
 
-  // Search pages when query changes
-  useEffect(() => {
-    if (searchTimerRef.current) {
-      clearTimeout(searchTimerRef.current);
+  // Filter pages by title (client-side)
+  // Case-insensitive and space/special-character forgiving
+  const filteredPages = useMemo(() => {
+    if (!searchQuery.trim()) {
+      // No search query - show all pages, sorted alphabetically
+      return allPages;
     }
 
-    if (!searchQuery.trim() || linkType !== 'internal') {
-      setSearchResults([]);
-      return;
-    }
-
-    setIsSearching(true);
-    searchTimerRef.current = setTimeout(async () => {
-      try {
-        // Pages API search returns an array of pages
-        const results = await searchPages(searchQuery.trim());
-        setSearchResults(results || []);
-      } catch (error) {
-        console.error('Error searching pages:', error);
-        setSearchResults([]);
-      } finally {
-        setIsSearching(false);
-      }
-    }, 300); // Debounce 300ms
-
-    return () => {
-      if (searchTimerRef.current) {
-        clearTimeout(searchTimerRef.current);
-      }
+    // Normalize search query: lowercase, remove spaces and special characters
+    const normalize = (str) => {
+      return (str || '')
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, '');
     };
-  }, [searchQuery, linkType]);
 
-  // Normalize URL - add protocol if missing for external URLs
-  const normalizeUrl = (urlString) => {
+    const normalizedQuery = normalize(searchQuery);
+
+    return allPages.filter((page) => {
+      const normalizedTitle = normalize(page.title);
+      // Check if normalized title contains normalized query
+      return normalizedTitle.includes(normalizedQuery);
+    });
+  }, [allPages, searchQuery]);
+
+  // Normalize URL - add protocol if missing for external URLs, resolve slugs for internal
+  const normalizeUrl = async (urlString) => {
     const trimmed = urlString.trim();
+
     if (linkType === 'external') {
       // If it doesn't start with http:// or https://, add https://
       if (trimmed && !trimmed.match(/^https?:\/\//i)) {
@@ -81,13 +100,41 @@ export function LinkDialog({ isOpen, onClose, onInsert, initialUrl = '' }) {
           return `https://${trimmed}`;
         }
       }
+      return trimmed;
+    } else {
+      // Internal link - handle different formats
+      // If it's already /pages/{id}, return as-is
+      if (trimmed.startsWith('/pages/')) {
+        return trimmed;
+      }
+
+      // If it looks like a UUID, assume it's a page ID
+      const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if (uuidPattern.test(trimmed)) {
+        return `/pages/${trimmed}`;
+      }
+
+      // Otherwise, treat it as a slug and look it up
+      if (trimmed) {
+        try {
+          const response = await apiClient.get('/pages', { params: { slug: trimmed } });
+          const pages = response.data.pages || [];
+          if (pages.length > 0) {
+            return `/pages/${pages[0].id}`;
+          }
+        } catch (error) {
+          console.error('Error looking up page by slug:', error);
+        }
+      }
+
+      // If lookup failed, return the original (might be invalid, but let the user try)
+      return trimmed.startsWith('/') ? trimmed : `/pages/${trimmed}`;
     }
-    return trimmed;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const normalizedUrl = normalizeUrl(url);
+    const normalizedUrl = await normalizeUrl(url);
     if (normalizedUrl) {
       onInsert(normalizedUrl);
       onClose();
@@ -95,11 +142,10 @@ export function LinkDialog({ isOpen, onClose, onInsert, initialUrl = '' }) {
   };
 
   const handleSelectPage = (page) => {
-    // Search API returns page_id, pages API returns id
-    const pageId = page.page_id || page.id;
+    const pageId = page.id;
     setUrl(`/pages/${pageId}`);
     setSearchQuery('');
-    setSearchResults([]);
+    setShowDropdown(false);
   };
 
   if (!isOpen) return null;
@@ -144,42 +190,59 @@ export function LinkDialog({ isOpen, onClose, onInsert, initialUrl = '' }) {
           {linkType === 'internal' ? (
             <div className="arc-link-dialog-internal">
               <label htmlFor="link-search">Search for page:</label>
-              <input
-                id="link-search"
-                type="text"
-                className="arc-link-dialog-search"
-                placeholder="Type to search pages..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                autoFocus
-              />
+              <div style={{ position: 'relative' }}>
+                <input
+                  ref={searchInputRef}
+                  id="link-search"
+                  type="text"
+                  className="arc-link-dialog-search"
+                  placeholder="Type to search pages..."
+                  value={searchQuery}
+                  onChange={(e) => {
+                    setSearchQuery(e.target.value);
+                    setShowDropdown(true);
+                  }}
+                  onFocus={() => setShowDropdown(true)}
+                  onBlur={(e) => {
+                    // Delay hiding dropdown to allow click on results
+                    setTimeout(() => setShowDropdown(false), 200);
+                  }}
+                  autoFocus
+                />
 
-              {isSearching && (
-                <div className="arc-link-dialog-loading">Searching...</div>
-              )}
-
-              {!isSearching && searchResults.length > 0 && (
-                <ul className="arc-link-dialog-results">
-                  {searchResults.map((page) => (
-                    <li key={page.page_id || page.id}>
-                      <button
-                        type="button"
-                        className="arc-link-dialog-result-item"
-                        onClick={() => handleSelectPage(page)}
-                      >
-                        <span className="arc-link-dialog-result-title">{page.title}</span>
-                        {page.section && (
-                          <span className="arc-link-dialog-result-section">{page.section}</span>
-                        )}
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              )}
-
-              {!isSearching && searchQuery.trim() && searchResults.length === 0 && (
-                <div className="arc-link-dialog-no-results">No pages found</div>
-              )}
+                {showDropdown && (
+                  <ul className="arc-link-dialog-results">
+                    {isLoadingPages ? (
+                      <li>
+                        <div className="arc-link-dialog-loading">Loading pages...</div>
+                      </li>
+                    ) : filteredPages.length > 0 ? (
+                      filteredPages.map((page) => (
+                        <li key={page.id}>
+                          <button
+                            type="button"
+                            className="arc-link-dialog-result-item"
+                            onMouseDown={(e) => {
+                              // Prevent input blur when clicking
+                              e.preventDefault();
+                              handleSelectPage(page);
+                            }}
+                          >
+                            <span className="arc-link-dialog-result-title">{page.title}</span>
+                            {page.section && (
+                              <span className="arc-link-dialog-result-section">{page.section}</span>
+                            )}
+                          </button>
+                        </li>
+                      ))
+                    ) : searchQuery.trim() ? (
+                      <li>
+                        <div className="arc-link-dialog-no-results">No pages found</div>
+                      </li>
+                    ) : null}
+                  </ul>
+                )}
+              </div>
 
               <label htmlFor="link-url">Or enter page ID or slug:</label>
               <input

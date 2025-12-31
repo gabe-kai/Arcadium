@@ -142,11 +142,18 @@
   list-style: none;
   padding: 0;
   margin: 0;
-  max-height: 200px;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  max-height: calc(4 * 3.5rem); /* 4 items * ~3.5rem per item (padding + content) */
   overflow-y: auto;
   border: 1px solid var(--arc-border);
   border-radius: var(--arc-radius-sm);
   background: var(--arc-bg);
+  box-shadow: var(--arc-shadow-md);
+  margin-top: 0.25rem;
 }
 
 .arc-link-dialog-result-item {
@@ -161,6 +168,8 @@
   flex-direction: column;
   gap: 0.25rem;
   transition: background 0.15s;
+  min-height: 3.5rem; /* Ensure consistent item height */
+  box-sizing: border-box;
 }
 
 .arc-link-dialog-result-item:last-child {

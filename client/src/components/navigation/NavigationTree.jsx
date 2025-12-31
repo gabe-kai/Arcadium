@@ -23,12 +23,12 @@ export function NavigationTree() {
     : null;
   const [searchQuery, setSearchQuery] = useState('');
   const [sectionView, setSectionView] = useState(() => {
-    // Load section view preference from localStorage
+    // Load section view preference from localStorage, default to true
     try {
       const saved = localStorage.getItem(SECTION_VIEW_KEY);
-      return saved === 'true';
+      return saved !== null ? saved === 'true' : true;
     } catch {
-      return false;
+      return true;
     }
   });
   const [expandedNodes, setExpandedNodes] = useState(() => {
@@ -93,14 +93,18 @@ export function NavigationTree() {
       // The section field comes from the Page model's section column
       const section = page.section;
 
-      // Only group pages that have a non-empty section
+      // Determine section key - use "No Section" for pages without a section
+      let sectionKey;
       if (section && typeof section === 'string' && section.trim().length > 0) {
-        const sectionKey = section.trim();
-        if (!groups[sectionKey]) {
-          groups[sectionKey] = [];
-        }
-        groups[sectionKey].push(page);
+        sectionKey = section.trim();
+      } else {
+        sectionKey = 'No Section';
       }
+
+      if (!groups[sectionKey]) {
+        groups[sectionKey] = [];
+      }
+      groups[sectionKey].push(page);
     });
 
     // Sort pages within each section by title
@@ -254,7 +258,12 @@ export function NavigationTree() {
         Object.keys(filteredGroups).length > 0 ? (
           <ul className="arc-nav-tree-list">
             {Object.keys(filteredGroups)
-              .sort()
+              .sort((a, b) => {
+                // Sort "No Section" to the top
+                if (a === 'No Section') return -1;
+                if (b === 'No Section') return 1;
+                return a.localeCompare(b);
+              })
               .map((section) => (
                 <SectionGroup
                   key={section}
@@ -266,7 +275,7 @@ export function NavigationTree() {
           </ul>
         ) : (
           <div className="arc-nav-tree-empty" style={{ padding: '1rem', color: 'var(--arc-text-subtle)', fontSize: '0.875rem' }}>
-            No pages with sections found.
+            No pages found.
           </div>
         )
       ) : (
