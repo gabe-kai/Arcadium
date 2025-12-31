@@ -157,10 +157,13 @@ python -m app.sync watch --admin-user-id <uuid>
 
 **Watcher Features:**
 - Automatically syncs files when created or modified
+- Automatically cleans up orphaned pages when files are deleted
 - Debouncing prevents rapid-fire syncs (waits 1 second after last change)
 - Recursively monitors all subdirectories in `data/pages/`
 - Only watches `.md` files
 - Graceful shutdown on Ctrl+C
+
+**Important:** The watcher must be running to detect file deletions. If you delete files while the watcher is not running, you can manually run `python -m app.sync sync-all` to clean up orphaned pages.
 
 **When to Use:**
 - **Watch mode**: For continuous development, AI agent workflows, or real-time automatic syncing

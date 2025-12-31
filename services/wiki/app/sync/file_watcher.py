@@ -279,11 +279,37 @@ class MarkdownFileHandler(FileSystemEventHandler):
         if event.is_directory:
             return
 
-        rel_path = self._get_relative_path(event.src_path)
-        if rel_path and self._should_handle(rel_path):
+        # For deleted files, event.src_path contains the path that was deleted
+        # We need to check if it was a markdown file in our pages directory
+        deleted_path = event.src_path
+
+        # Check if it's a markdown file
+        if not deleted_path.lower().endswith(".md"):
+            return
+
+        # Get relative path - for deleted files, we need to check if the path
+        # was within our pages directory before deletion
+        try:
+            pages_abs = os.path.abspath(self.pages_dir)
+            deleted_abs = os.path.abspath(deleted_path)
+
+            # Check if the deleted file was in our pages directory
+            if not deleted_abs.startswith(pages_abs):
+                return
+
+            # Get relative path
+            rel_path = os.path.relpath(deleted_abs, pages_abs)
+            rel_path = rel_path.replace("\\", "/")
+
             print(f"[WATCHER] File deleted: {rel_path}")
             # Schedule a full sync to reset database to match file system
             # This ensures the database reflects the current state of files
+            self._schedule_full_sync()
+        except Exception as e:
+            # If we can't determine the path, still schedule a sync to be safe
+            print(
+                f"[WATCHER] File deleted (path resolution error: {e}), scheduling full sync"
+            )
             self._schedule_full_sync()
 
 
