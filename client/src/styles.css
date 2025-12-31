@@ -393,6 +393,63 @@ body {
   margin-left: 0.25rem;
 }
 
+.arc-nav-tree-controls {
+  margin-bottom: 0.75rem;
+  padding: 0.5rem;
+  border-bottom: 1px solid var(--arc-border);
+}
+
+.arc-nav-tree-toggle-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  user-select: none;
+  font-size: 0.875rem;
+  color: var(--arc-text);
+}
+
+.arc-nav-tree-toggle-checkbox {
+  cursor: pointer;
+  width: 1rem;
+  height: 1rem;
+  accent-color: var(--arc-accent);
+}
+
+.arc-nav-tree-toggle-text {
+  font-weight: 500;
+}
+
+.arc-nav-tree-section-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  margin: 0.5rem 0;
+  background: var(--arc-surface);
+  border-radius: 0.25rem;
+  font-weight: 600;
+}
+
+.arc-nav-tree-section-name {
+  color: var(--arc-text);
+  font-size: 0.875rem;
+  flex: 1;
+}
+
+.arc-nav-tree-section-count {
+  color: var(--arc-text-subtle);
+  font-size: 0.75rem;
+  font-weight: normal;
+}
+
+.arc-nav-tree-list-section {
+  margin-left: 0.75rem;
+  margin-top: 0.25rem;
+  border-left: 2px solid var(--arc-accent-soft);
+  padding-left: 0.75rem;
+}
+
 .arc-content {
   padding: 2rem;
   overflow-y: auto;

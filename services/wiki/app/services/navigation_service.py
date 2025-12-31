@@ -78,6 +78,7 @@ class NavigationService:
             "title": page.title,
             "slug": page.slug,
             "status": page.status,
+            "section": page.section,
         }
 
         # Get children
