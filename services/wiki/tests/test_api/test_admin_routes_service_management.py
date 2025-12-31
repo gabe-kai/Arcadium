@@ -149,22 +149,23 @@ def test_refresh_service_status_success(
     mock_page.slug = "service-status"
     mock_create_page.return_value = mock_page
 
-    with mock_auth(test_admin_id, "admin"):
-        headers = auth_headers(test_admin_id, "admin")
-        resp = client.post("/api/admin/service-status/refresh", headers=headers)
+    with app.app_context():
+        with mock_auth(test_admin_id, "admin"):
+            headers = auth_headers(test_admin_id, "admin")
+            resp = client.post("/api/admin/service-status/refresh", headers=headers)
 
-    if resp.status_code != 200:
-        print(f"Response status: {resp.status_code}")
-        print(f"Response data: {resp.get_json()}")
-    assert resp.status_code == 200
-    data = resp.get_json()
-    assert data["success"] is True
-    assert "message" in data
-    assert (
-        "page_id" in data
-    )  # Changed from last_updated to page_id based on actual response
-    mock_check_all.assert_called_once()
-    mock_create_page.assert_called_once()
+        if resp.status_code != 200:
+            print(f"Response status: {resp.status_code}")
+            print(f"Response data: {resp.get_json()}")
+        assert resp.status_code == 200
+        data = resp.get_json()
+        assert data["success"] is True
+        assert "message" in data
+        assert (
+            "page_id" in data
+        )  # Changed from last_updated to page_id based on actual response
+        mock_check_all.assert_called_once()
+        mock_create_page.assert_called_once()
 
 
 def test_refresh_service_status_requires_auth(client):
@@ -199,12 +200,13 @@ def test_refresh_service_status_allows_authenticated_users(
     mock_create_page.return_value = mock_page
 
     # Writer (non-admin) should be able to refresh
-    with mock_auth(test_writer_id, "writer"):
-        headers = auth_headers(test_writer_id, "writer")
-        resp = client.post("/api/admin/service-status/refresh", headers=headers)
-        assert resp.status_code == 200
-        data = resp.get_json()
-        assert data["success"] is True
+    with app.app_context():
+        with mock_auth(test_writer_id, "writer"):
+            headers = auth_headers(test_writer_id, "writer")
+            resp = client.post("/api/admin/service-status/refresh", headers=headers)
+            assert resp.status_code == 200
+            data = resp.get_json()
+            assert data["success"] is True
 
 
 @patch("app.routes.admin_routes.ServiceStatusService.check_all_services")
