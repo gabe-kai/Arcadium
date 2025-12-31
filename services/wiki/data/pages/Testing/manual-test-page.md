@@ -13,7 +13,7 @@ order: 0
 
 The **bold**, _italic_, and `inline code` formats all appear to work.
 
-An [external link](https://www.google.com) and an [internal link](/pages/bea4e8a4-e141-47e6-9974-c9c1da165c29) both appear to work.
+An [external link](https://www.google.com) and an [internal link](/pages/0d858a1b-902e-4236-8bd5-8268e528f1b9) both appear to work.
 
 ### List Formatting
 
@@ -31,6 +31,7 @@ Bullet List:
 
             -   sub sub sub bullet 3
 
+
 Numbered List:
 
 1.  number 1
@@ -44,6 +45,7 @@ Numbered List:
         1.  sub sub number 2
 
             1.  sub sub sub number 3
+
 
 ### Image Formatting
 
