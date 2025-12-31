@@ -31,6 +31,7 @@ def test_extract_selection_requires_writer(client, app, test_user_id):
             created_by=test_user_id,
             updated_by=test_user_id,
             status="published",
+            section="Regression-Testing",
             file_path="source-page.md",
         )
         db.session.add(page)
@@ -61,6 +62,7 @@ def test_extract_selection_success(client, app, test_writer_id):
             created_by=test_writer_id,
             updated_by=test_writer_id,
             status="published",
+            section="Regression-Testing",
             file_path="source-page.md",
         )
         db.session.add(page)
@@ -102,6 +104,7 @@ def test_extract_selection_missing_fields(client, app, test_writer_id):
             created_by=test_writer_id,
             updated_by=test_writer_id,
             status="published",
+            section="Regression-Testing",
             file_path="source-page.md",
         )
         db.session.add(page)
@@ -136,6 +139,7 @@ def test_extract_selection_invalid_bounds(client, app, test_writer_id):
             created_by=test_writer_id,
             updated_by=test_writer_id,
             status="published",
+            section="Regression-Testing",
             file_path="source-page.md",
         )
         db.session.add(page)
@@ -194,6 +198,7 @@ def test_extract_heading_section_success(client, app, test_writer_id):
             created_by=test_writer_id,
             updated_by=test_writer_id,
             status="published",
+            section="Regression-Testing",
             file_path="source-page.md",
         )
         db.session.add(page)
@@ -229,6 +234,7 @@ def test_extract_heading_section_not_found(client, app, test_writer_id):
             created_by=test_writer_id,
             updated_by=test_writer_id,
             status="published",
+            section="Regression-Testing",
             file_path="source-page.md",
         )
         db.session.add(page)
@@ -261,6 +267,7 @@ def test_extract_heading_section_invalid_level(client, app, test_writer_id):
             created_by=test_writer_id,
             updated_by=test_writer_id,
             status="published",
+            section="Regression-Testing",
             file_path="source-page.md",
         )
         db.session.add(page)
@@ -318,6 +325,7 @@ def test_promote_section_from_toc_success(client, app, test_writer_id):
             created_by=test_writer_id,
             updated_by=test_writer_id,
             status="published",
+            section="Regression-Testing",
             file_path="source-page.md",
         )
         db.session.add(page)
@@ -352,6 +360,7 @@ def test_promote_section_from_toc_anchor_not_found(client, app, test_writer_id):
             created_by=test_writer_id,
             updated_by=test_writer_id,
             status="published",
+            section="Regression-Testing",
             file_path="source-page.md",
         )
         db.session.add(page)
@@ -383,6 +392,7 @@ def test_extract_selection_with_parent(client, app, test_writer_id):
             created_by=test_writer_id,
             updated_by=test_writer_id,
             status="published",
+            section="Regression-Testing",
             file_path="parent-page.md",
         )
         db.session.add(parent)
@@ -395,6 +405,7 @@ def test_extract_selection_with_parent(client, app, test_writer_id):
             created_by=test_writer_id,
             updated_by=test_writer_id,
             status="published",
+            section="Regression-Testing",
             file_path="source-page.md",
         )
         db.session.add(source)
@@ -429,6 +440,7 @@ def test_extract_selection_replace_with_link_false(client, app, test_writer_id):
             created_by=test_writer_id,
             updated_by=test_writer_id,
             status="published",
+            section="Regression-Testing",
             file_path="source-page.md",
         )
         db.session.add(page)
@@ -466,6 +478,7 @@ def test_extract_heading_promote_as_sibling(client, app, test_writer_id):
             created_by=test_writer_id,
             updated_by=test_writer_id,
             status="published",
+            section="Regression-Testing",
             file_path="parent-page.md",
         )
         db.session.add(parent)
@@ -517,6 +530,7 @@ def test_extract_selection_response_structure(client, app, test_writer_id):
             created_by=test_writer_id,
             updated_by=test_writer_id,
             status="published",
+            section="Regression-Testing",
             file_path="source-page.md",
         )
         db.session.add(page)

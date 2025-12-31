@@ -16,7 +16,11 @@ def test_create_page_empty_title(app):
         # Empty title might be allowed (uses slug as fallback) or rejected
         try:
             page = PageService.create_page(
-                title="", content="Content", user_id=user_id, slug="test"
+                title="",
+                content="Content",
+                user_id=user_id,
+                slug="test",
+                section="Regression-Testing",
             )
             # If it succeeds, title should be set to something
             assert page.title is not None and len(page.title) > 0
@@ -31,7 +35,11 @@ def test_create_page_empty_content(app):
         user_id = uuid.uuid4()
 
         page = PageService.create_page(
-            title="Empty Page", content="", user_id=user_id, slug="empty-page"
+            title="Empty Page",
+            content="",
+            user_id=user_id,
+            slug="empty-page",
+            section="Regression-Testing",
         )
 
         assert page is not None
@@ -47,7 +55,11 @@ def test_create_page_very_long_title(app):
         # Should either truncate or raise error
         try:
             page = PageService.create_page(
-                title=long_title, content="Content", user_id=user_id, slug="long-title"
+                title=long_title,
+                content="Content",
+                user_id=user_id,
+                slug="long-title",
+                section="Regression-Testing",
             )
             # If it succeeds, title should be truncated
             assert len(page.title) <= 255
@@ -67,6 +79,7 @@ def test_create_page_very_long_content(app):
             content=long_content,
             user_id=user_id,
             slug="long-content",
+            section="Regression-Testing",
         )
 
         assert page is not None
@@ -179,6 +192,7 @@ def test_create_page_special_characters_in_slug(app):
                 content="Content",
                 user_id=user_id,
                 slug="test-page-with-special-chars-!@#$%",
+                section="Regression-Testing",
             )
 
 
@@ -214,6 +228,7 @@ def test_create_page_unicode_content(app):
             content="Content with unicode: 日本語, русский, العربية",
             user_id=user_id,
             slug="unicode-page",
+            section="Regression-Testing",
         )
 
         assert page is not None
@@ -251,6 +266,7 @@ def test_create_page_with_all_fields(app):
             content="Parent content",
             user_id=user_id,
             slug="parent",
+            section="Regression-Testing",
         )
 
         # Create child with all fields (order_index is set via update, not create)
@@ -260,7 +276,7 @@ def test_create_page_with_all_fields(app):
             user_id=user_id,
             slug="child",
             parent_id=parent.id,
-            section="test-section",
+            section="test-section",  # Use the section we're testing
             status="draft",
         )
 

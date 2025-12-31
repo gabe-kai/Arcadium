@@ -40,6 +40,7 @@ def test_get_navigation_tree(client, app, test_user_id):
             created_by=test_user_id,
             updated_by=test_user_id,
             status="published",
+            section="Regression-Testing",
             parent_id=root.id,
             file_path="child-page.md",
         )
@@ -70,6 +71,7 @@ def test_get_navigation_excludes_drafts(client, app, test_user_id):
             created_by=test_user_id,
             updated_by=test_user_id,
             status="draft",
+            section="Regression-Testing",
             file_path="draft-page.md",
         )
         db.session.add(draft)
@@ -102,6 +104,7 @@ def test_get_navigation_includes_own_drafts(client, app, test_user_id):
             created_by=test_user_id,
             updated_by=test_user_id,
             status="draft",
+            section="Regression-Testing",
             file_path="my-draft.md",
         )
         db.session.add(draft)
@@ -137,6 +140,7 @@ def test_get_navigation_admin_sees_all_drafts(client, app, test_user_id, test_ad
             created_by=test_user_id,
             updated_by=test_user_id,
             status="draft",
+            section="Regression-Testing",
             file_path="other-draft.md",
         )
         db.session.add(draft)
@@ -532,6 +536,7 @@ def test_get_previous_next_excludes_drafts(client, app, test_user_id):
             created_by=test_user_id,
             updated_by=test_user_id,
             status="draft",
+            section="Regression-Testing",
             parent_id=parent.id,
             order_index=2,
             file_path="draft.md",

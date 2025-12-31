@@ -18,6 +18,7 @@ def test_get_version_history_empty(client, app, test_user_id):
             created_by=test_user_id,
             updated_by=test_user_id,
             status="published",
+            section="Regression-Testing",
             file_path="new-page.md",
         )
         db.session.add(page)
@@ -41,6 +42,7 @@ def test_get_version_history_with_versions(client, app, test_user_id):
             created_by=test_user_id,
             updated_by=test_user_id,
             status="published",
+            section="Regression-Testing",
             file_path="test-page.md",
         )
         db.session.add(page)
@@ -88,6 +90,7 @@ def test_get_version_history_response_structure(client, app, test_user_id):
             created_by=test_user_id,
             updated_by=test_user_id,
             status="published",
+            section="Regression-Testing",
             file_path="test-page.md",
         )
         db.session.add(page)
@@ -142,6 +145,7 @@ def test_get_specific_version(client, app, test_user_id):
             created_by=test_user_id,
             updated_by=test_user_id,
             status="published",
+            section="Regression-Testing",
             file_path="test-page.md",
         )
         db.session.add(page)
@@ -180,6 +184,7 @@ def test_get_specific_version_not_found(client, app, test_user_id):
             created_by=test_user_id,
             updated_by=test_user_id,
             status="published",
+            section="Regression-Testing",
             file_path="test-page.md",
         )
         db.session.add(page)
@@ -211,6 +216,7 @@ def test_compare_versions(client, app, test_user_id):
             created_by=test_user_id,
             updated_by=test_user_id,
             status="published",
+            section="Regression-Testing",
             file_path="test-page.md",
         )
         db.session.add(page)
@@ -257,6 +263,7 @@ def test_compare_versions_missing_params(client, app, test_user_id):
             created_by=test_user_id,
             updated_by=test_user_id,
             status="published",
+            section="Regression-Testing",
             file_path="test-page.md",
         )
         db.session.add(page)
@@ -286,6 +293,7 @@ def test_compare_versions_invalid_version_numbers(client, app, test_user_id):
             created_by=test_user_id,
             updated_by=test_user_id,
             status="published",
+            section="Regression-Testing",
             file_path="test-page.md",
         )
         db.session.add(page)
@@ -308,6 +316,7 @@ def test_compare_versions_not_found(client, app, test_user_id):
             created_by=test_user_id,
             updated_by=test_user_id,
             status="published",
+            section="Regression-Testing",
             file_path="test-page.md",
         )
         db.session.add(page)
@@ -330,6 +339,7 @@ def test_restore_version_requires_auth(client, app, test_user_id):
             created_by=test_user_id,
             updated_by=test_user_id,
             status="published",
+            section="Regression-Testing",
             file_path="test-page.md",
         )
         db.session.add(page)
@@ -360,6 +370,7 @@ def test_restore_version_viewer_forbidden(client, app, test_user_id):
             created_by=test_user_id,
             updated_by=test_user_id,
             status="published",
+            section="Regression-Testing",
             file_path="test-page.md",
         )
         db.session.add(page)
@@ -394,6 +405,7 @@ def test_restore_version_success(client, app, test_user_id):
             created_by=test_user_id,
             updated_by=test_user_id,
             status="published",
+            section="Regression-Testing",
             file_path="test-page.md",
         )
         db.session.add(page)
@@ -433,6 +445,7 @@ def test_restore_version_wrong_owner(client, app, test_user_id, test_writer_id):
             created_by=test_user_id,  # Created by different user
             updated_by=test_user_id,
             status="published",
+            section="Regression-Testing",
             file_path="test-page.md",
         )
         db.session.add(page)
@@ -471,6 +484,7 @@ def test_restore_version_admin_can_restore_any(
             created_by=test_user_id,  # Created by different user
             updated_by=test_user_id,
             status="published",
+            section="Regression-Testing",
             file_path="test-page.md",
         )
         db.session.add(page)
@@ -508,6 +522,7 @@ def test_restore_version_not_found(client, app, test_user_id):
             created_by=test_user_id,
             updated_by=test_user_id,
             status="published",
+            section="Regression-Testing",
             file_path="test-page.md",
         )
         db.session.add(page)

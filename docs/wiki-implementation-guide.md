@@ -1,24 +1,39 @@
 # Wiki Service Implementation Guide
 
-This guide provides reference documentation for the Wiki Service, including setup instructions, testing strategies, and best practices.
+This guide provides reference documentation for the Wiki Service implementation, including setup instructions, architecture overview, and testing strategies.
 
 ## 🎉 Implementation Status: **COMPLETE** ✅
 
 **All phases (1-8) have been successfully implemented!**
 
-- **Total Tests**: 561 tests across all phases, all passing (100%)
+- **Total Tests**: 560+ tests across all phases, all passing (100%)
 - **Phases Complete**: 8/8 (100%)
 - **Database Migrations**: Flask-Migrate setup complete ✅
 - **Production Ready**: Yes ✅
 - **Service Integrations**: Auth Service ✅, Notification Service ✅
 - **Performance Optimizations**: Caching ✅, Query Optimization ✅
 
-## Prerequisites
+---
+
+## Table of Contents
+
+1. [Prerequisites & Setup](#prerequisites--setup)
+2. [Architecture Overview](#architecture-overview)
+3. [Core Features](#core-features)
+4. [Service Integrations](#service-integrations)
+5. [Testing Strategy](#testing-strategy)
+6. [Common Issues & Solutions](#common-issues--solutions)
+
+---
+
+## Prerequisites & Setup
+
+### Requirements
 
 - Python 3.11+ (for Python services)
 - PostgreSQL 14+ (for databases)
 - Docker and Docker Compose (for local development)
-- Node.js 18+ (for client development, if needed)
+- Node.js 18+ (for client development)
 
 ### Initial Setup
 
@@ -68,341 +83,196 @@ This will apply all pending migrations and create all tables, indexes, and const
 
 **Note:** Never commit `.env` files with real passwords. They are automatically excluded by `.gitignore`.
 
-## Implementation Summary
+---
 
-The Wiki Service has been fully implemented with the following components:
+## Architecture Overview
 
-### Core Features
-- **Page Management**: Full CRUD operations with file system integration
-- **Comments**: Threaded comments with 5-level depth support
-- **Search**: Full-text search and keyword indexing
-- **Navigation**: Hierarchy, breadcrumbs, and previous/next navigation
-- **Version History**: Complete version tracking with diff support
-- **Orphanage System**: Automatic detection and management of orphaned pages
-- **Section Extraction**: Extract sections to new pages
-- **File Uploads**: Image upload with validation
-- **Admin Dashboard**: Size monitoring, configuration management, service status
+### Core Components
 
-### Service Integrations
-- **Auth Service**: JWT token validation and user profile retrieval
-- **Notification Service**: Oversized page notifications and internal messaging
+The Wiki Service is built with Flask and follows a service-oriented architecture:
 
-### Performance Optimizations
-- **Caching**: HTML and TOC caching with configurable TTL
-- **Query Optimization**: Reduced N+1 queries for comments
-- **Connection Pooling**: Database connection pooling configured
+- **Models**: Database models (`Page`, `Comment`, `PageLink`, `PageVersion`, `IndexEntry`, `Image`, `WikiConfig`, `OversizedPageNotification`)
+- **Services**: Business logic layer (`PageService`, `CommentService`, `LinkService`, `SearchIndexService`, `VersionService`, `OrphanageService`, `FileService`, `MarkdownService`, `CacheService`, `SizeMonitoringService`, `ServiceStatusService`)
+- **Routes**: API endpoints (`page_routes`, `comment_routes`, `search_routes`, `navigation_routes`, `version_routes`, `orphanage_routes`, `admin_routes`, `upload_routes`, `extraction_routes`)
+- **Utilities**: Helper functions (`SlugGenerator`, `SizeCalculator`, `SyncUtility`)
 
-### Testing
-- **561 tests** across all phases, all passing (100%)
-- Comprehensive coverage including unit, integration, and performance tests
-- PostgreSQL-based testing for production accuracy
+### Database Schema
+
+**Separate PostgreSQL Schema**: `wiki` schema for all wiki tables
+
+**Key Tables:**
+- `pages` - Page content and metadata
+- `comments` - Threaded comments (5 levels deep)
+- `page_links` - Bidirectional link tracking
+- `page_versions` - Version history with diff data
+- `index_entries` - Full-text search index
+- `images` - Image uploads
+- `wiki_config` - System configuration
+- `oversized_page_notifications` - Size limit notifications
+
+**Indexes:**
+- Standard indexes on frequently queried fields (parent_id, section, slug, status)
+- Partial indexes for filtered queries (is_orphaned, is_system_page, is_keyword, is_manual)
+- Composite indexes for version queries (page_id, version DESC)
+
+### File System Integration
+
+- **Storage**: Markdown files in `services/wiki/data/pages/` directory
+- **Format**: Markdown with YAML frontmatter for metadata
+- **Sync**: Automatic sync via file watcher or manual sync commands
+- **Structure**: File system mirrors page hierarchy (folders for sections, files for pages)
 
 ---
 
-## Implementation Phases Checklist
+## Core Features
 
-Use this checklist when implementing a wiki service from scratch:
+### Page Management
 
-### Phase 1: Foundation Setup
+**CRUD Operations:**
+- Create, read, update, delete pages
+- Draft/published status management
+- Archive/unarchive functionality
+- Permission-based access control
 
-#### 1.1 Project Structure
-- [ ] Set up Flask application structure
-- [ ] Configure database connection (PostgreSQL)
-- [ ] Set up environment variables (.env with DATABASE_URL)
-- [ ] Create base configuration files (config.py)
-- [ ] Set up shared Python virtual environment (monorepo)
-- [ ] Configure test infrastructure (pytest, PostgreSQL for tests)
+**Page Organization:**
+- Hierarchical parent-child relationships
+- Section-based categorization (independent of hierarchy)
+- Order index for custom sorting
+- Orphanage system for orphaned pages
 
-#### 1.2 Database Setup
-- [ ] Create database models (all tables):
-  - `pages` (with `is_system_page` field)
-  - `comments` (with `thread_depth` field)
-  - `page_links`
-  - `index_entries` (with `is_manual` field)
-  - `page_versions`
-  - `images` and `page_images`
-  - `wiki_config`
-  - `oversized_page_notifications`
-- [ ] Set up Flask-Migrate
-- [ ] Create initial migration
-- [ ] Create indexes as specified in architecture doc:
-  - Standard indexes (parent, section, slug, status, etc.)
-  - Partial indexes (is_orphaned, is_system_page, is_keyword, is_manual)
-  - Composite indexes (page_versions: page_id, version DESC)
-- [ ] Set up database connection pooling
+**File Integration:**
+- Automatic file system sync
+- Markdown file storage
+- Frontmatter preservation
+- AI content management compatible
 
-**Testing:**
-- [ ] Write model tests (all models)
-- [ ] Test database migrations (upgrade/downgrade)
-- [ ] Verify schema matches architecture doc
+### Comments System
 
----
+- Threaded comments (up to 5 levels deep)
+- User attribution and timestamps
+- Edit/delete own comments
+- Recommendation badges for player suggestions
+- Collapsible reply threads
 
-### Phase 2: Core Data Models
+### Search & Indexing
 
-- [ ] Implement Page model with all fields
-- [ ] Add validation for slug uniqueness
-- [ ] Implement parent-child relationships
-- [ ] Add `is_system_page` flag handling
-- [ ] Implement orphanage detection (is_orphaned, orphaned_from fields)
-- [ ] Implement Comment model with thread depth
-- [ ] Implement PageLink model for bidirectional tracking
-- [ ] Implement PageVersion model with diff data
-- [ ] Implement IndexEntry model (full-text and keywords)
-- [ ] Implement Image and PageImage models
-- [ ] Implement WikiConfig model
-- [ ] Implement OversizedPageNotification model
+- Full-text search with relevance ranking
+- Keyword extraction and indexing
+- Manual keyword management
+- Master index (alphabetical listing)
+- Section filtering
 
-**Testing:**
-- [ ] Test all model creation and relationships
-- [ ] Test constraints and validations
-- [ ] Test cascade deletes
-- [ ] Test edge cases
+### Navigation
 
----
+- Hierarchical navigation tree
+- Breadcrumb navigation
+- Previous/Next page navigation
+- Section grouping view (toggle between hierarchy and section groups)
+- Auto-expand to current page
 
-### Phase 3: File System Integration & Utilities
+### Version History
 
-- [ ] Implement FileService for file operations
-- [ ] Implement file path calculation (section/parent hierarchy)
-- [ ] Implement MarkdownService (parse frontmatter, render HTML)
-- [ ] Implement TOC generation (H2-H6 headings)
-- [ ] Implement SlugGenerator (generate and validate slugs)
-- [ ] Implement SizeCalculator (word count, content size KB)
+- Automatic versioning on every edit
+- Version comparison (side-by-side and inline diff)
+- Version restoration
+- Diff statistics (added/removed lines, character diff)
+- Change summaries
 
-**Testing:**
-- [ ] Test file operations (create, read, update, delete, move)
-- [ ] Test markdown parsing and rendering
-- [ ] Test TOC generation
-- [ ] Test slug generation and validation
-- [ ] Test size calculations
+### Orphanage System
 
----
+- Automatic detection of orphaned pages
+- Special "Orphanage" container page
+- Bulk reassignment tools
+- Individual page reassignment
+- Orphan tracking (original parent stored)
 
-### Phase 4: Core Business Logic
+### Section Extraction
 
-#### 4.1 Page Service
-- [ ] Implement page CRUD operations
-- [ ] Implement draft/published status handling
-- [ ] Implement permission checks (can_edit, can_delete)
-- [ ] Integrate with FileService
+- Extract selected text to new page
+- Extract heading-based sections
+- Promote sections from TOC to child/sibling pages
+- Automatic link replacement in original page
 
-#### 4.2 Orphanage Service
-- [ ] Implement orphan detection
-- [ ] Implement get_or_create_orphanage
-- [ ] Implement page reassignment
-- [ ] Implement bulk operations
+### File Uploads
 
-#### 4.3 Link Service
-- [ ] Implement link extraction from markdown
-- [ ] Implement bidirectional link tracking
-- [ ] Implement link updates on slug changes
-- [ ] Implement broken link detection
+- Image upload with validation
+- File size limits (configurable)
+- Type validation
+- Page-image associations
 
-#### 4.4 Search Index Service
-- [ ] Implement full-text indexing
-- [ ] Implement keyword extraction
-- [ ] Implement manual keyword management
-- [ ] Implement search with relevance ranking
+### Admin Dashboard
 
-#### 4.5 Version Service
-- [ ] Implement version creation on updates
-- [ ] Implement version retrieval
-- [ ] Implement diff calculation
-- [ ] Implement rollback functionality
-
-**Testing:**
-- [ ] Test all service methods
-- [ ] Test integration between services
-- [ ] Test error handling
-- [ ] Test edge cases
+- Size monitoring and distribution charts
+- Configuration management (upload size, page size limits)
+- Service status monitoring
+- Oversized page notifications
+- System statistics
 
 ---
 
-### Phase 5: API Endpoints
+## Service Integrations
 
-#### 5.1 Page Endpoints
-- [ ] GET /api/pages (list with filters)
-- [ ] GET /api/pages/{id} (get single page)
-- [ ] POST /api/pages (create page)
-- [ ] PUT /api/pages/{id} (update page)
-- [ ] DELETE /api/pages/{id} (delete page)
+### Auth Service Integration
 
-#### 5.2 Comment Endpoints
-- [ ] GET /api/pages/{id}/comments (get comments)
-- [ ] POST /api/pages/{id}/comments (create comment)
-- [ ] PUT /api/comments/{id} (update comment)
-- [ ] DELETE /api/comments/{id} (delete comment)
-- [ ] Support threaded replies (5 levels deep)
+**Purpose**: Authentication and authorization
 
-#### 5.3 Search Endpoints
-- [ ] GET /api/search?q={query} (search)
-- [ ] GET /api/search/master-index (master index)
+**Integration Points:**
+1. **JWT Token Validation** - All authenticated endpoints validate tokens
+2. **User Role Checking** - Permission enforcement (viewer, player, writer, admin)
+3. **User Profile Lookup** - Display user information in comments and metadata
+4. **Admin User for AI Content** - Wiki sync utility uses config-based admin user ID
 
-#### 5.4 Navigation Endpoints
-- [ ] GET /api/navigation (navigation tree)
-- [ ] GET /api/pages/{id}/breadcrumb (breadcrumb)
-- [ ] GET /api/pages/{id}/previous-next (previous/next)
+**Shared Code:**
+- `shared/auth/tokens/` - Token validation utilities
+- `shared/auth/permissions/` - Permission checking helpers
 
-#### 5.5 Version History Endpoints
-- [ ] GET /api/pages/{id}/versions (version list)
-- [ ] GET /api/pages/{id}/versions/{version} (get version)
-- [ ] GET /api/pages/{id}/versions/compare (compare versions)
-- [ ] POST /api/pages/{id}/versions/{version}/restore (restore)
+### Notification Service Integration
 
-#### 5.6 Orphanage Endpoints
-- [ ] GET /api/orphanage (get orphaned pages)
-- [ ] POST /api/orphanage/reassign (reassign pages)
-- [ ] POST /api/orphanage/clear (clear orphanage)
+**Purpose**: Internal messaging for system notifications
 
-#### 5.7 Section Extraction Endpoints
-- [ ] POST /api/pages/{id}/extract-selection (extract selection)
-- [ ] POST /api/pages/{id}/extract-heading (extract heading)
-- [ ] POST /api/pages/{id}/promote-section (promote from TOC)
+**Integration Points:**
+1. **Oversized Page Notifications** - Notify page authors when size limits are exceeded
+2. **Service Authentication** - Uses service tokens (not user JWT)
+3. **Error Handling** - Non-blocking (failures logged but don't block operations)
 
-#### 5.8 Authentication Middleware
-- [ ] Implement require_auth decorator
-- [ ] Implement require_role decorator
-- [ ] Implement get_user_from_token
-
-#### 5.9 Admin Endpoints
-- [ ] GET /api/admin/dashboard/stats (dashboard stats)
-- [ ] GET /api/admin/dashboard/size-distribution (size distribution)
-- [ ] GET /api/admin/oversized-pages (oversized pages)
-- [ ] POST /api/admin/config/upload-size (configure upload size)
-- [ ] POST /api/admin/config/page-size (configure page size)
-- [ ] GET /api/admin/service-status (get service status)
-- [ ] PUT /api/admin/service-status (update service status)
-- [ ] POST /api/admin/service-status/refresh (refresh status page)
-
-#### 5.10 File Upload Endpoints
-- [ ] POST /api/upload/image (upload image)
-- [ ] Validate file size and type
-- [ ] Associate images with pages
-
-**Testing:**
-- [ ] Test all endpoints (happy paths)
-- [ ] Test authentication/authorization
-- [ ] Test error handling
-- [ ] Test edge cases
-- [ ] Test draft filtering
-- [ ] Test permission enforcement
-
----
-
-### Phase 6: Sync Utility (AI Content)
-
-- [ ] Implement file scanner (find markdown files)
-- [ ] Implement frontmatter parser
-- [ ] Implement database sync logic (create/update pages)
-- [ ] Implement parent slug resolution
-- [ ] Integrate with LinkService and SearchIndexService
-- [ ] Implement CLI commands:
-  - [ ] sync-all (sync all files)
-  - [ ] sync-file (sync single file)
-  - [ ] sync-dir (sync directory)
-- [ ] Implement file watcher service (automatic syncing)
-- [ ] Add debouncing to prevent rapid-fire syncs
-- [ ] Handle admin user assignment
-
-**Testing:**
-- [ ] Test file scanning
-- [ ] Test sync logic (create/update)
-- [ ] Test error handling
-- [ ] Test CLI commands
-- [ ] Test file watcher
-- [ ] Test integration with other services
-
----
-
-### Phase 7: Admin Dashboard Features
-
-#### 7.1 Size Monitoring
-- [ ] Implement SizeMonitoringService
-- [ ] Calculate page sizes and word counts
-- [ ] Track oversized pages
-- [ ] Generate size distribution charts
-- [ ] Auto-create notifications when limit is set
-- [ ] Auto-resolve when pages are fixed
-
-#### 7.2 Configuration Management
-- [ ] Implement file upload size limits (presets + custom)
-- [ ] Implement page size limits with notification creation
-- [ ] Store configuration in WikiConfig
-- [ ] Validate configuration values
-
-#### 7.3 Service Status Page
-- [ ] Implement ServiceStatusService
-- [ ] Health check integration for all services
-- [ ] Generate system page with status table
-- [ ] Support manual status notes
-- [ ] Create API endpoints for status management
-
-**Testing:**
-- [ ] Test size monitoring
-- [ ] Test configuration management
-- [ ] Test service status checks
-- [ ] Test API endpoints
-
----
-
-### Phase 8: Integration & Polish
-
-#### 8.1 Auth Service Integration
-- [ ] Create AuthServiceClient
-- [ ] Implement JWT token verification
-- [ ] Implement user profile retrieval
-- [ ] Update auth middleware to use Auth Service
-
-#### 8.2 Notification Service Integration
-- [ ] Create NotificationServiceClient
-- [ ] Integrate oversized page notifications
-- [ ] Support service token authentication
-- [ ] Handle errors gracefully (non-blocking)
-
-#### 8.3 Performance Optimization
-- [ ] Implement CacheService (HTML and TOC caching)
-- [ ] Add cache invalidation on content updates
-- [ ] Optimize comment queries (reduce N+1)
-- [ ] Configure connection pooling
-
-**Testing:**
-- [ ] Test Auth Service integration
-- [ ] Test Notification Service integration
-- [ ] Test caching performance
-- [ ] Test query optimization
+**Notification Format:**
+```json
+{
+  "recipient_ids": ["author-uuid"],
+  "subject": "Page Size Limit Exceeded",
+  "content": "Your page '[Title]' exceeds...",
+  "type": "warning",
+  "action_url": "/wiki/pages/{slug}",
+  "metadata": {
+    "page_id": "uuid",
+    "notification_type": "oversized_page"
+  }
+}
+```
 
 ---
 
 ## Testing Strategy
 
-### Unit Tests
-- Test each model, service, and utility independently
-- Mock external dependencies (Auth Service, Notification Service)
-- Aim for >80% code coverage
+### Test Infrastructure
 
-### Integration Tests
-- Test API endpoints with database
-- Test file system operations
-- Test service-to-service communication
+**Framework**: Pytest with PostgreSQL for accurate testing
 
-### End-to-End Tests
-- Test complete user workflows:
-  - Create page → Edit → Delete
-  - Comment → Reply (5 levels)
-  - Search → Navigate → View
-  - Admin: Configure → Monitor → Notify
-
-### Test Data Setup
-```python
-# tests/fixtures/
-- test_pages.json
-- test_users.json
-- test_comments.json
-- test_links.json
+**Test Organization:**
+```
+tests/
+├── conftest.py          # Shared fixtures (app, client, db)
+├── test_api/           # API endpoint tests
+├── test_models/        # Database model tests
+├── test_services/      # Service layer tests
+├── test_sync/          # Sync utility tests
+├── test_integration/   # Integration tests
+├── test_performance/   # Performance tests
+└── test_utils/         # Utility function tests
 ```
 
-### Continuous Testing
+### Running Tests
+
 ```bash
 # Activate virtual environment first (from project root)
 # Windows: venv\Scripts\activate
@@ -415,7 +285,7 @@ pytest tests/
 # Run with coverage
 pytest --cov=app tests/
 
-# Run specific phase
+# Run specific test suite
 pytest tests/test_models/
 pytest tests/test_services/
 pytest tests/test_api/
@@ -423,53 +293,20 @@ pytest tests/test_sync/
 ```
 
 **Note:**
-- **Recommended:** Use PostgreSQL for testing to match production behavior (especially important for UUID handling)
-- **Alternative:** SQLite in-memory can be used for faster unit tests, but may have limitations with UUID types
+- **Recommended**: Use PostgreSQL for testing to match production behavior (especially important for UUID handling)
+- **Alternative**: SQLite in-memory can be used for faster unit tests, but may have limitations with UUID types
 - Set `TEST_DATABASE_URL` environment variable to use PostgreSQL: `postgresql://user:password@host:port/database`
-- See "Testing Best Practices and Common Issues" section below for detailed setup instructions
+- See "Common Issues & Solutions" section below for detailed setup instructions
+
+### Test Coverage
+
+- **560+ tests** across all phases, all passing (100%)
+- Comprehensive coverage including unit, integration, and performance tests
+- PostgreSQL-based testing for production accuracy
 
 ---
 
-## Validation Checklist
-
-After each phase, validate against design documents:
-
-### Specification Validation
-- [ ] All user roles implemented correctly
-- [ ] All permissions enforced
-- [ ] All features from specification present
-
-### API Validation
-- [ ] All endpoints match API documentation
-- [ ] Request/response formats correct
-- [ ] Error handling matches spec
-- [ ] Permissions match spec
-
-### Architecture Validation
-- [ ] Database schema matches architecture doc
-- [ ] File structure matches spec
-- [ ] Data flow matches diagrams
-- [ ] Component structure matches
-
-### UI Validation
-- [ ] TOC generation matches UI spec
-- [ ] Comment threading matches spec
-- [ ] Navigation matches spec
-- [ ] Editor features match spec
-
----
-
-## Common Pitfalls to Avoid
-
-1. **Don't skip tests** - Write tests as you implement
-2. **Don't hardcode permissions** - Use middleware
-3. **Don't forget draft filtering** - Check all list endpoints
-4. **Don't ignore file system** - Keep files and DB in sync
-5. **Don't skip validation** - Validate against design docs regularly
-
----
-
-## Testing Best Practices and Common Issues
+## Common Issues & Solutions
 
 ### PostgreSQL Testing Setup
 
@@ -485,7 +322,6 @@ After each phase, validate against design documents:
 import os
 
 # Use TEST_DATABASE_URL from .env if available, otherwise construct from environment variables
-# This allows using the same database connection approach as development
 TEST_DATABASE_URL = os.environ.get("TEST_DATABASE_URL")
 if not TEST_DATABASE_URL:
     # Fall back to constructing from individual variables
@@ -498,19 +334,7 @@ if not TEST_DATABASE_URL:
     if TEST_DB_USER and TEST_DB_PASSWORD:
         TEST_DATABASE_URL = f"postgresql://{TEST_DB_USER}:{TEST_DB_PASSWORD}@{TEST_DB_HOST}:{TEST_DB_PORT}/{TEST_DB_NAME}"
         os.environ["TEST_DATABASE_URL"] = TEST_DATABASE_URL
-    else:
-        # If no credentials, use the regular DATABASE_URL (from .env)
-        TEST_DATABASE_URL = os.environ.get("DATABASE_URL")
-        if not TEST_DATABASE_URL:
-            raise ValueError(
-                "TEST_DATABASE_URL, DATABASE_URL, or (arcadium_user and arcadium_pass) environment variables are required for testing."
-            )
-
-# Skip database creation check - use existing database connection from .env
-# The database should already exist and be accessible via TEST_DATABASE_URL or DATABASE_URL
 ```
-<｜tool▁calls▁begin｜><｜tool▁call▁begin｜>
-read_file
 
 **Configuration:**
 ```python
@@ -518,7 +342,6 @@ read_file
 class TestingConfig(Config):
     TESTING = True
     # Test database - uses PostgreSQL for accurate testing (matches production)
-    # Can be set via TEST_DATABASE_URL or constructed from arcadium_user/arcadium_pass
     _test_db_url = os.environ.get("TEST_DATABASE_URL")
     if not _test_db_url:
         db_user = os.environ.get("arcadium_user")
@@ -537,13 +360,12 @@ class TestingConfig(Config):
         "pool_pre_ping": True,
         "connect_args": {
             "connect_timeout": 10,
-            # Disable statement timeout for test DDL to avoid DROP/CREATE timeouts
             "options": "-c statement_timeout=0",
         },
     }
 ```
 
-### Critical: Database Fixture Setup
+### Database Fixture Setup
 
 **Problem:** Tests need a clean database state, but dropping/recreating tables can cause timeout issues with PostgreSQL locks.
 
@@ -565,7 +387,6 @@ def app():
 
         # Clean up: rollback any uncommitted transactions
         # Don't drop or truncate tables - let them persist between tests
-        # This is faster and avoids all timeout/lock issues
         try:
             db.session.rollback()
             db.session.close()
@@ -577,40 +398,9 @@ def app():
 
 **Note:** This approach avoids `db.drop_all()` which can cause timeout issues with PostgreSQL. Tests use transaction rollback for isolation instead of dropping tables.
 
-**Best Practice:** Use transactions and rollback for isolation:
-
-```python
-@pytest.fixture
-def db_session(app):
-    """Create database session with transaction rollback"""
-    connection = db.engine.connect()
-    transaction = connection.begin()
-    session = db.session
-
-    yield session
-
-    session.close()
-    transaction.rollback()
-    connection.close()
-```
-
-### SQLAlchemy Object Detachment in Test Fixtures
+### SQLAlchemy Object Detachment
 
 **Problem:** SQLAlchemy objects become detached from the session when used across test fixtures, causing `DetachedInstanceError`.
-
-**Example Issue:**
-```python
-@pytest.fixture
-def test_page(app, test_user_id):
-    """Create a test page"""
-    page = Page(title="Test", slug="test", created_by=test_user_id, ...)
-    db.session.add(page)
-    db.session.commit()
-    return page  # Object is detached after session closes
-
-def test_something(test_page):
-    print(test_page.title)  # DetachedInstanceError!
-```
 
 **Solutions:**
 
@@ -630,20 +420,7 @@ def test_something(app, test_page):
         print(test_page.title)  # Works!
 ```
 
-3. **Keep session open in fixture:**
-```python
-@pytest.fixture
-def test_page(app, test_user_id):
-    """Create a test page"""
-    with app.app_context():
-        page = Page(title="Test", slug="test", created_by=test_user_id, ...)
-        db.session.add(page)
-        db.session.commit()
-        yield page
-        # Session stays open until fixture cleanup
-```
-
-4. **Return ID instead of object:**
+3. **Return ID instead of object (Best Practice):**
 ```python
 @pytest.fixture
 def test_page_id(app, test_user_id):
@@ -660,61 +437,7 @@ def test_something(app, test_page_id):
         print(page.title)  # Works!
 ```
 
-**Best Practice:** Use option 4 (return IDs) for fixtures that create database objects, as it ensures fresh objects in each test and avoids detachment issues.
-
-### Avoiding Duplicate Service Calls
-
-**Problem:** Multiple tests calling the same service method can cause conflicts or unexpected behavior.
-
-**Example:**
-```python
-def test_create_page(app, test_user_id):
-    page_service = PageService()
-    page = page_service.create_page(...)  # Creates page
-
-def test_update_page(app, test_user_id):
-    page_service = PageService()
-    page = page_service.create_page(...)  # Creates another page - might conflict!
-```
-
-**Solution:** Use fixtures to create shared test data:
-
-```python
-@pytest.fixture
-def test_page(app, test_user_id):
-    """Create a test page fixture"""
-    with app.app_context():
-        page = Page(title="Test", slug="test", created_by=test_user_id, ...)
-        db.session.add(page)
-        db.session.commit()
-        return page.id
-
-def test_update_page(app, test_page_id, test_user_id):
-    """Use fixture instead of creating new page"""
-    page_service = PageService()
-    page = page_service.update_page(test_page_id, ...)  # Uses fixture
-```
-
-### Test Fixture Organization
-
-**Structure:**
-```
-tests/
-├── conftest.py          # Shared fixtures (app, client, db)
-├── test_api/
-│   └── conftest.py     # API-specific fixtures (auth mocking)
-├── test_models/
-│   └── conftest.py     # Model-specific fixtures
-└── test_services/
-    └── conftest.py     # Service-specific fixtures
-```
-
-**Best Practices:**
-- Put shared fixtures in `conftest.py` at the appropriate level
-- Use descriptive fixture names (`test_user_id`, `test_page_id`)
-- Return IDs from fixtures that create database objects
-- Use `pytest.fixture(scope='function')` for test isolation
-- Use `pytest.fixture(scope='module')` sparingly (only for expensive setup)
+**Best Practice:** Use option 3 (return IDs) for fixtures that create database objects, as it ensures fresh objects in each test and avoids detachment issues.
 
 ### Authentication Mocking in Tests
 
@@ -730,7 +453,7 @@ def mock_auth(user_id, role='writer'):
     """Context manager to mock authentication"""
     return patch('app.middleware.auth.get_user_from_token', return_value={
         'id': user_id,
-                'role': role,
+        'role': role,
         'username': 'testuser'
     })
 
@@ -768,17 +491,177 @@ pytest -v -s --tb=short tests/
 
 ---
 
-## Next Steps
+## Performance Optimizations
 
-### Pre-Production Checklist
-1. ✅ Code review against design documents - **COMPLETE**
-2. ✅ Performance testing - **COMPLETE** (caching, query optimization)
-3. ⏳ Security audit - **TODO**
-4. ⏳ User acceptance testing - **TODO**
-5. ✅ Documentation review - **COMPLETE**
-6. ⏳ Deployment preparation - **TODO**
+### Caching
 
-### Future Enhancements
+- **HTML Caching**: Rendered HTML cached with configurable TTL
+- **TOC Caching**: Table of contents cached per page
+- **Cache Invalidation**: Automatic invalidation on content updates
+
+### Query Optimization
+
+- **Reduced N+1 Queries**: Optimized comment queries
+- **Eager Loading**: Strategic use of joinedload for relationships
+- **Index Usage**: Proper indexes on frequently queried fields
+
+### Connection Pooling
+
+- **Pool Size**: 10 connections per service (default, configurable)
+- **Max Overflow**: 20 connections (configurable)
+- **Connection Timeout**: 5 seconds (configurable)
+- **Max Idle Time**: 30 minutes (configurable)
+- **Pool Pre-ping**: Enabled (verifies connections before use)
+
+---
+
+## API Endpoints
+
+### Page Endpoints
+
+- `GET /api/pages` - List all pages (excludes archived pages)
+- `GET /api/pages/{id}` - Get single page (includes `can_delete` and `can_archive` flags)
+- `POST /api/pages` - Create page
+- `PUT /api/pages/{id}` - Update page
+- `DELETE /api/pages/{id}` - Delete page
+- `POST /api/pages/{id}/archive` - Archive page
+- `DELETE /api/pages/{id}/archive` - Unarchive page
+
+### Comment Endpoints
+
+- `GET /api/pages/{id}/comments` - Get comments
+- `POST /api/pages/{id}/comments` - Create comment
+- `PUT /api/comments/{id}` - Update comment
+- `DELETE /api/comments/{id}` - Delete comment
+
+### Search Endpoints
+
+- `GET /api/search?q={query}` - Full-text search
+- `GET /api/index` - Master index (alphabetical listing)
+
+### Navigation Endpoints
+
+- `GET /api/navigation` - Navigation tree (includes section field)
+- `GET /api/pages/{id}/breadcrumb` - Breadcrumb path
+- `GET /api/pages/{id}/navigation` - Previous/next pages
+
+### Version History Endpoints
+
+- `GET /api/pages/{id}/versions` - Version list
+- `GET /api/pages/{id}/versions/{version}` - Get specific version
+- `GET /api/pages/{id}/versions/compare?from={v1}&to={v2}` - Compare versions
+- `POST /api/pages/{id}/versions/{version}/restore` - Restore version
+
+### Orphanage Endpoints
+
+- `GET /api/orphanage` - Get orphaned pages
+- `POST /api/orphanage/reassign` - Reassign pages
+- `POST /api/orphanage/clear` - Clear orphanage
+
+### Section Extraction Endpoints
+
+- `POST /api/pages/{id}/extract-selection` - Extract selection
+- `POST /api/pages/{id}/extract-heading` - Extract heading
+- `POST /api/pages/{id}/promote-section` - Promote from TOC
+
+### Admin Endpoints
+
+- `GET /api/admin/dashboard/stats` - Dashboard statistics
+- `GET /api/admin/dashboard/size-distribution` - Size distribution charts
+- `GET /api/admin/oversized-pages` - Oversized pages list
+- `POST /api/admin/config/upload-size` - Configure upload size
+- `POST /api/admin/config/page-size` - Configure page size
+- `GET /api/admin/service-status` - Get service status
+- `PUT /api/admin/service-status` - Update service status notes
+- `POST /api/admin/service-status/refresh` - Refresh status page
+
+### File Upload Endpoints
+
+- `POST /api/upload/image` - Upload image
+
+---
+
+## File Sync Utility
+
+The wiki service includes a sync utility for syncing markdown files to the database. This is especially useful for AI agents writing wiki content.
+
+### Manual Sync Commands
+
+```bash
+# Sync all markdown files
+python -m app.sync sync-all
+
+# Sync a specific file
+python -m app.sync sync-file data/pages/section/page.md
+
+# Sync a directory
+python -m app.sync sync-dir data/pages/section/
+
+# Force sync (ignore modification time)
+python -m app.sync sync-all --force
+
+# Specify admin user ID
+python -m app.sync sync-all --admin-user-id <uuid>
+```
+
+### Automatic Sync (File Watcher)
+
+Start the file watcher to automatically sync files when they're created or modified:
+
+```bash
+# Start watching (runs until Ctrl+C)
+python -m app.sync watch
+
+# With custom debounce time (default: 1.0 seconds)
+python -m app.sync watch --debounce 2.0
+
+# With custom admin user ID
+python -m app.sync watch --admin-user-id <uuid>
+```
+
+**Watcher Features:**
+- Automatically syncs files when created or modified
+- Automatically cleans up orphaned pages when files are deleted
+- Debouncing prevents rapid-fire syncs (waits 1 second after last change)
+- Recursively monitors all subdirectories in `data/pages/`
+- Only watches `.md` files
+- Graceful shutdown on Ctrl+C
+
+For more details, see [Wiki AI Content Management](wiki-ai-content-management.md).
+
+---
+
+## Markdown Processing
+
+### Code Blocks
+
+- **Language specifiers**: Code blocks can include language identifiers (e.g., ` ```python `)
+- **Whitespace preservation**: Indentation and newlines are preserved
+- **HTML conversion**: Code blocks converted to `<pre><code class="language-{lang}">` HTML
+- **Syntax highlighting**: Frontend uses Prism.js for syntax highlighting
+- **Multi-line support**: Code blocks can span multiple lines with proper formatting
+- **HTML entity escaping**: Code content is properly escaped to prevent HTML injection
+
+### Tables
+
+- **GFM table syntax**: Supports GitHub Flavored Markdown table syntax
+- **Pattern**: `| Header | Header |\n|--------|\n| Cell | Cell |`
+- **Structure preservation**: Header row structure preserved (`<thead>` / `<tbody>`)
+- **HTML escaping**: Table cell content is properly escaped
+- **Paragraph wrapping protection**: Tables are protected from paragraph wrapping
+
+### Frontmatter
+
+- **Preservation**: All frontmatter fields (including custom fields from AI systems) are stored in `page.content`
+- **Hidden from editor**: Frontend editor only displays markdown content (frontmatter is parsed and stripped)
+- **Metadata form**: Standard fields (title, slug, section, status, order) managed through UI
+- **Custom fields preserved**: Custom frontmatter fields preserved when users edit pages
+- **AI compatible**: AI content management systems can write files with custom frontmatter fields
+
+---
+
+## Future Enhancements
+
 1. **Enhanced Search**: PostgreSQL full-text search (ts_vector) for better search quality
 2. **Advanced Keywords**: TF-IDF-based keyword extraction
 3. **Real-time Features**: WebSocket support for live notifications
@@ -787,3 +670,14 @@ pytest -v -s --tb=short tests/
 6. **Advanced Caching**: Redis integration for distributed caching
 7. **Monitoring**: Enhanced monitoring and alerting
 8. **Load Testing**: Comprehensive load and stress testing
+
+---
+
+## Related Documentation
+
+- [Wiki Service Specification](wiki-service-specification.md) - Complete feature specification
+- [Wiki User Interface Design](wiki-user-interface.md) - UI/UX design specifications
+- [Wiki UI Implementation Guide](wiki-ui-implementation-guide.md) - Frontend implementation guide
+- [Wiki AI Content Management](wiki-ai-content-management.md) - AI content workflow
+- [Wiki Architecture](architecture/wiki-architecture.md) - System architecture details
+- [Wiki API Documentation](api/wiki-api.md) - Complete API reference

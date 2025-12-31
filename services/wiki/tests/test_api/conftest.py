@@ -92,6 +92,7 @@ def test_page(app, test_user_id):
             created_by=test_user_id,
             updated_by=test_user_id,
             status="published",
+            section="Regression-Testing",
             file_path="test-page.md",
         )
         db.session.add(page)
@@ -118,6 +119,7 @@ def test_draft_page(app, test_user_id):
             created_by=test_user_id,
             updated_by=test_user_id,
             status="draft",
+            section="Regression-Testing",
             file_path="draft-page.md",
         )
         db.session.add(page)

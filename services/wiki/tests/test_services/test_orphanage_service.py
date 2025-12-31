@@ -36,7 +36,10 @@ def test_orphan_pages(app):
 
             # Create parent and children
             parent = PageService.create_page(
-                title="Parent", content="Parent content", user_id=user_id
+                title="Parent",
+                content="Parent content",
+                user_id=user_id,
+                section="Regression-Testing",
             )
 
             child1 = PageService.create_page(
@@ -44,6 +47,7 @@ def test_orphan_pages(app):
                 content="Child 1 content",
                 user_id=user_id,
                 parent_id=parent.id,
+                section="Regression-Testing",
             )
 
             child2 = PageService.create_page(
@@ -51,6 +55,7 @@ def test_orphan_pages(app):
                 content="Child 2 content",
                 user_id=user_id,
                 parent_id=parent.id,
+                section="Regression-Testing",
             )
 
             # Orphan the children
@@ -145,11 +150,17 @@ def test_reassign_page(app):
 
             # Create structure
             old_parent = PageService.create_page(
-                title="Old Parent", content="Content", user_id=user_id
+                title="Old Parent",
+                content="Content",
+                user_id=user_id,
+                section="Regression-Testing",
             )
 
             new_parent = PageService.create_page(
-                title="New Parent", content="Content", user_id=user_id
+                title="New Parent",
+                content="Content",
+                user_id=user_id,
+                section="Regression-Testing",
             )
 
             child = PageService.create_page(
@@ -157,6 +168,7 @@ def test_reassign_page(app):
                 content="Content",
                 user_id=user_id,
                 parent_id=old_parent.id,
+                section="Regression-Testing",
             )
 
             # Orphan child
@@ -185,11 +197,18 @@ def test_reassign_page_to_root(app):
             user_id = uuid.uuid4()
 
             parent = PageService.create_page(
-                title="Parent", content="Content", user_id=user_id
+                title="Parent",
+                content="Content",
+                user_id=user_id,
+                section="Regression-Testing",
             )
 
             child = PageService.create_page(
-                title="Child", content="Content", user_id=user_id, parent_id=parent.id
+                title="Child",
+                content="Content",
+                user_id=user_id,
+                parent_id=parent.id,
+                section="Regression-Testing",
             )
 
             # Orphan child
@@ -360,11 +379,18 @@ def test_reassign_page_circular_reference(app):
             user_id = uuid.uuid4()
 
             parent = PageService.create_page(
-                title="Parent", content="Content", user_id=user_id
+                title="Parent",
+                content="Content",
+                user_id=user_id,
+                section="Regression-Testing",
             )
 
             child = PageService.create_page(
-                title="Child", content="Content", user_id=user_id, parent_id=parent.id
+                title="Child",
+                content="Content",
+                user_id=user_id,
+                parent_id=parent.id,
+                section="Regression-Testing",
             )
 
             # Orphan child
@@ -376,7 +402,10 @@ def test_reassign_page_circular_reference(app):
 
             # Create a grandparent to orphan parent under
             grandparent = PageService.create_page(
-                title="Grandparent", content="Content", user_id=user_id
+                title="Grandparent",
+                content="Content",
+                user_id=user_id,
+                section="Regression-Testing",
             )
             # Orphan parent under grandparent
             OrphanageService.orphan_pages([parent.id], grandparent.id)

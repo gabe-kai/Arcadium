@@ -18,9 +18,11 @@ The Notification Service provides internal messaging and notification capabiliti
    - Priority-based delivery
 
 3. **Notification Management**
-   - Mark as read/unread
+   - Mark as read/unread (single notification)
    - Filter and search
-   - Notification preferences (future)
+   - Delete notifications (single notification)
+   - **Bulk Operations**: Not implemented for MVP (future enhancement)
+   - **Notification Preferences**: Not implemented for MVP (future enhancement)
 
 ## Integration Points
 
@@ -102,9 +104,10 @@ The Wiki Service uses Notification Service for:
 
 ## Notification Limits
 
-- **No limits** on number of notifications per user
-- **No limits** on sending notifications
-- Rate limiting handled at service level if needed
+- **No limits** on number of notifications per user (notifications kept indefinitely)
+- **No limits** on sending notifications per service call
+- **Rate limiting**: Handled at service level if needed (not implemented for MVP)
+- **Future**: May add limits for performance optimization if needed
 
 ## API Endpoints
 
@@ -217,9 +220,20 @@ Service tokens:
 
 ## Future Enhancements
 
+**Bulk Operations:**
+- Mark multiple notifications as read/unread
+- Delete multiple notifications
+- Bulk operations endpoint: `PUT /api/notifications/bulk/read`, `DELETE /api/notifications/bulk`
+
+**Notification Preferences:**
+- Opt-out of certain notification types
+- Email notification preferences (structure for future email implementation)
+- Quiet hours configuration
+- Per-type notification preferences
+
+**Other Enhancements:**
 - Email notifications
-- Push notifications
-- Notification preferences per user
+- Push notifications (WebSocket)
 - Notification templates
 - Batch notification sending
 - Notification scheduling

@@ -20,6 +20,7 @@ def test_page_with_max_fields(app):
             slug="test-page",
             file_path="data/pages/test-page.md",
             content="Content",
+            section="Regression-Testing",
             created_by=user_id,
             updated_by=user_id,
         )
@@ -42,6 +43,7 @@ def test_comment_with_max_depth(app):
             slug="test-page",
             file_path="data/pages/test-page.md",
             content="Content",
+            section="Regression-Testing",
             created_by=user_id,
             updated_by=user_id,
         )
@@ -92,6 +94,7 @@ def test_page_link_self_reference(app):
             slug="test-page",
             file_path="data/pages/test-page.md",
             content="Content",
+            section="Regression-Testing",
             created_by=user_id,
             updated_by=user_id,
         )
@@ -123,6 +126,7 @@ def test_page_with_null_parent(app):
             file_path="data/pages/root-page.md",
             content="Content",
             parent_id=None,  # Explicitly null
+            section="Regression-Testing",
             created_by=user_id,
             updated_by=user_id,
         )
@@ -146,6 +150,7 @@ def test_comment_with_empty_content(app):
             slug="test-page",
             file_path="data/pages/test-page.md",
             content="Content",
+            section="Regression-Testing",
             created_by=user_id,
             updated_by=user_id,
         )
@@ -180,6 +185,7 @@ def test_page_with_duplicate_slug_different_cases(app):
             slug="test-page",
             file_path="data/pages/test-page.md",
             content="Content",
+            section="Regression-Testing",
             created_by=user_id,
             updated_by=user_id,
         )
@@ -194,6 +200,7 @@ def test_page_with_duplicate_slug_different_cases(app):
                 slug="TEST-PAGE",  # Different case
                 file_path="data/pages/TEST-PAGE.md",
                 content="Content",
+                section="Regression-Testing",
                 created_by=user_id,
                 updated_by=user_id,
             )

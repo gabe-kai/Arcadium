@@ -22,6 +22,7 @@ def test_oversized_page_notification_integration(app):
             created_by=test_user_id,
             updated_by=test_user_id,
             status="published",
+            section="Regression-Testing",
             file_path="oversized-test.md",
         )
         db.session.add(page)

@@ -26,6 +26,7 @@ def _create_page(
             updated_by=user_id,
             content_size_kb=size_kb,
             word_count=word_count,
+            section="Regression-Testing",
             file_path=f"{slug}.md",
         )
         db.session.add(page)

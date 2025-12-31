@@ -49,14 +49,20 @@ The project uses **GitHub Actions** for CI/CD. Currently, CI is configured for t
 5. **Runs tests:**
    - Executes `pytest` from `services/wiki` directory
    - Uses PostgreSQL test database (avoids SQLite UUID issues)
-   - Generates coverage reports
+   - Generates test reports:
+     - JUnit XML (`test-results.xml`)
+     - HTML report (`test-report.html`)
+     - JSON report (`test-report.json`)
+   - Generates failure summaries (detailed and compact formats)
+   - Publishes test results to GitHub Actions
 
 #### Environment Variables
 
 The workflow sets:
 - `FLASK_ENV=testing`
-- `TEST_DATABASE_URL=postgresql://arcadium:password@localhost:5432/wiki_test`
-  - Or use `arcadium_user` and `arcadium_pass` (will construct TEST_DATABASE_URL automatically)
+- `TEST_DATABASE_URL=postgresql://postgres:Le555ecure@localhost:5432/arcadium_testing_wiki`
+  - Note: CI uses hardcoded credentials for the PostgreSQL service container
+  - Locally, you can use `arcadium_user` and `arcadium_pass` (will construct TEST_DATABASE_URL automatically)
 
 #### Test Configuration
 
@@ -92,24 +98,37 @@ The workflow runs three jobs in parallel:
 1. **Unit & Integration Tests:**
    - Sets up Node.js 20
    - Installs dependencies with `npm ci`
-   - Runs linting and formatting checks (if configured)
-   - Runs Vitest test suite (`npm test -- --run`)
-   - Automatically discovers and runs all test files (including new auth tests)
+   - Runs linting and formatting checks (ESLint/Prettier if configured)
+   - Runs Vitest test suite in groups:
+     - Component tests (`src/test/components/`)
+     - Page tests (`src/test/pages/`)
+     - Service tests (`src/test/services/`)
+     - Utility tests (`src/test/utils/`)
+     - Integration tests (`src/test/integration/`)
+     - Other tests (routing, App, API client)
+   - Generates test failure summaries and artifacts
    - Attempts to generate coverage report (optional)
    - All tests are mocked and don't require external services
 
 2. **E2E Tests:**
    - Sets up Node.js 20
    - Installs dependencies
-   - Installs Playwright browsers
-   - Runs Playwright E2E tests (`npm run test:e2e`)
-   - Uploads test report as artifact
+   - Installs Playwright browsers with dependencies
+   - Runs Playwright E2E tests in groups:
+     - Auth flow tests (`e2e/auth-flow.spec.js`)
+     - Navigation tests (`e2e/navigation.spec.js`)
+     - Page viewing tests (`e2e/page-viewing.spec.js`)
+     - TOC & Backlinks tests (`e2e/toc-backlinks.spec.js`)
+     - Example tests (`e2e/example.spec.js`)
+   - Generates E2E test failure summaries
+   - Uploads Playwright report and test artifacts
 
 3. **Build Check:**
    - Sets up Node.js 20
    - Installs dependencies
    - Builds the client (`npm run build`)
    - Ensures production build succeeds
+   - Uses environment variables for API base URLs (with fallbacks)
 
 #### Test Coverage
 
@@ -153,13 +172,11 @@ npm run test:coverage
 
 #### What’s Currently Covered
 
-- App shell renders (React + Router + layout)
-- Basic routing (home, page view, search)
-- Axios API client configuration
-
-Future CI work (see **Planned CI/CD Features** below) will add:
-- A GitHub Actions workflow for the Wiki UI (running `npm test`)
-- Optional build checks (`npm run build`) for the client
+- Tests run with `continue-on-error: true` to ensure all test groups execute
+- Each test group generates separate output files for easier debugging
+- Test summaries are generated and displayed in the workflow output
+- Artifacts are uploaded for test results, summaries, and failure details
+- E2E tests use environment variables for API base URLs (with fallback defaults)
 
 ## Running CI Tests Locally
 
@@ -170,8 +187,8 @@ To verify tests will pass in CI before pushing, replicate the CI environment loc
 1. **PostgreSQL running locally:**
    - Host: `localhost`
    - Port: `5432`
-   - User: `postgres`
-   - Password: Set via `arcadium_pass` environment variable
+   - User: `arcadium_user` (or `postgres` if using default)
+   - Password: Set via `arcadium_pass` environment variable (or your PostgreSQL password)
    - Test database: `arcadium_testing_wiki` (will be created automatically if missing)
 
 2. **Python environment:**
@@ -189,8 +206,8 @@ To verify tests will pass in CI before pushing, replicate the CI environment loc
 
 2. **Ensure test database exists:**
    ```sql
-   -- Connect to PostgreSQL as postgres user
-   CREATE DATABASE wiki_test;
+   -- Connect to PostgreSQL as postgres user (or arcadium_user)
+   CREATE DATABASE arcadium_testing_wiki;
    ```
 
    Or let the test setup create it automatically (see `services/wiki/tests/conftest.py`).
@@ -212,7 +229,7 @@ To verify tests will pass in CI before pushing, replicate the CI environment loc
    export FLASK_ENV=testing
    # TEST_DATABASE_URL will be constructed from arcadium_user and arcadium_pass if not set
    # Or set explicitly:
-   export TEST_DATABASE_URL="postgresql://${arcadium_user}:${arcadium_pass}@localhost:5432/wiki_test"
+   export TEST_DATABASE_URL="postgresql://${arcadium_user}:${arcadium_pass}@localhost:5432/arcadium_testing_wiki"
    cd services/wiki
    pytest
    ```
@@ -235,7 +252,7 @@ pytest "$@"
 ```powershell
 $env:FLASK_ENV = "testing"
 # TEST_DATABASE_URL will be constructed from arcadium_user and arcadium_pass if not set
-# Or set explicitly: $env:TEST_DATABASE_URL = "postgresql://$env:arcadium_user:$env:arcadium_pass@localhost:5432/wiki_test"
+# Or set explicitly: $env:TEST_DATABASE_URL = "postgresql://$env:arcadium_user:$env:arcadium_pass@localhost:5432/arcadium_testing_wiki"
 Set-Location services/wiki
 pytest $args
 ```
@@ -246,15 +263,18 @@ pytest $args
 
 1. Go to your repository on GitHub
 2. Click the **"Actions"** tab
-3. Select the **"Wiki Service - Tests"** workflow
-4. View individual run results
+3. Select the workflow:
+   - **"Wiki Service - Tests"** for backend tests
+   - **"Client - Tests"** for frontend tests
+4. View individual run results, test summaries, and download artifacts
 
-### Workflow Status Badge
+### Workflow Status Badges
 
-You can add a status badge to your README:
+You can add status badges to your README:
 
 ```markdown
-![CI Tests](https://github.com/USERNAME/REPO/workflows/Wiki%20Service%20-%20Tests/badge.svg)
+![Wiki Service Tests](https://github.com/USERNAME/REPO/workflows/Wiki%20Service%20-%20Tests/badge.svg)
+![Client Tests](https://github.com/USERNAME/REPO/workflows/Client%20-%20Tests/badge.svg)
 ```
 
 Replace `USERNAME` and `REPO` with your GitHub username and repository name.
@@ -292,10 +312,12 @@ If tests fail with PostgreSQL connection errors:
 2. **Check database creation:**
    - Verify `arcadium_testing_wiki` database is created
    - Check PostgreSQL logs in CI output
+   - Database is created automatically in the workflow
 
 3. **Check credentials:**
-   - Ensure `TEST_DATABASE_URL` uses correct credentials
-   - Verify password matches service container configuration
+   - CI uses hardcoded credentials: `postgres:Le555ecure` for the service container
+   - Locally, use `arcadium_user` and `arcadium_pass` or set `TEST_DATABASE_URL` explicitly
+   - Verify password matches your local PostgreSQL configuration
 
 ### Slow CI Runs
 
@@ -312,20 +334,22 @@ If tests fail with PostgreSQL connection errors:
 ### Planned CI/CD Features
 
 - [x] **Multi-service testing:**
-  - ✅ Wiki Service tests (backend)
-  - ✅ Client tests (frontend)
+  - ✅ Wiki Service tests (backend) - Full test suite with reporting
+  - ✅ Client tests (frontend) - Unit, integration, and E2E tests
+  - [ ] Auth Service tests (when test suite is implemented)
   - [ ] Game Server tests (when implemented)
 
 - [x] **Code quality checks:**
   - ✅ Linting (ruff)
   - ✅ Code formatting (black, isort)
-  - ✅ Pre-commit hooks (trailing whitespace, merge conflicts, YAML/JSON validation)
+  - ✅ Pre-commit hooks (trailing whitespace, merge conflicts, YAML/JSON validation, Wiki Service tests)
   - [ ] Type checking (mypy) - Optional future enhancement
 
 - [ ] **Coverage reporting:**
   - Upload coverage reports to Codecov or similar
   - Enforce minimum coverage thresholds
   - Coverage badges in README
+  - Note: Coverage generation is attempted but not enforced
 
 - [ ] **Security scanning:**
   - Dependency vulnerability scanning
@@ -351,9 +375,11 @@ If tests fail with PostgreSQL connection errors:
 
 ## Related Documentation
 
-- [Wiki Service Testing](services/wiki/README.md#testing)
+- [Wiki Service Testing](../services/wiki/README.md#testing)
 - [Database Configuration](architecture/database-configuration.md)
+- [Database Credentials](architecture/database-credentials.md)
 - [Wiki Implementation Guide](wiki-implementation-guide.md)
+- [Auth Service Implementation Guide](auth-service-implementation-guide.md)
 
 ## Contributing
 

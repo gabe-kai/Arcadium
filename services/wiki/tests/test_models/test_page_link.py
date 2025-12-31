@@ -18,6 +18,7 @@ def test_link_creation(app):
             slug="page-1",
             file_path="data/pages/page-1.md",
             content="Content 1",
+            section="Regression-Testing",
             created_by=user_id,
             updated_by=user_id,
         )
@@ -26,6 +27,7 @@ def test_link_creation(app):
             slug="page-2",
             file_path="data/pages/page-2.md",
             content="Content 2",
+            section="Regression-Testing",
             created_by=user_id,
             updated_by=user_id,
         )
@@ -54,6 +56,7 @@ def test_bidirectional_tracking(app):
             slug="page-1",
             file_path="data/pages/page-1.md",
             content="Content 1",
+            section="Regression-Testing",
             created_by=user_id,
             updated_by=user_id,
         )
@@ -62,6 +65,7 @@ def test_bidirectional_tracking(app):
             slug="page-2",
             file_path="data/pages/page-2.md",
             content="Content 2",
+            section="Regression-Testing",
             created_by=user_id,
             updated_by=user_id,
         )
@@ -94,6 +98,7 @@ def test_unique_link_constraint(app):
             slug="page-1",
             file_path="data/pages/page-1.md",
             content="Content 1",
+            section="Regression-Testing",
             created_by=user_id,
             updated_by=user_id,
         )
@@ -102,6 +107,7 @@ def test_unique_link_constraint(app):
             slug="page-2",
             file_path="data/pages/page-2.md",
             content="Content 2",
+            section="Regression-Testing",
             created_by=user_id,
             updated_by=user_id,
         )

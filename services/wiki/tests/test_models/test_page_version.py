@@ -18,6 +18,7 @@ def test_page_version_creation(app):
             slug="test-page",
             file_path="data/pages/test-page.md",
             content="Original content",
+            section="Regression-Testing",
             created_by=user_id,
             updated_by=user_id,
         )
@@ -55,6 +56,7 @@ def test_version_unique_constraint(app):
             slug="test-page",
             file_path="data/pages/test-page.md",
             content="Content",
+            section="Regression-Testing",
             created_by=user_id,
             updated_by=user_id,
         )
@@ -101,6 +103,7 @@ def test_version_diff_data(app):
             slug="test-page",
             file_path="data/pages/test-page.md",
             content="Content",
+            section="Regression-Testing",
             created_by=user_id,
             updated_by=user_id,
         )
@@ -142,6 +145,7 @@ def test_version_relationship_to_page(app):
             slug="test-page",
             file_path="data/pages/test-page.md",
             content="Content",
+            section="Regression-Testing",
             created_by=user_id,
             updated_by=user_id,
         )
@@ -183,6 +187,7 @@ def test_version_cascade_delete(app):
             slug="test-page",
             file_path="data/pages/test-page.md",
             content="Content",
+            section="Regression-Testing",
             created_by=user_id,
             updated_by=user_id,
         )

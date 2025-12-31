@@ -76,6 +76,7 @@ def test_page_image_association(app):
             slug="test-page",
             file_path="data/pages/test-page.md",
             content="Content",
+            section="Regression-Testing",
             created_by=user_id,
             updated_by=user_id,
         )
@@ -112,6 +113,7 @@ def test_image_relationships(app):
             slug="page-1",
             file_path="data/pages/page-1.md",
             content="Content",
+            section="Regression-Testing",
             created_by=user_id,
             updated_by=user_id,
         )
@@ -120,6 +122,7 @@ def test_image_relationships(app):
             slug="page-2",
             file_path="data/pages/page-2.md",
             content="Content",
+            section="Regression-Testing",
             created_by=user_id,
             updated_by=user_id,
         )
@@ -161,6 +164,7 @@ def test_image_cascade_delete(app):
             slug="test-page",
             file_path="data/pages/test-page.md",
             content="Content",
+            section="Regression-Testing",
             created_by=user_id,
             updated_by=user_id,
         )
@@ -203,6 +207,7 @@ def test_page_image_cascade_delete(app):
             slug="test-page",
             file_path="data/pages/test-page.md",
             content="Content",
+            section="Regression-Testing",
             created_by=user_id,
             updated_by=user_id,
         )
@@ -248,6 +253,7 @@ def test_multiple_images_per_page(app):
             slug="test-page",
             file_path="data/pages/test-page.md",
             content="Content",
+            section="Regression-Testing",
             created_by=user_id,
             updated_by=user_id,
         )

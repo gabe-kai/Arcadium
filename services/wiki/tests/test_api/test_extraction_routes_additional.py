@@ -17,6 +17,7 @@ def test_extract_selection_empty_selection(client, app, test_writer_id):
             created_by=test_writer_id,
             updated_by=test_writer_id,
             status="published",
+            section="Regression-Testing",
             file_path="source-page.md",
         )
         db.session.add(page)
@@ -48,6 +49,7 @@ def test_extract_selection_out_of_bounds(client, app, test_writer_id):
             created_by=test_writer_id,
             updated_by=test_writer_id,
             status="published",
+            section="Regression-Testing",
             file_path="source-page.md",
         )
         db.session.add(page)
@@ -79,6 +81,7 @@ def test_extract_selection_negative_bounds(client, app, test_writer_id):
             created_by=test_writer_id,
             updated_by=test_writer_id,
             status="published",
+            section="Regression-Testing",
             file_path="source-page.md",
         )
         db.session.add(page)
@@ -412,6 +415,7 @@ def test_extract_selection_invalid_parent_id(client, app, test_writer_id):
             created_by=test_writer_id,
             updated_by=test_writer_id,
             status="published",
+            section="Regression-Testing",
             file_path="source-page.md",
         )
         db.session.add(page)

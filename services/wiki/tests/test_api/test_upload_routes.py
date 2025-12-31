@@ -74,6 +74,8 @@ def test_upload_image_with_page_id(client, app, test_writer_id, test_user_id):
             content="# Page",
             created_by=test_user_id,
             updated_by=test_user_id,
+            status="published",
+            section="Regression-Testing",
             file_path="page-for-image.md",
         )
         db.session.add(page)

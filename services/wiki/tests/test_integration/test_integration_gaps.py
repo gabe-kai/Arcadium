@@ -71,6 +71,7 @@ def test_multiple_oversized_pages_notifications(app):
             created_by=test_user_id,
             updated_by=test_user_id,
             status="published",
+            section="Regression-Testing",
             file_path="oversized-1.md",
         )
         page2 = Page(
@@ -80,6 +81,7 @@ def test_multiple_oversized_pages_notifications(app):
             created_by=test_user_id,
             updated_by=test_user_id,
             status="published",
+            section="Regression-Testing",
             file_path="oversized-2.md",
         )
         db.session.add(page1)

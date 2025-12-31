@@ -29,6 +29,7 @@ def test_get_orphanage_with_orphaned_pages(client, app, test_user_id):
             created_by=test_user_id,
             updated_by=test_user_id,
             status="published",
+            section="Regression-Testing",
             file_path="parent-page.md",
         )
         db.session.add(parent)
@@ -43,6 +44,7 @@ def test_get_orphanage_with_orphaned_pages(client, app, test_user_id):
             created_by=test_user_id,
             updated_by=test_user_id,
             status="published",
+            section="Regression-Testing",
             parent_id=OrphanageService.get_or_create_orphanage(test_user_id).id,
             is_orphaned=True,
             orphaned_from=parent_id,
@@ -76,6 +78,7 @@ def test_get_orphanage_response_structure(client, app, test_user_id):
             created_by=test_user_id,
             updated_by=test_user_id,
             status="published",
+            section="Regression-Testing",
             parent_id=OrphanageService.get_or_create_orphanage(test_user_id).id,
             is_orphaned=True,
             file_path="test-orphan.md",
@@ -110,6 +113,7 @@ def test_get_orphanage_grouped_by_parent(client, app, test_user_id):
             created_by=test_user_id,
             updated_by=test_user_id,
             status="published",
+            section="Regression-Testing",
             file_path="parent-1.md",
         )
         parent2 = Page(
@@ -119,6 +123,7 @@ def test_get_orphanage_grouped_by_parent(client, app, test_user_id):
             created_by=test_user_id,
             updated_by=test_user_id,
             status="published",
+            section="Regression-Testing",
             file_path="parent-2.md",
         )
         db.session.add(parent1)
@@ -220,6 +225,7 @@ def test_reassign_orphaned_pages_success(client, app, test_user_id, test_admin_i
             created_by=test_user_id,
             updated_by=test_user_id,
             status="published",
+            section="Regression-Testing",
             file_path="new-parent.md",
         )
         db.session.add(new_parent)
@@ -272,6 +278,7 @@ def test_reassign_orphaned_pages_reassign_all(client, app, test_user_id, test_ad
             created_by=test_user_id,
             updated_by=test_user_id,
             status="published",
+            section="Regression-Testing",
             file_path="new-parent.md",
         )
         db.session.add(new_parent)
@@ -403,6 +410,7 @@ def test_clear_orphanage_with_reassign_to(client, app, test_user_id, test_admin_
             created_by=test_user_id,
             updated_by=test_user_id,
             status="published",
+            section="Regression-Testing",
             file_path="new-parent.md",
         )
         db.session.add(new_parent)
@@ -464,6 +472,7 @@ def test_reassign_orphaned_pages_response_structure(
             created_by=test_user_id,
             updated_by=test_user_id,
             status="published",
+            section="Regression-Testing",
             file_path="new-parent.md",
         )
         db.session.add(new_parent)

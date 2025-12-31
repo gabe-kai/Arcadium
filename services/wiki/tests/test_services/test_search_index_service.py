@@ -19,6 +19,7 @@ def test_index_page_fulltext(app):
             content="This is a test page with some content about programming and Python.",
             user_id=user_id,
             slug="test-page",
+            section="Regression-Testing",
         )
 
         # Index the page
@@ -46,6 +47,7 @@ def test_index_page_keywords(app):
             content="Python is a programming language. Python supports object-oriented programming. Python has many libraries.",
             user_id=user_id,
             slug="python-guide",
+            section="Regression-Testing",
         )
 
         # Index the page
@@ -81,6 +83,7 @@ This is a tutorial about Python programming.
             content=content,
             user_id=user_id,
             slug="python-tutorial",
+            section="Regression-Testing",
         )
 
         # Index the page
@@ -108,6 +111,7 @@ def test_index_page_incremental_update(app):
             content="Original content about Python.",
             user_id=user_id,
             slug="test-page",
+            section="Regression-Testing",
         )
 
         # Index first time
@@ -142,6 +146,7 @@ def test_search_basic(app):
             content="This is a guide about Python programming.",
             user_id=user_id,
             slug="python-guide",
+            section="Regression-Testing",
         )
 
         page2 = PageService.create_page(
@@ -149,6 +154,7 @@ def test_search_basic(app):
             content="This is a tutorial about JavaScript programming.",
             user_id=user_id,
             slug="javascript-tutorial",
+            section="Regression-Testing",
         )
 
         # Index both pages
@@ -175,6 +181,7 @@ def test_search_keyword_priority(app):
             content="Python is a programming language. Python is great.",
             user_id=user_id,
             slug="python-programming",
+            section="Regression-Testing",
         )
 
         # Add manual keyword
@@ -202,6 +209,7 @@ def test_search_by_keyword(app):
             content="Python programming guide.",
             user_id=user_id,
             slug="python-guide",
+            section="Regression-Testing",
         )
 
         page2 = PageService.create_page(
@@ -209,6 +217,7 @@ def test_search_by_keyword(app):
             content="JavaScript programming guide.",
             user_id=user_id,
             slug="javascript-guide",
+            section="Regression-Testing",
         )
 
         # Index and add keywords
@@ -234,6 +243,7 @@ def test_add_manual_keyword(app):
             content="Test content.",
             user_id=user_id,
             slug="test-page",
+            section="Regression-Testing",
         )
 
         # Add manual keyword
@@ -257,6 +267,7 @@ def test_remove_keyword(app):
             content="Test content.",
             user_id=user_id,
             slug="test-page",
+            section="Regression-Testing",
         )
 
         # Add keyword
@@ -286,6 +297,7 @@ def test_get_page_keywords(app):
             content="Python programming tutorial.",
             user_id=user_id,
             slug="test-page",
+            section="Regression-Testing",
         )
 
         # Index page (creates auto keywords)
@@ -310,11 +322,19 @@ def test_reindex_all(app):
 
         # Create multiple pages
         page1 = PageService.create_page(
-            title="Page 1", content="Content 1", user_id=user_id, slug="page-1"
+            title="Page 1",
+            content="Content 1",
+            user_id=user_id,
+            slug="page-1",
+            section="Regression-Testing",
         )
 
         page2 = PageService.create_page(
-            title="Page 2", content="Content 2", user_id=user_id, slug="page-2"
+            title="Page 2",
+            content="Content 2",
+            user_id=user_id,
+            slug="page-2",
+            section="Regression-Testing",
         )
 
         # Reindex all
@@ -340,6 +360,7 @@ def test_get_index_stats(app):
             content="Python programming tutorial.",
             user_id=user_id,
             slug="test-page",
+            section="Regression-Testing",
         )
 
         SearchIndexService.index_page(page.id, page.content, page.title)
@@ -365,6 +386,7 @@ def test_search_relevance(app):
             content="Python Python Python programming guide tutorial. Python is great.",
             user_id=user_id,
             slug="python-guide",
+            section="Regression-Testing",
         )
 
         page2 = PageService.create_page(
@@ -372,6 +394,7 @@ def test_search_relevance(app):
             content="JavaScript tutorial with some Python mentions.",
             user_id=user_id,
             slug="javascript-tutorial",
+            section="Regression-Testing",
         )
 
         # Index both

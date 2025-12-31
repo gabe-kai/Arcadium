@@ -66,6 +66,13 @@
 - Click to navigate
 - Search within tree
 - Show page count per section
+- **Section View Toggle** ✅ (Implemented):
+  - Toggle between hierarchical view and section grouping
+  - Section grouping displays pages grouped by section
+  - "No Section" grouping for pages without section (appears at top)
+  - Folder icons (📁) for sections, document icons (📄) for pages
+  - Section view is default when page loads
+  - Preference persisted in localStorage
 
 **Visual Design**:
 - Clean, minimal tree view
@@ -196,6 +203,46 @@
 - Slug must be unique
 - Parent must exist (if specified)
 - Order must be positive integer
+
+## Additional Features (Implemented)
+
+### Theme Support ✅
+- Light/dark mode toggle (ThemeToggle component)
+- Respects system preferences (`prefers-color-scheme`)
+- Persists user choice in localStorage
+- All components adapt to theme via CSS variables
+
+### Share Functionality ✅
+- Share button in page header (ShareButton component)
+- Copy page link to clipboard
+- Fallback to Web Share API if available
+- Success/error notifications
+
+### Service Status ✅
+- Service status indicator in header (ServiceStatusIndicator component)
+- Visual indicator of overall service health
+- Click to navigate to service management page
+- Auto-refreshes every 15 seconds
+
+### Service Management ✅
+- Service management page (ServiceManagementPage component)
+- Displays status of all Arcadium services
+- Manual refresh button
+- Service control actions (start/stop/restart)
+- Status notes editing
+- Export service status report
+
+### User Profile ✅
+- Profile page (ProfilePage component)
+- Displays account information (username, email, user ID)
+- Shows role and permissions
+- Redirects to sign-in if not authenticated
+
+### Notification System ✅
+- NotificationProvider context for app-wide notifications
+- Toast-style notifications (success, error, info, warning)
+- Auto-dismiss after timeout
+- Manual dismiss option
 
 ## Responsive Design
 

@@ -59,6 +59,7 @@ def test_search_multiple_words(client, app, test_user_id):
             created_by=test_user_id,
             updated_by=test_user_id,
             status="published",
+            section="Regression-Testing",
             file_path="multi-word-page.md",
         )
         db.session.add(page)
@@ -81,6 +82,7 @@ def test_search_special_characters(client, app, test_user_id):
             created_by=test_user_id,
             updated_by=test_user_id,
             status="published",
+            section="Regression-Testing",
             file_path="special-page.md",
         )
         db.session.add(page)
@@ -132,6 +134,7 @@ def test_search_include_drafts_writer_other_user(
             created_by=test_user_id,
             updated_by=test_user_id,
             status="draft",
+            section="Regression-Testing",
             file_path="other-user-draft.md",
         )
         db.session.add(draft_page)
@@ -163,6 +166,7 @@ def test_search_include_drafts_viewer_forbidden(client, app, test_user_id):
             created_by=test_user_id,
             updated_by=test_user_id,
             status="draft",
+            section="Regression-Testing",
             file_path="draft-page.md",
         )
         db.session.add(draft_page)
@@ -196,6 +200,7 @@ def test_search_relevance_ordering(client, app, test_user_id):
             created_by=test_user_id,
             updated_by=test_user_id,
             status="published",
+            section="Regression-Testing",
             file_path="keyword-page.md",
         )
         db.session.add(page1)
@@ -209,6 +214,7 @@ def test_search_relevance_ordering(client, app, test_user_id):
             created_by=test_user_id,
             updated_by=test_user_id,
             status="published",
+            section="Regression-Testing",
             file_path="fulltext-page.md",
         )
         db.session.add(page2)
@@ -250,6 +256,7 @@ def test_get_master_index_numeric_titles(client, app, test_user_id):
             created_by=test_user_id,
             updated_by=test_user_id,
             status="published",
+            section="Regression-Testing",
             file_path="123-number-page.md",
         )
         db.session.add(page)
@@ -272,6 +279,7 @@ def test_get_master_index_special_char_titles(client, app, test_user_id):
             created_by=test_user_id,
             updated_by=test_user_id,
             status="published",
+            section="Regression-Testing",
             file_path="special-page.md",
         )
         db.session.add(page)
@@ -294,6 +302,7 @@ def test_get_master_index_letter_case_insensitive(client, app, test_user_id):
             created_by=test_user_id,
             updated_by=test_user_id,
             status="published",
+            section="Regression-Testing",
             file_path="apple-page.md",
         )
         db.session.add(page)
@@ -323,7 +332,7 @@ def test_get_master_index_empty_section_filter(client, app, test_user_id):
             created_by=test_user_id,
             updated_by=test_user_id,
             status="published",
-            section=None,
+            section="Regression-Testing",
             file_path="no-section-page.md",
         )
         db.session.add(page)
@@ -347,6 +356,7 @@ def test_search_snippet_length(client, app, test_user_id):
             created_by=test_user_id,
             updated_by=test_user_id,
             status="published",
+            section="Regression-Testing",
             file_path="long-page.md",
         )
         db.session.add(page)
@@ -372,6 +382,7 @@ def test_search_total_matches_count(client, app, test_user_id):
             created_by=test_user_id,
             updated_by=test_user_id,
             status="published",
+            section="Regression-Testing",
             file_path="test-page.md",
         )
         db.session.add(page)

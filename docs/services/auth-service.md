@@ -59,6 +59,8 @@ The Wiki Service depends on Auth Service for:
 4. **Admin User for AI Content**
    - Wiki sync utility needs to find/create "admin" system user
    - AI-written pages assigned to admin user
+   - **Current Implementation**: Wiki uses config-based admin user ID (`SYNC_ADMIN_USER_ID` or default UUID)
+   - **Future**: `POST /api/users/system` endpoint for system user creation (not yet implemented)
 
 ### Shared Authentication Library
 
@@ -68,22 +70,51 @@ Both Auth Service and consuming services use shared code from `shared/auth/`:
 - Permission checking helpers
 - JWT handling
 
+## Token Configuration
+
+### Token Expiration
+- **Access Token**: 1 hour (3600 seconds) - configurable via `JWT_ACCESS_TOKEN_EXPIRATION`
+- **Refresh Token**: 7 days (604800 seconds) - configurable via `JWT_REFRESH_TOKEN_EXPIRATION`
+- **Service Token**: 90 days (7776000 seconds) - configurable via `JWT_SERVICE_TOKEN_EXPIRATION`
+
+### Token Refresh
+- Tokens can be refreshed before expiration using refresh token
+- When refresh token expires, user must login again
+- Refresh tokens are stored in database and can be revoked
+
+## Password Requirements
+
+### Password Strength
+- **Minimum length**: 8 characters (configurable via `PASSWORD_MIN_LENGTH`)
+- **Required**: Uppercase letter, lowercase letter, number
+- **Recommended**: Special character (not required)
+
+### Password History
+- Cannot reuse last 3 passwords (configurable via `PASSWORD_HISTORY_COUNT`)
+- Password history is tracked in `password_history` table
+- Password expiration not implemented
+
 ## API Endpoints
 
 See [Auth Service API Documentation](../api/auth-api.md) for complete endpoint specifications.
 
 ### Key Endpoints
 
+**Implemented:**
 - `POST /api/auth/register` - User registration (first user becomes admin)
 - `POST /api/auth/login` - User login
-- `POST /api/auth/logout` - User logout (invalidates token)
 - `POST /api/auth/verify` - Token validation
-- `POST /api/auth/refresh` - Refresh access token
-- `POST /api/auth/revoke` - Revoke token (add to blacklist)
 - `GET /api/users/{user_id}` - Get user profile
 - `GET /api/users/username/{username}` - Get user by username
-- `PUT /api/users/{user_id}/role` - Update user role (admin only)
-- `POST /api/users/system` - Create system user (service token required)
+
+**Planned Endpoints (Service Methods Ready):**
+- `POST /api/auth/logout` - User logout (invalidates token via blacklist) - service method exists, endpoint to be added in Phase 3 completion
+- `POST /api/auth/refresh` - Refresh access token using refresh token - service method exists, endpoint to be added in Phase 3 completion
+- `POST /api/auth/revoke` - Revoke token (add to blacklist) - service method exists, endpoint to be added in Phase 3 completion
+
+**Future Endpoints:**
+- `PUT /api/users/{user_id}/role` - Update user role (admin only) - Phase 4: User Management
+- `POST /api/users/system` - Create system user (service token required) - Phase 4: User Management
 
 ## Database Schema
 
@@ -139,23 +170,26 @@ CREATE INDEX idx_password_history_user ON password_history(user_id, created_at D
 ## Security Considerations
 
 ### Password Security
-- Passwords hashed using bcrypt (12 rounds)
+- Passwords hashed using bcrypt (12 rounds, configurable via `BCRYPT_ROUNDS`)
 - Never store plaintext passwords
 - **Password Requirements**:
-  - Minimum length: 8 characters
-  - Must contain: uppercase, lowercase, number
-  - Recommended: special character
-  - Cannot be common password (check against common password list)
-  - Password history: Cannot reuse last 3 passwords
+  - Minimum length: 8 characters (configurable via `PASSWORD_MIN_LENGTH`)
+  - Must contain: uppercase letter, lowercase letter, number
+  - Recommended: special character (not required)
+  - Password history: Cannot reuse last 3 passwords (configurable via `PASSWORD_HISTORY_COUNT`)
+  - Password expiration: Not implemented (no expiration requirement)
 
 ### JWT Tokens
 - Secure secret key for signing (stored in environment variable)
 - **Token Expiration**:
-  - Access token: 1 hour
-  - Refresh token: 7 days
-  - Tokens can be refreshed before expiration
-- Refresh token support with `/api/auth/refresh` endpoint
-- Token revocation via blacklist (stored in database)
+  - Access token: 1 hour (3600 seconds) - configurable via `JWT_ACCESS_TOKEN_EXPIRATION`
+  - Refresh token: 7 days (604800 seconds) - configurable via `JWT_REFRESH_TOKEN_EXPIRATION`
+  - Tokens can be refreshed before expiration using refresh token
+- **Token Management**:
+  - Refresh token support - service method ready, endpoint to be added in Phase 3
+  - Token revocation via blacklist (stored in database) - service method ready, endpoint to be added in Phase 3
+  - Logout functionality - service method ready, endpoint to be added in Phase 3
+  - Token blacklist checked during token verification
 
 ### Service Tokens
 - Service tokens are long-lived JWT tokens with special claims

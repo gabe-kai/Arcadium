@@ -267,6 +267,3 @@ See `e2e/README.md` for detailed E2E testing documentation.
 - `docs/wiki-ui-implementation-guide.md` – phased UI implementation plan
 - `docs/wiki-implementation-guide.md` – backend Wiki Service implementation
 - `docs/ci-cd.md` – CI/CD setup for both backend and frontend
-- `client/PHASE_8_SUMMARY.md` – Phase 8 implementation details
-- `client/TEST_COVERAGE_SUMMARY.md` – Comprehensive test coverage summary
-- `client/TEST_STATUS.md` – Current test status and breakdown

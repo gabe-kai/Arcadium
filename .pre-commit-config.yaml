@@ -29,8 +29,7 @@ repos:
     hooks:
       - id: wiki-service-tests
         name: Wiki Service Tests
-        entry: bash scripts/pre-commit-tests.sh
+        entry: python scripts/pre_commit_tests.py
         language: system
         pass_filenames: false
         always_run: true
-        stages: [commit]
