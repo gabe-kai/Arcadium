@@ -57,11 +57,12 @@ This project uses [pre-commit](https://pre-commit.com/) to ensure code quality a
 # Install pre-commit (if not already installed)
 pip install pre-commit
 
-# Install pre-commit hooks (runs on git commit)
+# Install pre-commit hooks (runs formatting/linting on git commit)
 pre-commit install
 
-# Install pre-push hook (runs tests before git push)
-bash scripts/install-pre-push-hook.sh
+# Note: Test hooks are disabled. Run tests manually before committing/pushing:
+# python scripts/pre_commit_tests.py
+# bash scripts/pre-push-hook.sh
 
 # Run hooks on all files (optional, for initial setup)
 pre-commit run --all-files
@@ -77,12 +78,14 @@ pre-commit run --all-files
 - **Black** - Python code formatter
 - **isort** - Python import sorter
 
-**Pre-push Hook (runs on `git push`):**
-- **Wiki Service Tests** - Runs full test suite before pushing to catch failures early
+**Running Tests (manual):**
+- **Wiki Service Tests** - Run manually before committing/pushing:
+  - `python scripts/run-wiki-tests.py` (recommended)
+  - `bash scripts/run-wiki-tests.sh`
 
-The pre-commit hooks will run automatically on `git commit`. To skip hooks (not recommended), use `git commit --no-verify`.
+The pre-commit hooks will run automatically on `git commit` (formatting and linting only). To skip hooks (not recommended), use `git commit --no-verify`.
 
-The pre-push hook will run automatically on `git push`. To skip the test check (not recommended), use `git push --no-verify`.
+**Note:** Test execution has been removed from automatic hooks. Run tests manually before committing/pushing to ensure everything passes.
 
 ### Database Setup
 
@@ -187,5 +190,6 @@ The web client is a React-based SPA located in `client/`. See [Client README](cl
 1. Create a feature branch
 2. Make your changes
 3. Ensure pre-commit hooks pass (run `pre-commit run --all-files` if needed)
+4. Run tests manually before committing: `python scripts/run-wiki-tests.py`
 4. Ensure all tests pass
 5. Submit a pull request

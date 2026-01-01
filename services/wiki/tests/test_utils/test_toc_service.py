@@ -26,6 +26,16 @@ def test_toc_anchor_generation():
     assert toc[0]["anchor"] == "my-heading-here"
 
 
+def test_toc_anchor_starts_with_number():
+    """Test anchor generation for headings starting with numbers (CSS IDs cannot start with digits)"""
+    content = "## 1. Goals & Design Principles"
+    toc = generate_toc(content)
+    assert len(toc) == 1
+    # Should be prefixed with "h-" to make it a valid CSS ID
+    assert toc[0]["anchor"] == "h-1-goals-design-principles"
+    assert not toc[0]["anchor"][0].isdigit()  # Should not start with a number
+
+
 def test_toc_excludes_h1():
     """Test that H1 headings are excluded"""
     content = """# Main Title

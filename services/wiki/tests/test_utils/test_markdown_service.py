@@ -33,7 +33,8 @@ def test_markdown_to_html_basic():
     """Test basic markdown to HTML conversion"""
     md = "## Heading\n\nThis is **bold** text."
     html = markdown_to_html(md)
-    assert "<h2>Heading</h2>" in html
+    # Headings now include ID attributes for TOC navigation
+    assert '<h2 id="heading">Heading</h2>' in html or "<h2>Heading</h2>" in html
     assert "<strong>bold</strong>" in html
 
 

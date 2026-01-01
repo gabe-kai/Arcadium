@@ -135,7 +135,14 @@ export function htmlToMarkdown(html) {
   // Enable GFM features (tables, strikethrough, task lists)
   turndownService.use(gfm);
 
-  return turndownService.turndown(html);
+  let markdown = turndownService.turndown(html);
+
+  // Remove escaped periods from headings (Turndown escapes periods to prevent list interpretation)
+  // Pattern: ## 1\. Title -> ## 1. Title
+  // This fixes headings like "1. Goals" that get escaped to "1\. Goals"
+  markdown = markdown.replace(/^(#{1,6})\s+(\d+)\\.\s+/gm, '$1 $2. ');
+
+  return markdown;
 }
 
 /**
@@ -144,6 +151,10 @@ export function htmlToMarkdown(html) {
  */
 export function markdownToHtml(markdown) {
   if (!markdown) return '';
+
+  // Unescape backslashes in headings before parsing (e.g., "1\. Title" -> "1. Title")
+  // TurndownService escapes periods to prevent list interpretation, but we want them unescaped in HTML
+  markdown = markdown.replace(/^(#{1,6})\s+(\d+)\\.\s+/gm, '$1 $2. ');
 
   // Configure marked options
   marked.setOptions({

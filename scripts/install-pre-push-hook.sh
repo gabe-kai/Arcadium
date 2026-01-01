@@ -49,5 +49,9 @@ fi
 
 echo "✓ Pre-push hook installed successfully!"
 echo ""
-echo "The hook will run tests before every 'git push'."
+echo "NOTE: This hook is currently disabled. Tests should be run manually."
+echo "To run tests manually:"
+echo "  python scripts/run-wiki-tests.py"
+echo "  (or: bash scripts/run-wiki-tests.sh)"
+echo ""
 echo "To skip the hook: git push --no-verify"

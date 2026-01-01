@@ -269,24 +269,25 @@ pytest
 
 Test fixtures and test code explicitly assign `section="Regression-Testing"` when creating pages. System pages (like `orphanage` and `service-status`) created during tests also receive this section assignment.
 
-### Pre-commit Hook
+### Running Tests
 
-The Wiki Service tests are automatically run before each commit via a pre-commit hook. This ensures tests pass before code is committed, catching failures early in the development cycle.
+Wiki Service tests should be run manually before committing or pushing. The test suite can be executed using:
 
-**Installation:**
+**Recommended:**
 ```bash
-# From project root
-./scripts/install-pre-commit-tests.sh
-
-# Or manually:
-pre-commit install --hook-type pre-commit
+python scripts/run-wiki-tests.py
 ```
 
-**Behavior:**
-- Tests run automatically on `git commit`
-- Runs after formatting/linting checks (black, isort, ruff)
+**Alternative:**
+```bash
+bash scripts/run-wiki-tests.sh
+```
+
+**Pre-commit Hooks:**
+- Formatting and linting hooks (black, isort, ruff) run automatically on `git commit`
+- Test execution has been removed from automatic hooks
+- Install hooks: `pre-commit install`
 - Uses database credentials from `services/wiki/.env`
-- To skip (not recommended): `git commit --no-verify`
 
 **Note:** The pre-commit hook runs the full test suite. For faster feedback during development, you can run `pytest` manually on specific test files.
 

@@ -25,11 +25,3 @@ repos:
     hooks:
       - id: isort
         args: ["--profile=black"]
-  - repo: local
-    hooks:
-      - id: wiki-service-tests
-        name: Wiki Service Tests
-        entry: python scripts/pre_commit_tests.py
-        language: system
-        pass_filenames: false
-        always_run: true

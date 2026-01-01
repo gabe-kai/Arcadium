@@ -24,11 +24,18 @@ export function TableOfContents({ toc, contentRef }) {
   const scrollToSection = (anchor) => {
     if (!contentRef?.current) return;
 
-    const element = contentRef.current.querySelector(`#${anchor}`);
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      // Update active section immediately
-      setActiveSection(anchor);
+    try {
+      // Validate anchor is a valid CSS selector
+      const element = contentRef.current.querySelector(`#${anchor}`);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        // Update active section immediately
+        setActiveSection(anchor);
+      }
+    } catch (error) {
+      // Invalid selector (e.g., starts with number) - silently fail
+      // These are from old pages saved before the anchor fix
+      // The anchor will be fixed when the page is next saved
     }
   };
 
@@ -36,10 +43,18 @@ export function TableOfContents({ toc, contentRef }) {
   useEffect(() => {
     if (!toc || !contentRef?.current) return;
 
-    const headings = toc.map((item) => ({
-      anchor: item.anchor,
-      element: contentRef.current.querySelector(`#${item.anchor}`),
-    })).filter((item) => item.element);
+    const headings = toc.map((item) => {
+      try {
+        // Validate anchor is a valid CSS selector (e.g., doesn't start with number)
+        // querySelector will throw if selector is invalid
+        const element = contentRef.current.querySelector(`#${item.anchor}`);
+        return { anchor: item.anchor, element };
+      } catch (error) {
+        // Invalid selector (e.g., starts with number) - skip this heading silently
+        // These are from old pages saved before the anchor fix
+        return { anchor: item.anchor, element: null };
+      }
+    }).filter((item) => item.element);
 
     if (headings.length === 0) return;
 

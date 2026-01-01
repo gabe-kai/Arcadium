@@ -4,6 +4,7 @@ import re
 from typing import Dict, Optional, Tuple
 
 import yaml
+from app.utils.toc_service import _generate_anchor
 
 
 def parse_frontmatter(content: str) -> Tuple[Dict, str]:
@@ -63,6 +64,22 @@ def _parse_lists(lines: list) -> list:
             i += 1
             continue
 
+        # Skip lines that are already HTML tags (e.g., <hr>, <h2>, etc.)
+        # This prevents processing horizontal rules or headings as list items
+        if stripped.startswith("<") and stripped.endswith(">"):
+            result.append(line)
+            i += 1
+            continue
+
+        # Skip horizontal rules (---, ***, ___, * * *, - - -, _ _ _) - they should already be converted to <hr>
+        # but check here as a safeguard to prevent them from being processed as list items
+        if re.match(r"^([-*_])\1{2,}\s*$", stripped) or re.match(
+            r"^([-*_])(?:\s+\1){2,}\s*$", stripped
+        ):
+            result.append(line)
+            i += 1
+            continue
+
         # Check if this is a list item (bullet or numbered)
         bullet_match = re.match(r"^(\s*)[-*+]\s+(.+)$", stripped)
         numbered_match = re.match(r"^(\s*)(\d+)\.\s+(.+)$", stripped)
@@ -91,6 +108,10 @@ def _parse_lists(lines: list) -> list:
                     next_stripped = lines[i].strip()
                     if not next_stripped:
                         continue
+                    # Check if next line is a horizontal rule (---, ***, ___) - end the list
+                    if re.match(r"^([-*_])\1{2,}\s*$", next_stripped):
+                        # List ends at horizontal rule
+                        break
                     # Check if next line is a list item at same or deeper level
                     next_bullet = re.match(r"^(\s*)[-*+]\s+", next_stripped)
                     next_numbered = re.match(r"^(\s*)(\d+)\.\s+", next_stripped)
@@ -100,6 +121,13 @@ def _parse_lists(lines: list) -> list:
                             # List continues
                             continue
                     # List ends
+                    break
+
+                # Check if this is a horizontal rule (---, ***, ___, * * *, - - -, _ _ _) - end the list
+                if re.match(r"^([-*_])\1{2,}\s*$", stripped) or re.match(
+                    r"^([-*_])(?:\s+\1){2,}\s*$", stripped
+                ):
+                    # List ends at horizontal rule
                     break
 
                 # Check if this is a list item
@@ -312,12 +340,42 @@ def markdown_to_html(markdown: str) -> str:
     html = table_pattern.sub(replace_table, html)
 
     # Headers (H1-H6) - do after code blocks and tables to avoid conflicts
-    html = re.sub(r"^# (.+)$", r"<h1>\1</h1>", html, flags=re.MULTILINE)
-    html = re.sub(r"^## (.+)$", r"<h2>\1</h2>", html, flags=re.MULTILINE)
-    html = re.sub(r"^### (.+)$", r"<h3>\1</h3>", html, flags=re.MULTILINE)
-    html = re.sub(r"^#### (.+)$", r"<h4>\1</h4>", html, flags=re.MULTILINE)
-    html = re.sub(r"^##### (.+)$", r"<h5>\1</h5>", html, flags=re.MULTILINE)
-    html = re.sub(r"^###### (.+)$", r"<h6>\1</h6>", html, flags=re.MULTILINE)
+    # Add IDs to H2-H6 headings for TOC navigation (H1 is typically page title, not in TOC)
+    def add_heading_id(match, level):
+        heading_text = match.group(1)
+        # Unescape backslashes in heading text (e.g., "1\. Title" -> "1. Title")
+        # TurndownService escapes periods to prevent list interpretation, but we want them unescaped in HTML
+        heading_text = heading_text.replace("\\.", ".")
+        anchor = _generate_anchor(heading_text)
+        return f'<h{level} id="{anchor}">{heading_text}</h{level}>'
+
+    # Horizontal rules (---, ***, ___, * * *, - - -, _ _ _) - do before headers and lists to avoid conflicts
+    # Pattern 1: three or more repeated dashes, asterisks, or underscores (---, ***, ___)
+    # Pattern 2: three or more dashes, asterisks, or underscores separated by spaces (* * *, - - -, _ _ _)
+    html = re.sub(r"^([-*_])\1{2,}\s*$", r"<hr>", html, flags=re.MULTILINE)
+    html = re.sub(r"^([-*_])(?:\s+\1){2,}\s*$", r"<hr>", html, flags=re.MULTILINE)
+
+    # H1 headings - unescape backslashes (e.g., "1\. Title" -> "1. Title")
+    def add_h1(match):
+        heading_text = match.group(1).replace("\\.", ".")
+        return f"<h1>{heading_text}</h1>"
+
+    html = re.sub(r"^# (.+)$", add_h1, html, flags=re.MULTILINE)
+    html = re.sub(
+        r"^## (.+)$", lambda m: add_heading_id(m, 2), html, flags=re.MULTILINE
+    )
+    html = re.sub(
+        r"^### (.+)$", lambda m: add_heading_id(m, 3), html, flags=re.MULTILINE
+    )
+    html = re.sub(
+        r"^#### (.+)$", lambda m: add_heading_id(m, 4), html, flags=re.MULTILINE
+    )
+    html = re.sub(
+        r"^##### (.+)$", lambda m: add_heading_id(m, 5), html, flags=re.MULTILINE
+    )
+    html = re.sub(
+        r"^###### (.+)$", lambda m: add_heading_id(m, 6), html, flags=re.MULTILINE
+    )
 
     # Parse lists (bullet and numbered) - handle nested lists
     # Do this BEFORE header conversion so we can parse markdown list syntax
@@ -417,6 +475,7 @@ def markdown_to_html(markdown: str) -> str:
                 "</ol",
                 "<table",
                 "</table",
+                "<hr",
                 "<PROTECTEDCODE",
                 "<PROTECTEDTABLE",
             )

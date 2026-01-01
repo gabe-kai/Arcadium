@@ -44,12 +44,13 @@ def _generate_anchor(text: str) -> str:
     """
     Generate an anchor ID from heading text.
     Converts to lowercase, replaces spaces with hyphens, removes special chars.
+    Ensures anchor doesn't start with a number (CSS IDs cannot start with digits).
 
     Args:
         text: Heading text
 
     Returns:
-        Anchor string (e.g., "my-heading")
+        Anchor string (e.g., "my-heading" or "h-1-goals" if starts with number)
     """
     # Convert to lowercase
     anchor = text.lower()
@@ -61,4 +62,9 @@ def _generate_anchor(text: str) -> str:
     # Remove leading/trailing hyphens
     anchor = anchor.strip("-")
 
-    return anchor or "heading"
+    # If anchor is empty or starts with a number, prefix with "h-"
+    # CSS IDs cannot start with a digit
+    if not anchor or (anchor and anchor[0].isdigit()):
+        anchor = f"h-{anchor}" if anchor else "heading"
+
+    return anchor
