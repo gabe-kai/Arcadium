@@ -39,4 +39,9 @@ class RefreshToken(db.Model):
 
     def is_expired(self):
         """Check if refresh token is expired"""
-        return datetime.now(timezone.utc) > self.expires_at
+        # Convert stored datetime to UTC-aware for comparison
+        # (stored as naive but represents UTC time)
+        expires_at_aware = self.expires_at
+        if expires_at_aware.tzinfo is None:
+            expires_at_aware = expires_at_aware.replace(tzinfo=timezone.utc)
+        return datetime.now(timezone.utc) > expires_at_aware

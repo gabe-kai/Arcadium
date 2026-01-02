@@ -245,9 +245,9 @@ def refresh_token():
         New access token and expiration
     """
     try:
-        data = request.get_json()
+        data = request.get_json(silent=True)
 
-        if not data:
+        if data is None:
             return jsonify({"error": "Request body is required"}), 400
 
         refresh_token_str = data.get("token")
