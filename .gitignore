@@ -89,3 +89,9 @@ playwright-report/
 playwright/.cache/
 
 venvLibsite-packages/
+
+# Wiki test pages (should not be in repository)
+services/wiki/data/pages/Regression-Testing/
+services/wiki/data/pages/draft-page.md
+services/wiki/data/pages/untitled*.md
+services/wiki/data/pages/page-1.md
