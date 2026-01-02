@@ -8,6 +8,7 @@ For AI agents writing wiki pages:
 """
 
 import os
+import time
 import uuid
 from typing import Dict, Optional, Tuple
 
@@ -101,12 +102,15 @@ class SyncUtility:
         """
         Determine if file should be synced (newer than database record).
 
+        Includes conflict detection: if database was recently updated (within grace period),
+        sync is skipped to protect browser edits from being overwritten.
+
         Args:
             file_path: Relative file path
             page: Existing page record (None if new)
 
         Returns:
-            True if file should be synced
+            True if file should be synced, False if sync should be skipped
         """
         file_mtime = FileScanner.get_file_modification_time(file_path, self.pages_dir)
 
@@ -120,7 +124,31 @@ class SyncUtility:
         # Compare file modification time with database updated_at
         if page.updated_at:
             db_time = page.updated_at.timestamp()
-            return file_mtime > db_time
+
+            # Check if file is newer than database
+            if file_mtime <= db_time:
+                # File is not newer, skip sync
+                return False
+
+            # File is newer - check for conflict with recent browser edits
+            grace_period = current_app.config.get(
+                "SYNC_CONFLICT_GRACE_PERIOD_SECONDS", 600
+            )  # Default: 10 minutes
+            current_time = time.time()
+            time_since_db_update = current_time - db_time
+
+            if time_since_db_update < grace_period:
+                # Database was updated recently (within grace period)
+                # Skip sync to protect browser edits
+                current_app.logger.info(
+                    f"Sync skipped for {file_path} (slug: {page.slug}): "
+                    f"Database was updated {time_since_db_update:.1f}s ago "
+                    f"(within {grace_period}s grace period). Browser edits protected."
+                )
+                return False
+
+            # File is newer and database update was outside grace period, safe to sync
+            return True
 
         # If no updated_at, sync it
         return True
@@ -133,13 +161,13 @@ class SyncUtility:
 
         Args:
             file_path: Relative file path
-            force: Force sync even if file is not newer
+            force: Force sync even if file is not newer (bypasses conflict detection)
 
         Returns:
             Tuple of (Page instance, status: bool|None)
             - True: page was created
             - False: page was updated
-            - None: page was skipped (not newer than DB)
+            - None: page was skipped (file not newer than DB, or conflict detected)
         """
         # Read file
         frontmatter, markdown_content = self.read_file(file_path)

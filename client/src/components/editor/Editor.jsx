@@ -18,9 +18,16 @@ import { markdownToHtml } from '../../utils/markdown';
  */
 export const Editor = forwardRef(({ content, onChange, placeholder = 'Start writing...', onEditorReady }, ref) => {
   // Convert markdown to HTML for initial content
-  const initialContent = content ? markdownToHtml(content) : '';
+  let initialContent = '';
+  try {
+    initialContent = content ? markdownToHtml(content) : '';
+  } catch (error) {
+    console.error('[Editor] Error converting markdown to HTML:', error);
+    initialContent = '';
+  }
 
   const [isReady, setIsReady] = useState(false);
+  const [initError, setInitError] = useState(null);
 
   const editor = useEditor({
     extensions: [
@@ -69,8 +76,16 @@ export const Editor = forwardRef(({ content, onChange, placeholder = 'Start writ
     },
     onError: ({ editor, error }) => {
       console.error('[Editor] Tiptap initialization error:', error);
+      setInitError(error?.message || 'Editor initialization failed');
     },
   });
+
+  // Log editor state for debugging
+  useEffect(() => {
+    if (editor) {
+      console.log('[Editor] Editor instance created successfully');
+    }
+  }, [editor]);
 
   // Expose editor instance via ref
   useImperativeHandle(ref, () => ({
@@ -123,13 +138,29 @@ export const Editor = forwardRef(({ content, onChange, placeholder = 'Start writ
     }
   }, [content, editor]);
 
+  if (initError) {
+    return (
+      <div className="arc-editor-loading" style={{ color: 'var(--arc-error, #ef4444)', padding: '2rem' }}>
+        <p><strong>Editor Error:</strong> {initError}</p>
+        <p style={{ fontSize: '0.875rem', marginTop: '0.5rem' }}>
+          Please refresh the page. If the issue persists, check the browser console for details.
+        </p>
+      </div>
+    );
+  }
+
   if (!editor || !isReady) {
     return (
-      <div className="arc-editor-loading">
-        Loading editor...
+      <div className="arc-editor-loading" style={{ minHeight: '400px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+        <div>Loading editor...</div>
         {!editor && (
           <div style={{ fontSize: '0.875rem', marginTop: '0.5rem', color: 'var(--arc-text-subtle)' }}>
             Initializing Tiptap editor...
+          </div>
+        )}
+        {editor && !isReady && (
+          <div style={{ fontSize: '0.875rem', marginTop: '0.5rem', color: 'var(--arc-text-subtle)' }}>
+            Editor ready, finalizing...
           </div>
         )}
       </div>

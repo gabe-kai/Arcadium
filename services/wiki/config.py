@@ -95,6 +95,14 @@ class Config:
     )
     NOTIFICATION_SERVICE_TOKEN = os.environ.get("NOTIFICATION_SERVICE_TOKEN") or ""
 
+    # File sync conflict detection
+    # Grace period (in seconds) to protect browser edits from being overwritten by file sync
+    # If database was updated within this period, file sync will be skipped
+    # Default: 10 minutes (600 seconds)
+    SYNC_CONFLICT_GRACE_PERIOD_SECONDS = int(
+        os.environ.get("SYNC_CONFLICT_GRACE_PERIOD_SECONDS", "600")
+    )
+
 
 class DevelopmentConfig(Config):
     """Development configuration"""

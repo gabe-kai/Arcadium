@@ -345,7 +345,9 @@ export function EditPage() {
 
   return (
     <Layout sidebar={<Sidebar />}>
-      <div className="arc-edit-page">
+      <div className="arc-content-wrapper">
+        <div className="arc-content-scrollable">
+          <div className="arc-edit-page">
         <div className="arc-edit-page-header">
           <div className="arc-edit-page-header-top">
             <h2 className="arc-edit-page-header-title">
@@ -455,6 +457,8 @@ export function EditPage() {
               {isSaving ? 'Saving...' : isNewPage ? 'Create Page' : 'Save Changes'}
             </button>
           </div>
+          </div>
+        </div>
         </div>
       </div>
     </Layout>

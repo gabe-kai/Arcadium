@@ -217,14 +217,141 @@ python -m app.sync watch --admin-user-id <uuid>
 - Recursively monitors all subdirectories in `data/pages/`
 - Only watches `.md` files
 - Graceful shutdown on Ctrl+C
+- **Conflict Detection**: Protects browser edits from being overwritten - if a page was edited in the browser within the grace period (default: 10 minutes), file sync is skipped to preserve browser edits
 
 **Important:** The watcher must be running to detect file deletions. If you delete files while the watcher is not running, you can manually run `python -m app.sync sync-all` to clean up orphaned pages.
+
+**Conflict Resolution:**
+The sync system includes conflict detection to prevent browser edits from being overwritten by file sync:
+- **Grace Period**: Pages edited in the browser are protected from file sync for a configurable period (default: 10 minutes)
+- **Configuration**: Set `SYNC_CONFLICT_GRACE_PERIOD_SECONDS` in environment variables to adjust the grace period (in seconds)
+- **Behavior**: If a file is modified but the database page was updated within the grace period, sync is skipped and a log message is generated
+- **After Grace Period**: Once the grace period expires, file edits will sync to the database (file takes precedence)
 
 **When to Use:**
 - **Watch mode**: For continuous development, AI agent workflows, or real-time automatic syncing
 - **Manual sync**: For batch operations, one-time syncs, or when you want control over when syncing happens
 
 For more details, see [Wiki AI Content Management](../../docs/wiki-ai-content-management.md).
+
+## Bidirectional Sync Workflow
+
+The wiki service supports bidirectional synchronization between markdown files and the database, enabling seamless editing workflows:
+
+### Overview
+
+- **File → Database**: Markdown files can be edited and automatically synced to the database
+- **Database → File**: Pages edited in the browser are automatically written to markdown files
+- **Automatic Sync**: File watcher monitors files and syncs changes in real-time
+- **Conflict Protection**: Grace period prevents browser edits from being overwritten
+
+### Editing Workflows
+
+#### Workflow 1: File-Based Editing (AI/External Editors)
+
+1. Edit markdown files directly in `services/wiki/data/pages/`
+2. File watcher detects changes (if running) or run manual sync
+3. Changes sync to database automatically
+4. Pages appear in wiki with full functionality
+
+**Best for:**
+- AI agents generating content
+- Bulk content updates
+- External markdown editors
+- Version control workflows
+
+#### Workflow 2: Browser-Based Editing
+
+1. Edit pages through the wiki web interface
+2. Save changes
+3. File is automatically updated with new content
+4. Database and file remain in sync
+
+**Best for:**
+- Human editors using the UI
+- Rich text editing with preview
+- Metadata management (title, slug, section, etc.)
+- Collaborative editing
+
+#### Workflow 3: Hybrid Editing (Recommended)
+
+1. Use file editing for initial content creation/bulk updates
+2. Use browser editing for refinements and metadata
+3. File watcher keeps everything in sync
+4. Grace period protects recent browser edits
+
+**Best Practices:**
+- Keep file watcher running during development
+- Use file editing for initial drafts
+- Use browser editing for final edits and publishing
+- Avoid editing the same page in both places simultaneously
+
+### Conflict Resolution
+
+The sync system includes automatic conflict detection to prevent data loss:
+
+**Grace Period Protection:**
+- Pages edited in the browser are protected for a configurable period (default: 10 minutes)
+- If a file is modified while a page was recently edited in the browser, file sync is skipped
+- This prevents browser edits from being overwritten by file changes
+
+**How It Works:**
+1. User edits page in browser → Database and file updated
+2. AI/external editor modifies file (within grace period)
+3. File watcher detects change → Checks if database was recently updated
+4. If within grace period → Sync skipped, browser edits preserved
+5. If grace period expired → File syncs to database (file takes precedence)
+
+**Configuration:**
+```bash
+# Set grace period (in seconds, default: 600 = 10 minutes)
+export SYNC_CONFLICT_GRACE_PERIOD_SECONDS=600
+```
+
+**Best Practices:**
+- Grace period provides a safety buffer - use appropriate duration for your workflow
+- If you need to force sync after browser edits, wait for grace period to expire or use `--force` flag
+- Check server logs for conflict warnings to understand sync behavior
+- After grace period expires, file edits will sync (file takes precedence)
+
+### Sync Rules
+
+**File → Database Sync:**
+- File modification time > Database `updated_at` → Sync to database
+- Database `updated_at` > File modification time → Skip sync (preserve database)
+- Database updated within grace period → Skip sync (protect browser edits)
+
+**Database → File Sync:**
+- Happens immediately when page is saved in browser
+- File is updated with current database content and metadata
+- Frontmatter is regenerated from database values
+
+**Precedence:**
+- When file is newer (and outside grace period) → File content takes precedence
+- When database is newer → Database content takes precedence
+- Within grace period → Database content is protected (browser edits preserved)
+
+### Troubleshooting
+
+**File not syncing to database:**
+- Check file modification time is newer than database `updated_at`
+- Verify file watcher is running (if using automatic sync)
+- Check if page was recently edited in browser (grace period protection)
+- Check server logs for sync errors or conflict warnings
+- Use `--force` flag to bypass timestamp checks (use with caution)
+
+**Database changes not appearing in file:**
+- File should update immediately when page is saved in browser
+- Check server logs for file write errors
+- Verify file permissions
+- Ensure page has a valid `file_path` in database
+
+**Duplicate pages after rename:**
+- Ensure file watcher is running or run manual sync after renaming
+- Old file with old slug should be moved/updated automatically
+- Check both old and new file paths don't exist simultaneously
+
+For more details, see [Wiki AI Content Management](../../docs/wiki-ai-content-management.md) and [File Sync Analysis](../../docs/wiki-file-sync-analysis.md).
 
 ## Markdown Processing
 

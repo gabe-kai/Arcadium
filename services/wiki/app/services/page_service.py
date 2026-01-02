@@ -256,6 +256,25 @@ class PageService:
             page.file_path = new_file_path
             # Move file if path changed
             FileService.move_page_file(page, old_file_path, new_file_path)
+            # After moving, update file content to reflect new slug/metadata in frontmatter
+            # This ensures the file's frontmatter matches the database state
+            # Parse frontmatter from page.content (which may have frontmatter from frontend)
+            frontmatter, markdown_content = parse_frontmatter(page.content)
+            # Merge with page metadata (page metadata takes precedence)
+            if page.section:
+                frontmatter["section"] = page.section
+            if page.status:
+                frontmatter["status"] = page.status
+            file_content = PageService._build_file_content_from_values(
+                title=page.title,
+                slug=page.slug,
+                parent_id=page.parent_id,
+                section=page.section,
+                status=page.status,
+                frontmatter=frontmatter,
+                markdown_content=markdown_content,
+            )
+            FileService.write_page_file(page, file_content)
         else:
             # Update file content
             # Parse frontmatter from page.content (which may have frontmatter from frontend)
