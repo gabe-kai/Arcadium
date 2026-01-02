@@ -90,7 +90,13 @@ This guide outlines the implementation status and details for the Wiki User Inte
   - Highlight current section while scrolling
   - Indentation for nested headings
   - Active section highlighting
-  - Sticky positioning support
+  - **Sticky positioning**: TOC follows viewport as user scrolls page content
+    - TOC container uses CSS `position: sticky` with `top: 1.5rem`
+    - Container has `max-height: calc(100vh - 3rem)` to stay within viewport
+    - TOC list is scrollable when content exceeds viewport height
+    - Auto-scrolls TOC list to keep active section visible when TOC is taller than viewport
+    - Smooth scroll behavior with 20px padding from top/bottom
+    - Custom scrollbar styling for better UX
   - Collapsible for pages with < 5 TOC items
 - **Backlinks component** - Displays pages that link to current page
   - Shows backlink count
@@ -99,6 +105,13 @@ This guide outlines the implementation status and details for the Wiki User Inte
 - **Integration**: Both components integrated into PageView right sidebar
 
 ### ✅ Phase 5: Comments System
+- **CommentsPanel component** - Collapsible comments panel that splits content area
+  - Collapsed: One-row height bar at bottom of content pane (2.5rem)
+  - Expanded: Splits content area (40% height, 300px-600px range), showing comments in bottom panel
+  - Smooth transitions between states (0.3s ease)
+  - Shows comment count in collapsed state
+  - Content area adjusts to 60% when panel is expanded
+  - Panel scrolls independently from main content
 - **CommentsList component** - Displays all comments with threading
 - **CommentItem component** - Single comment with nested replies (up to 5 levels)
 - **CommentForm component** - Form for creating new comments and replies
@@ -295,6 +308,60 @@ This guide outlines the implementation status and details for the Wiki User Inte
 - `client/src/components/navigation/NavigationTree.jsx` - Main implementation
 - `client/src/styles.css` - Section grouping styles
 
+### Table of Contents Enhancements
+
+#### Sticky Positioning with Auto-Scroll
+
+**Feature**: Table of Contents follows viewport as user scrolls, with automatic scrolling to keep active section visible
+
+**Implementation**:
+- **Sticky Container**: TOC container uses CSS `position: sticky` with `top: 1.5rem` to stay within viewport
+- **Height Constraint**: Container has `max-height: calc(100vh - 3rem)` to prevent exceeding viewport
+- **Scrollable List**: TOC list (`arc-toc-list`) has `overflow-y: auto` when content exceeds container height
+- **Auto-Scroll Logic**: `useEffect` hook monitors `activeSection` changes and scrolls TOC list to keep active item visible
+  - Calculates if active item is above or below visible area
+  - Scrolls with 20px padding from top/bottom edges
+  - Uses smooth scroll behavior for better UX
+  - Only scrolls when TOC is taller than viewport (no unnecessary scrolling)
+- **Custom Scrollbar**: Thin, styled scrollbar for better visual appearance
+
+**Behavior**:
+- TOC container stays fixed relative to viewport as page content scrolls
+- When TOC list is taller than viewport, it becomes scrollable
+- Active section automatically scrolls into view when it changes
+- Smooth transitions prevent jarring movements
+
+**Files**:
+- `client/src/components/navigation/TableOfContents.jsx` - Main implementation with auto-scroll logic
+- `client/src/styles.css` - Sticky positioning and scrollbar styling
+
+### Comments Panel Enhancements
+
+#### Collapsible Comments Panel
+
+**Feature**: Comments panel that collapses to a one-row bar and expands to split the content area
+
+**Implementation**:
+- **Collapsed State**: One-row height bar (2.5rem) at bottom of content pane showing "Comments (count)" with expand icon
+- **Expanded State**: Panel expands to 40% of content area height (300px-600px range), splitting the frame
+- **Layout Split**: When expanded, content area takes 60% and comments panel takes 40%
+- **Independent Scrolling**: Comments panel scrolls independently from main content
+- **Smooth Transitions**: 0.3s ease transition for height changes
+- **State Management**: Uses React state to toggle expanded/collapsed, updates wrapper class for CSS styling
+
+**Behavior**:
+- Panel always visible at bottom of content area (collapsed by default)
+- Clicking toggle button expands/collapses panel
+- Content area automatically adjusts height when panel expands
+- Comments panel has its own scrollbar when content exceeds panel height
+- Panel shows comment count in collapsed state
+
+**Files**:
+- `client/src/components/comments/CommentsPanel.jsx` - Main collapsible panel component
+- `client/src/components/comments/CommentsPanel.css` - Panel styling and transitions
+- `client/src/pages/PageView.jsx` - Integration with content wrapper layout
+- `client/src/styles.css` - Split-pane layout CSS (`.arc-content-wrapper`, `.arc-content-scrollable`)
+
 ### Editor Enhancements
 
 #### Link Dialog Improvements
@@ -464,9 +531,10 @@ src/
     content/
       (integrated into PageView)
     comments/
-      CommentsList.jsx
-      CommentItem.jsx
-      CommentForm.jsx
+      CommentsPanel.jsx    # Collapsible comments panel
+      CommentsList.jsx      # Comments list with threading
+      CommentItem.jsx      # Single comment component
+      CommentForm.jsx      # Comment form component
     editor/
       Editor.jsx           # Tiptap editor
       EditorToolbar.jsx   # Formatting toolbar

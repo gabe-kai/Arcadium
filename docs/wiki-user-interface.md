@@ -18,16 +18,30 @@
 │  Home > Section > Parent > Current Page                │
 ├──────────┬──────────────────────────────┬───────────────┤
 │          │                              │               │
-│  Nav     │                              │  Sidebar      │
-│  Tree    │      Page Content            │  - TOC        │
-│          │      (Continuous Scroll)     │  - Backlinks  │
-│          │                              │               │
+│  Nav     │      Page Content            │  Sidebar      │
+│  Tree    │      (Scrollable)            │  - TOC        │
+│          │                              │  - Backlinks  │
 │          │      [Previous] [Next]       │               │
 │          │                              │               │
 │          ├──────────────────────────────┤               │
-│          │      Comments Section        │               │
-│          │      (Threaded, max 5 deep)  │               │
+│          │  [Comments (3) ▲]            │               │
+│          │  (Collapsed: one-row bar)    │               │
 │          │                              │               │
+└──────────┴──────────────────────────────┴───────────────┘
+
+When Comments Panel Expanded:
+┌──────────┬──────────────────────────────┬───────────────┤
+│          │      Page Content (60%)       │  Sidebar      │
+│  Nav     │      (Scrollable)             │  - TOC        │
+│  Tree    │                              │  - Backlinks  │
+│          │      [Previous] [Next]       │               │
+│          ├──────────────────────────────┤               │
+│          │  Comments Panel (40%)        │               │
+│          │  [Comments (3) ▼]            │               │
+│          │  ┌────────────────────────┐ │               │
+│          │  │ Threaded Comments      │ │               │
+│          │  │ (Scrollable, max 5 deep)│ │               │
+│          │  └────────────────────────┘ │               │
 └──────────┴──────────────────────────────┴───────────────┘
 ```
 
@@ -282,15 +296,18 @@
 3. Click page to read
 4. Scroll through content
 5. Use TOC to jump to sections
-6. Read comments at bottom
-7. Navigate via Previous/Next or breadcrumbs
+6. See collapsed comments bar at bottom
+7. Click to expand comments panel (splits content area)
+8. Navigate via Previous/Next or breadcrumbs
 
 ### Commenting Flow (Player)
-1. Scroll to comments section
-2. Type comment in text area
-3. Optionally mark as "recommendation"
-4. Submit comment
-5. See comment appear in thread
+1. Click collapsed comments bar at bottom to expand panel
+2. Comments panel splits content area (40% height)
+3. Type comment in text area
+4. Optionally mark as "recommendation"
+5. Submit comment
+6. See comment appear in thread
+7. Can collapse panel to return to full content view
 
 ### Editing Flow (Writer)
 1. Click "Edit" button on page
