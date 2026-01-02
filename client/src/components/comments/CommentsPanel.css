@@ -1,0 +1,68 @@
+/* Comments Panel Styles */
+
+.arc-comments-panel {
+  background: var(--arc-surface);
+  border-top: 1px solid var(--arc-border);
+  display: flex;
+  flex-direction: column;
+  height: 2.5rem;
+  flex-shrink: 0;
+  transition: height 0.3s ease;
+  z-index: 5;
+}
+
+.arc-comments-panel-expanded {
+  height: 40%;
+  min-height: 300px;
+  max-height: 600px;
+}
+
+.arc-comments-panel-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 1rem;
+  background: var(--arc-surface);
+  border: none;
+  border-top: 1px solid var(--arc-border);
+  color: var(--arc-text);
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: background 0.15s;
+  width: 100%;
+  min-height: 2.5rem;
+}
+
+.arc-comments-panel-toggle:hover {
+  background: var(--arc-bg-elevated);
+}
+
+.arc-comments-panel-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.arc-comments-panel-count {
+  color: var(--arc-text-subtle);
+  font-weight: 400;
+}
+
+.arc-comments-panel-icon {
+  font-size: 0.75rem;
+  transition: transform 0.3s ease;
+}
+
+.arc-comments-panel-expanded .arc-comments-panel-icon {
+  transform: rotate(180deg);
+}
+
+.arc-comments-panel-content {
+  overflow-y: auto;
+  overflow-x: hidden;
+  flex: 1;
+  min-height: 0;
+  padding: 1.5rem;
+  padding-top: 1rem;
+}

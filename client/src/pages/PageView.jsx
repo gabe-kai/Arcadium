@@ -7,7 +7,7 @@ import { Breadcrumb } from '../components/navigation/Breadcrumb';
 import { PageNavigation } from '../components/navigation/PageNavigation';
 import { TableOfContents } from '../components/navigation/TableOfContents';
 import { Backlinks } from '../components/navigation/Backlinks';
-import { CommentsList } from '../components/comments/CommentsList';
+import { CommentsPanel } from '../components/comments/CommentsPanel';
 import { DeleteArchiveDialog } from '../components/page/DeleteArchiveDialog';
 import { ShareButton } from '../components/common/ShareButton';
 import { usePage, useBreadcrumb, usePageNavigation, deletePage, archivePage, unarchivePage } from '../services/api/pages';
@@ -161,87 +161,91 @@ export function PageView() {
   } else {
     content = (
       <>
-        {breadcrumb && <Breadcrumb breadcrumb={breadcrumb} currentPageId={pageId} />}
+        <div className="arc-content-wrapper">
+          <div className="arc-content-scrollable">
+            {breadcrumb && <Breadcrumb breadcrumb={breadcrumb} currentPageId={pageId} />}
 
-        <header className="arc-page-header">
-          <div className="arc-page-header-top">
-            <h1>{page.title}</h1>
-            <div className="arc-page-header-actions">
-              <ShareButton pageId={pageId} pageTitle={page.title} />
-              {page.can_edit && (
-                <button
-                  type="button"
-                  className="arc-edit-button"
-                  onClick={handleEditClick}
-                  aria-label="Edit this page"
-                >
-                  Edit
-                </button>
-              )}
-              {page.status === 'archived' && page.can_archive && (
-                <button
-                  type="button"
-                  className="arc-page-action-button arc-page-action-button-unarchive"
-                  onClick={handleUnarchiveClick}
-                  aria-label="Unarchive this page"
-                >
-                  Unarchive
-                </button>
-              )}
-              {page.status !== 'archived' && page.can_archive && (
-                <button
-                  type="button"
-                  className="arc-page-action-button arc-page-action-button-archive"
-                  onClick={handleArchiveClick}
-                  aria-label="Archive this page"
-                >
-                  Archive
-                </button>
-              )}
-              {page.can_delete && (
-                <button
-                  type="button"
-                  className="arc-page-action-button arc-page-action-button-delete"
-                  onClick={handleDeleteClick}
-                  aria-label="Delete this page"
-                >
-                  Delete
-                </button>
-              )}
-            </div>
+            <header className="arc-page-header">
+              <div className="arc-page-header-top">
+                <h1>{page.title}</h1>
+                <div className="arc-page-header-actions">
+                  <ShareButton pageId={pageId} pageTitle={page.title} />
+                  {page.can_edit && (
+                    <button
+                      type="button"
+                      className="arc-edit-button"
+                      onClick={handleEditClick}
+                      aria-label="Edit this page"
+                    >
+                      Edit
+                    </button>
+                  )}
+                  {page.status === 'archived' && page.can_archive && (
+                    <button
+                      type="button"
+                      className="arc-page-action-button arc-page-action-button-unarchive"
+                      onClick={handleUnarchiveClick}
+                      aria-label="Unarchive this page"
+                    >
+                      Unarchive
+                    </button>
+                  )}
+                  {page.status !== 'archived' && page.can_archive && (
+                    <button
+                      type="button"
+                      className="arc-page-action-button arc-page-action-button-archive"
+                      onClick={handleArchiveClick}
+                      aria-label="Archive this page"
+                    >
+                      Archive
+                    </button>
+                  )}
+                  {page.can_delete && (
+                    <button
+                      type="button"
+                      className="arc-page-action-button arc-page-action-button-delete"
+                      onClick={handleDeleteClick}
+                      aria-label="Delete this page"
+                    >
+                      Delete
+                    </button>
+                  )}
+                </div>
+              </div>
+              <div className="arc-page-meta">
+                {page.updated_at && (
+                  <span>
+                    Last updated:{' '}
+                    {new Date(page.updated_at).toLocaleString(undefined, {
+                      dateStyle: 'medium',
+                      timeStyle: 'short',
+                    })}
+                  </span>
+                )}
+                {typeof page.word_count === 'number' && (
+                  <span> · {page.word_count} words</span>
+                )}
+                {typeof page.content_size_kb === 'number' && (
+                  <span> · {page.content_size_kb.toFixed(1)} KB</span>
+                )}
+                {page.status && <span> · {page.status}</span>}
+              </div>
+            </header>
+
+            <article className="arc-reading-view">
+              <div
+                ref={contentRef}
+                className="arc-reading-body"
+                // Backend supplies sanitized HTML (`html_content`)
+                dangerouslySetInnerHTML={{ __html: page.html_content || '' }}
+              />
+            </article>
+
+            {navigation && <PageNavigation navigation={navigation} />}
           </div>
-          <div className="arc-page-meta">
-            {page.updated_at && (
-              <span>
-                Last updated:{' '}
-                {new Date(page.updated_at).toLocaleString(undefined, {
-                  dateStyle: 'medium',
-                  timeStyle: 'short',
-                })}
-              </span>
-            )}
-            {typeof page.word_count === 'number' && (
-              <span> · {page.word_count} words</span>
-            )}
-            {typeof page.content_size_kb === 'number' && (
-              <span> · {page.content_size_kb.toFixed(1)} KB</span>
-            )}
-            {page.status && <span> · {page.status}</span>}
-          </div>
-        </header>
 
-        <article className="arc-reading-view">
-          <div
-            ref={contentRef}
-            className="arc-reading-body"
-            // Backend supplies sanitized HTML (`html_content`)
-            dangerouslySetInnerHTML={{ __html: page.html_content || '' }}
-          />
-        </article>
-
-        {navigation && <PageNavigation navigation={navigation} />}
-
-        {pageId && <CommentsList pageId={pageId} comments={comments || []} />}
+          {pageId && <CommentsPanel pageId={pageId} comments={comments || []} />}
+        </div>
       </>
     );
   }

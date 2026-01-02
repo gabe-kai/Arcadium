@@ -105,6 +105,13 @@ This guide outlines the implementation status and details for the Wiki User Inte
 - **Integration**: Both components integrated into PageView right sidebar
 
 ### ✅ Phase 5: Comments System
+- **CommentsPanel component** - Collapsible comments panel that splits content area
+  - Collapsed: One-row height bar at bottom of content pane (2.5rem)
+  - Expanded: Splits content area (40% height, 300px-600px range), showing comments in bottom panel
+  - Smooth transitions between states (0.3s ease)
+  - Shows comment count in collapsed state
+  - Content area adjusts to 60% when panel is expanded
+  - Panel scrolls independently from main content
 - **CommentsList component** - Displays all comments with threading
 - **CommentItem component** - Single comment with nested replies (up to 5 levels)
 - **CommentForm component** - Form for creating new comments and replies
@@ -328,6 +335,33 @@ This guide outlines the implementation status and details for the Wiki User Inte
 - `client/src/components/navigation/TableOfContents.jsx` - Main implementation with auto-scroll logic
 - `client/src/styles.css` - Sticky positioning and scrollbar styling
 
+### Comments Panel Enhancements
+
+#### Collapsible Comments Panel
+
+**Feature**: Comments panel that collapses to a one-row bar and expands to split the content area
+
+**Implementation**:
+- **Collapsed State**: One-row height bar (2.5rem) at bottom of content pane showing "Comments (count)" with expand icon
+- **Expanded State**: Panel expands to 40% of content area height (300px-600px range), splitting the frame
+- **Layout Split**: When expanded, content area takes 60% and comments panel takes 40%
+- **Independent Scrolling**: Comments panel scrolls independently from main content
+- **Smooth Transitions**: 0.3s ease transition for height changes
+- **State Management**: Uses React state to toggle expanded/collapsed, updates wrapper class for CSS styling
+
+**Behavior**:
+- Panel always visible at bottom of content area (collapsed by default)
+- Clicking toggle button expands/collapses panel
+- Content area automatically adjusts height when panel expands
+- Comments panel has its own scrollbar when content exceeds panel height
+- Panel shows comment count in collapsed state
+
+**Files**:
+- `client/src/components/comments/CommentsPanel.jsx` - Main collapsible panel component
+- `client/src/components/comments/CommentsPanel.css` - Panel styling and transitions
+- `client/src/pages/PageView.jsx` - Integration with content wrapper layout
+- `client/src/styles.css` - Split-pane layout CSS (`.arc-content-wrapper`, `.arc-content-scrollable`)
+
 ### Editor Enhancements
 
 #### Link Dialog Improvements
@@ -497,9 +531,10 @@ src/
     content/
       (integrated into PageView)
     comments/
-      CommentsList.jsx
-      CommentItem.jsx
-      CommentForm.jsx
+      CommentsPanel.jsx    # Collapsible comments panel
+      CommentsList.jsx      # Comments list with threading
+      CommentItem.jsx      # Single comment component
+      CommentForm.jsx      # Comment form component
     editor/
       Editor.jsx           # Tiptap editor
       EditorToolbar.jsx   # Formatting toolbar
