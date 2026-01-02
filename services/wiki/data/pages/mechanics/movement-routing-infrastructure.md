@@ -1,9 +1,9 @@
 ---
-title: Movement, Routing, & Infrastructure
-slug: movement-routing-infrastructure
-section: Mechanics
-status: published
 order: 0
+section: Mechanics
+slug: movement-routing-infrastructure
+status: published
+title: Movement, Routing, & Infrastructure
 ---
 # Arcadium Movement, Routing, and Infrastructure
 

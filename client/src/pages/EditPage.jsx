@@ -30,6 +30,7 @@ export function EditPage() {
 
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
+  const [markdownContent, setMarkdownContent] = useState(''); // Store markdown without frontmatter for Editor
   const [metadata, setMetadata] = useState({
     title: '',
     slug: '',
@@ -78,19 +79,23 @@ export function EditPage() {
       // Load content only if we haven't loaded it yet or there are no unsaved changes
       if (page.content && (!metadataLoadedRef.current || !hasUnsavedChanges)) {
         // Parse frontmatter to get markdown content (frontmatter should not be in editor)
-        const { markdown: markdownContent } = parseFrontmatter(page.content);
+        const { markdown: markdownContentOnly } = parseFrontmatter(page.content);
+
+        // Store markdown without frontmatter for Editor component
+        setMarkdownContent(markdownContentOnly);
 
         // Convert markdown to HTML for editor (without frontmatter)
-        const html = markdownToHtml(markdownContent);
+        const html = markdownToHtml(markdownContentOnly);
         editor.commands.setContent(html);
         setContent(html);
       }
     }
   }, [page, editor]);
 
-  // Reset metadata loaded flag when pageId changes
+  // Reset metadata loaded flag and markdown content when pageId changes
   useEffect(() => {
     metadataLoadedRef.current = false;
+    setMarkdownContent(''); // Reset markdown content when switching pages
   }, [pageId]);
 
   // Auto-save to localStorage
@@ -426,7 +431,7 @@ export function EditPage() {
           ) : (
             <Editor
               ref={editorRef}
-              content={page?.content || ''}
+              content={markdownContent || ''}
               onEditorReady={handleEditorReady}
               onChange={(html) => {
                 setContent(html);
