@@ -34,7 +34,7 @@ def admin_user_id():
 
 
 def test_check_sync_conflict_no_file_path(app, admin_user_id):
-    """Test check_sync_conflict returns None when page has no file_path"""
+    """Test check_sync_conflict returns None when page has empty file_path"""
     with app.app_context():
         page = Page(
             title="Test",
@@ -42,11 +42,14 @@ def test_check_sync_conflict_no_file_path(app, admin_user_id):
             content="# Test",
             created_by=admin_user_id,
             updated_by=admin_user_id,
-            file_path=None,
+            file_path="",  # Empty string - file_path is NOT NULL in DB
         )
         db.session.add(page)
         db.session.commit()
 
+        # Manually set file_path to None after creation to test the code path
+        # (In practice, file_path is always set, but code checks for it defensively)
+        page.file_path = None
         conflict = PageService.check_sync_conflict(page)
         assert conflict is None
 
@@ -182,7 +185,7 @@ def test_check_sync_conflict_grace_period(app, admin_user_id, temp_pages_dir):
 
 
 def test_get_sync_status_no_file_path(app, admin_user_id):
-    """Test get_sync_status returns None when page has no file_path"""
+    """Test get_sync_status returns None when page has empty file_path"""
     with app.app_context():
         page = Page(
             title="Test",
@@ -190,11 +193,14 @@ def test_get_sync_status_no_file_path(app, admin_user_id):
             content="# Test",
             created_by=admin_user_id,
             updated_by=admin_user_id,
-            file_path=None,
+            file_path="",  # Empty string - file_path is NOT NULL in DB
         )
         db.session.add(page)
         db.session.commit()
 
+        # Manually set file_path to None after creation to test the code path
+        # (In practice, file_path is always set, but code checks for it defensively)
+        page.file_path = None
         status = PageService.get_sync_status(page)
         assert status is None
 

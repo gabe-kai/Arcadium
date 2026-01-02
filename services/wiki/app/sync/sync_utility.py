@@ -16,7 +16,6 @@ from typing import Dict, Optional, Tuple
 from app import db
 from app.models.page import Page
 from app.services.link_service import LinkService
-from app.services.page_service import PageService
 from app.services.search_index_service import SearchIndexService
 from app.services.version_service import VersionService
 from app.sync.file_scanner import FileScanner
@@ -173,7 +172,13 @@ class SyncUtility:
         if enable_content_comparison:
             file_hash = self._get_file_content_hash(file_path)
             if file_hash:
-                db_hash = self._compute_content_hash(page.content)
+                # Reconstruct database content the same way as file content for comparison
+                # This ensures YAML formatting differences don't cause false positives
+                db_frontmatter, db_markdown = parse_frontmatter(page.content)
+                db_reconstructed = self._reconstruct_content(
+                    db_frontmatter, db_markdown
+                )
+                db_hash = self._compute_content_hash(db_reconstructed)
                 if file_hash == db_hash:
                     # Content is identical, skip sync regardless of timestamps
                     current_app.logger.debug(
@@ -303,6 +308,9 @@ class SyncUtility:
         else:
             # Create new page
             # Pass full_content with frontmatter (needed for AI content management)
+            # Import here to avoid circular import (PageService imports FileScanner, which imports SyncUtility)
+            from app.services.page_service import PageService
+
             page = PageService.create_page(
                 title=title,
                 content=full_content,  # Pass content with frontmatter for AI system
