@@ -7,14 +7,15 @@ For AI agents writing wiki pages:
 - After writing files, user runs: python -m app.sync sync-all
 """
 
+import hashlib
 import os
+import time
 import uuid
 from typing import Dict, Optional, Tuple
 
 from app import db
 from app.models.page import Page
 from app.services.link_service import LinkService
-from app.services.page_service import PageService
 from app.services.search_index_service import SearchIndexService
 from app.services.version_service import VersionService
 from app.sync.file_scanner import FileScanner
@@ -97,16 +98,61 @@ class SyncUtility:
         frontmatter, markdown_content = parse_frontmatter(content)
         return frontmatter, markdown_content
 
+    def _compute_content_hash(self, content: str) -> str:
+        """
+        Compute SHA256 hash of content.
+
+        Args:
+            content: Content string to hash
+
+        Returns:
+            Hexadecimal hash string
+        """
+        return hashlib.sha256(content.encode("utf-8")).hexdigest()
+
+    def _get_file_content_hash(self, file_path: str) -> Optional[str]:
+        """
+        Get content hash of file (reconstructing full content with frontmatter).
+
+        Args:
+            file_path: Relative file path
+
+        Returns:
+            Content hash string, or None if file cannot be read
+        """
+        try:
+            full_path = os.path.join(self.pages_dir, file_path)
+            if not os.path.exists(full_path):
+                return None
+
+            with open(full_path, "r", encoding="utf-8") as f:
+                file_content = f.read()
+
+            # Reconstruct full content with frontmatter for comparison
+            frontmatter, markdown_content = parse_frontmatter(file_content)
+            full_content = self._reconstruct_content(frontmatter, markdown_content)
+
+            return self._compute_content_hash(full_content)
+        except Exception as e:
+            current_app.logger.warning(
+                f"Error computing file content hash for {file_path}: {e}"
+            )
+            return None
+
     def should_sync_file(self, file_path: str, page: Optional[Page]) -> bool:
         """
-        Determine if file should be synced (newer than database record).
+        Determine if file should be synced.
+
+        Uses content comparison (hash-based) to skip syncs when content is identical,
+        even if timestamps differ. Also includes conflict detection: if database was
+        recently updated (within grace period), sync is skipped to protect browser edits.
 
         Args:
             file_path: Relative file path
             page: Existing page record (None if new)
 
         Returns:
-            True if file should be synced
+            True if file should be synced, False if sync should be skipped
         """
         file_mtime = FileScanner.get_file_modification_time(file_path, self.pages_dir)
 
@@ -117,10 +163,58 @@ class SyncUtility:
             # New file, should sync
             return True
 
-        # Compare file modification time with database updated_at
+        # Check if content comparison is enabled (default: True)
+        enable_content_comparison = current_app.config.get(
+            "SYNC_ENABLE_CONTENT_COMPARISON", True
+        )
+
+        # Content comparison: Skip sync if content is identical
+        if enable_content_comparison:
+            file_hash = self._get_file_content_hash(file_path)
+            if file_hash:
+                # Reconstruct database content the same way as file content for comparison
+                # This ensures YAML formatting differences don't cause false positives
+                db_frontmatter, db_markdown = parse_frontmatter(page.content)
+                db_reconstructed = self._reconstruct_content(
+                    db_frontmatter, db_markdown
+                )
+                db_hash = self._compute_content_hash(db_reconstructed)
+                if file_hash == db_hash:
+                    # Content is identical, skip sync regardless of timestamps
+                    current_app.logger.debug(
+                        f"Sync skipped for {file_path} (slug: {page.slug}): "
+                        "Content is identical (content hash match)."
+                    )
+                    return False
+
+        # Content differs - check timestamps and grace period
         if page.updated_at:
             db_time = page.updated_at.timestamp()
-            return file_mtime > db_time
+
+            # Check if file is newer than database
+            if file_mtime <= db_time:
+                # File is not newer, skip sync
+                return False
+
+            # File is newer - check for conflict with recent browser edits
+            grace_period = current_app.config.get(
+                "SYNC_CONFLICT_GRACE_PERIOD_SECONDS", 600
+            )  # Default: 10 minutes
+            current_time = time.time()
+            time_since_db_update = current_time - db_time
+
+            if time_since_db_update < grace_period:
+                # Database was updated recently (within grace period)
+                # Skip sync to protect browser edits
+                current_app.logger.info(
+                    f"Sync skipped for {file_path} (slug: {page.slug}): "
+                    f"Database was updated {time_since_db_update:.1f}s ago "
+                    f"(within {grace_period}s grace period). Browser edits protected."
+                )
+                return False
+
+            # File is newer and database update was outside grace period, safe to sync
+            return True
 
         # If no updated_at, sync it
         return True
@@ -133,13 +227,13 @@ class SyncUtility:
 
         Args:
             file_path: Relative file path
-            force: Force sync even if file is not newer
+            force: Force sync even if file is not newer (bypasses conflict detection)
 
         Returns:
             Tuple of (Page instance, status: bool|None)
             - True: page was created
             - False: page was updated
-            - None: page was skipped (not newer than DB)
+            - None: page was skipped (file not newer than DB, or conflict detected)
         """
         # Read file
         frontmatter, markdown_content = self.read_file(file_path)
@@ -214,6 +308,9 @@ class SyncUtility:
         else:
             # Create new page
             # Pass full_content with frontmatter (needed for AI content management)
+            # Import here to avoid circular import (PageService imports FileScanner, which imports SyncUtility)
+            from app.services.page_service import PageService
+
             page = PageService.create_page(
                 title=title,
                 content=full_content,  # Pass content with frontmatter for AI system

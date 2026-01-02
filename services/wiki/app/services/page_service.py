@@ -1,5 +1,8 @@
 """Page service for CRUD operations and business logic"""
 
+import hashlib
+import os
+import time
 import uuid
 from typing import Dict, List, Optional
 
@@ -8,9 +11,11 @@ from app import db
 from app.models.page import Page
 from app.models.page_version import PageVersion
 from app.services.file_service import FileService
+from app.sync.file_scanner import FileScanner
 from app.utils.markdown_service import parse_frontmatter
 from app.utils.size_calculator import calculate_content_size_kb, calculate_word_count
 from app.utils.slug_generator import generate_slug, validate_slug
+from flask import current_app
 from sqlalchemy.exc import IntegrityError
 
 
@@ -256,6 +261,25 @@ class PageService:
             page.file_path = new_file_path
             # Move file if path changed
             FileService.move_page_file(page, old_file_path, new_file_path)
+            # After moving, update file content to reflect new slug/metadata in frontmatter
+            # This ensures the file's frontmatter matches the database state
+            # Parse frontmatter from page.content (which may have frontmatter from frontend)
+            frontmatter, markdown_content = parse_frontmatter(page.content)
+            # Merge with page metadata (page metadata takes precedence)
+            if page.section:
+                frontmatter["section"] = page.section
+            if page.status:
+                frontmatter["status"] = page.status
+            file_content = PageService._build_file_content_from_values(
+                title=page.title,
+                slug=page.slug,
+                parent_id=page.parent_id,
+                section=page.section,
+                status=page.status,
+                frontmatter=frontmatter,
+                markdown_content=markdown_content,
+            )
+            FileService.write_page_file(page, file_content)
         else:
             # Update file content
             # Parse frontmatter from page.content (which may have frontmatter from frontend)
@@ -726,3 +750,179 @@ class PageService:
                 pass
 
         db.session.commit()
+
+    @staticmethod
+    def check_sync_conflict(page: Page) -> Optional[Dict]:
+        """
+        Check if there's a potential file sync conflict for a page.
+
+        Returns conflict information if file exists and is newer/different than database.
+
+        Args:
+            page: Page instance to check
+
+        Returns:
+            Dictionary with conflict information, or None if no conflict detected.
+            Conflict dict contains:
+            - has_conflict: bool (always True if returned)
+            - file_newer: bool (file modification time > database updated_at)
+            - content_different: bool (file content hash != database content hash)
+            - file_modification_time: float (Unix timestamp)
+            - database_updated_at: float (Unix timestamp)
+            - grace_period_remaining: float (seconds remaining in grace period, if applicable)
+            - message: str (human-readable conflict message)
+        """
+        if not page.file_path:
+            return None
+
+        pages_dir = current_app.config.get("WIKI_PAGES_DIR", "data/pages")
+        file_mtime = FileScanner.get_file_modification_time(page.file_path, pages_dir)
+
+        if not file_mtime:
+            # File doesn't exist, no conflict
+            return None
+
+        # Check if file is newer than database
+        db_time = page.updated_at.timestamp() if page.updated_at else 0
+        file_newer = file_mtime > db_time
+
+        # Check if content differs (if content comparison enabled)
+        enable_content_comparison = current_app.config.get(
+            "SYNC_ENABLE_CONTENT_COMPARISON", True
+        )
+        content_different = False
+
+        if enable_content_comparison:
+            try:
+                # Read and hash file content
+                full_path = os.path.join(pages_dir, page.file_path)
+                if os.path.exists(full_path):
+                    with open(full_path, "r", encoding="utf-8") as f:
+                        file_content = f.read()
+
+                    # Reconstruct full content with frontmatter for comparison
+                    file_frontmatter, file_markdown = parse_frontmatter(file_content)
+                    file_full_content = PageService._reconstruct_content_for_hash(
+                        file_frontmatter, file_markdown
+                    )
+                    file_hash = hashlib.sha256(
+                        file_full_content.encode("utf-8")
+                    ).hexdigest()
+
+                    # Hash database content
+                    db_hash = hashlib.sha256(page.content.encode("utf-8")).hexdigest()
+
+                    content_different = file_hash != db_hash
+            except Exception:
+                # If content comparison fails, assume content might differ
+                content_different = True
+
+        # Only report conflict if file is newer or content differs
+        if not file_newer and not content_different:
+            return None
+
+        # Check grace period
+        grace_period = current_app.config.get("SYNC_CONFLICT_GRACE_PERIOD_SECONDS", 600)
+        current_time = time.time()
+        time_since_db_update = current_time - db_time
+        grace_period_remaining = max(0, grace_period - time_since_db_update)
+
+        # Build conflict message
+        messages = []
+        if file_newer:
+            messages.append("File has been modified more recently than this page")
+        if content_different:
+            messages.append("File content differs from database content")
+
+        conflict_message = (
+            "This page may have file-based changes that could conflict with your edits. "
+            + " ".join(messages)
+        )
+
+        if grace_period_remaining > 0:
+            minutes_remaining = grace_period_remaining / 60
+            conflict_message += (
+                f" Your edits are protected for {minutes_remaining:.1f} more minutes."
+            )
+
+        return {
+            "has_conflict": True,
+            "file_newer": file_newer,
+            "content_different": content_different,
+            "file_modification_time": file_mtime,
+            "database_updated_at": db_time,
+            "grace_period_remaining": (
+                grace_period_remaining if grace_period_remaining > 0 else None
+            ),
+            "message": conflict_message,
+        }
+
+    @staticmethod
+    def get_sync_status(page: Page) -> Optional[Dict]:
+        """
+        Get sync status information for a page.
+
+        Tracks which source (file/database) was last updated.
+
+        Args:
+            page: Page instance to check
+
+        Returns:
+            Dictionary with sync status information, or None if file doesn't exist.
+            Status dict contains:
+            - last_updated_source: str ("file" or "database" or "synced")
+            - file_modification_time: float (Unix timestamp) or None
+            - database_updated_at: float (Unix timestamp) or None
+            - is_synced: bool (True if file and database are in sync)
+            - time_difference_seconds: float (difference between file and DB timestamps)
+        """
+        if not page.file_path:
+            return None
+
+        pages_dir = current_app.config.get("WIKI_PAGES_DIR", "data/pages")
+        file_mtime = FileScanner.get_file_modification_time(page.file_path, pages_dir)
+
+        if file_mtime is None:
+            # File doesn't exist
+            return None
+
+        db_time = page.updated_at.timestamp() if page.updated_at else 0
+
+        # Determine which source is newer
+        time_diff = file_mtime - db_time
+        is_synced = abs(time_diff) < 1.0  # Consider synced if within 1 second
+
+        if is_synced:
+            last_updated_source = "synced"
+        elif file_mtime > db_time:
+            last_updated_source = "file"
+        else:
+            last_updated_source = "database"
+
+        return {
+            "last_updated_source": last_updated_source,
+            "file_modification_time": file_mtime,
+            "database_updated_at": db_time,
+            "is_synced": is_synced,
+            "time_difference_seconds": time_diff,
+        }
+
+    @staticmethod
+    def _reconstruct_content_for_hash(frontmatter: Dict, markdown_content: str) -> str:
+        """
+        Reconstruct full content with frontmatter for hash comparison.
+
+        This should match the format used in SyncUtility._reconstruct_content.
+
+        Args:
+            frontmatter: Frontmatter dictionary
+            markdown_content: Markdown content without frontmatter
+
+        Returns:
+            Full content with frontmatter
+        """
+        if not frontmatter:
+            return markdown_content
+
+        yaml_str = yaml.dump(frontmatter, default_flow_style=False, allow_unicode=True)
+        return f"---\n{yaml_str}---\n\n{markdown_content}"
