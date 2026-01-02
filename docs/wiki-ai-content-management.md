@@ -101,16 +101,18 @@ AI Agent → Markdown File → Sync Utility → Database → Wiki UI
 
 1. **File Detection**: Scanner finds `.md` files in `data/pages/`
 2. **Frontmatter Parsing**: Extract metadata from YAML frontmatter
-3. **Conflict Detection**: Compare file modification time vs database `updated_at`
-4. **Database Update**: Create/update page records with metadata and content
-5. **Relationship Resolution**: Resolve `parent_slug` to `parent_id`
-6. **Content Processing**: Extract links, update search index, calculate metrics
-7. **Version History**: Create version snapshots on updates
+3. **Content Comparison**: Compare file content hash with database content hash (if enabled)
+4. **Conflict Detection**: Compare file modification time vs database `updated_at`, check grace period
+5. **Database Update**: Create/update page records with metadata and content
+6. **Relationship Resolution**: Resolve `parent_slug` to `parent_id`
+7. **Content Processing**: Extract links, update search index, calculate metrics
+8. **Version History**: Create version snapshots on updates
 
 ### Bidirectional Sync
 
 **File → Database:**
-- File modification time > Database `updated_at` → Sync file to database
+- Content hashes match → Skip sync (content identical, regardless of timestamps)
+- Content hashes differ and file modification time > Database `updated_at` → Sync file to database
 - Database `updated_at` > File modification time → Skip sync (preserve database)
 - Database updated within grace period → Skip sync (protect browser edits)
 
@@ -372,16 +374,27 @@ AI Agent → Markdown File → Sync Utility → Database → Wiki UI
 
 **Location**: `app/services/page_service.py`, `app/services/file_service.py`
 
-### Priority 5: Future Enhancements (Not Implemented)
+### Priority 5: Future Enhancements
 
 #### Feature 5.1: Content Comparison for Sync Decisions
 **Priority**: Low (Nice to Have)
-**Status**: ❌ Not Implemented
-**Description**: Compare actual file content with database content, not just timestamps
+**Status**: ✅ Implemented
+**Description**: Compare actual file content with database content using hash comparison, not just timestamps
 
-**Current Behavior**: Uses file modification time vs database `updated_at` timestamps
-**Limitation**: Identical content with different timestamps will sync unnecessarily
-**Future Implementation**: Hash-based content comparison before syncing
+**Implementation:**
+- SHA256 hash comparison of file content vs database content
+- Skips sync when content hashes match, even if timestamps differ
+- Prevents unnecessary syncs when content is identical
+- Configurable via `SYNC_ENABLE_CONTENT_COMPARISON` (default: True)
+- Content comparison runs before timestamp/grace period checks for efficiency
+
+**Location**: `app/sync/sync_utility.py` (`should_sync_file()`, `_compute_content_hash()`, `_get_file_content_hash()`)
+**Configuration**: `config.py` (SYNC_ENABLE_CONTENT_COMPARISON)
+
+**Behavior:**
+- If content hashes match → Skip sync (content identical)
+- If content hashes differ → Continue with timestamp and grace period checks
+- Falls back to timestamp-based logic if content comparison fails or is disabled
 
 #### Feature 5.2: Enhanced Conflict Warnings in UI
 **Priority**: Low (Nice to Have)
@@ -470,6 +483,7 @@ services/wiki/
 
 **Environment Variables:**
 - `SYNC_CONFLICT_GRACE_PERIOD_SECONDS`: Grace period for conflict protection (default: 600)
+- `SYNC_ENABLE_CONTENT_COMPARISON`: Enable content hash comparison (default: true)
 - `SYNC_ADMIN_USER_ID`: Admin user UUID for sync operations
 - `WIKI_PAGES_DIR`: Directory for page files (default: `data/pages`)
 
@@ -537,11 +551,12 @@ python -m app.sync watch
 ### Common Issues
 
 **File not syncing to database:**
+- Check if content hashes match (content comparison may skip sync if content is identical)
 - Check file modification time is newer than database `updated_at`
 - Verify file watcher is running (if using automatic sync)
 - Check if page was recently edited in browser (grace period protection)
 - Check server logs for sync errors or conflict warnings
-- Use `--force` flag to bypass timestamp checks (use with caution)
+- Use `--force` flag to bypass content/timestamp checks (use with caution)
 
 **Database changes not appearing in file:**
 - File should update immediately when page is saved in browser

@@ -7,6 +7,7 @@ For AI agents writing wiki pages:
 - After writing files, user runs: python -m app.sync sync-all
 """
 
+import hashlib
 import os
 import time
 import uuid
@@ -98,12 +99,54 @@ class SyncUtility:
         frontmatter, markdown_content = parse_frontmatter(content)
         return frontmatter, markdown_content
 
+    def _compute_content_hash(self, content: str) -> str:
+        """
+        Compute SHA256 hash of content.
+
+        Args:
+            content: Content string to hash
+
+        Returns:
+            Hexadecimal hash string
+        """
+        return hashlib.sha256(content.encode("utf-8")).hexdigest()
+
+    def _get_file_content_hash(self, file_path: str) -> Optional[str]:
+        """
+        Get content hash of file (reconstructing full content with frontmatter).
+
+        Args:
+            file_path: Relative file path
+
+        Returns:
+            Content hash string, or None if file cannot be read
+        """
+        try:
+            full_path = os.path.join(self.pages_dir, file_path)
+            if not os.path.exists(full_path):
+                return None
+
+            with open(full_path, "r", encoding="utf-8") as f:
+                file_content = f.read()
+
+            # Reconstruct full content with frontmatter for comparison
+            frontmatter, markdown_content = parse_frontmatter(file_content)
+            full_content = self._reconstruct_content(frontmatter, markdown_content)
+
+            return self._compute_content_hash(full_content)
+        except Exception as e:
+            current_app.logger.warning(
+                f"Error computing file content hash for {file_path}: {e}"
+            )
+            return None
+
     def should_sync_file(self, file_path: str, page: Optional[Page]) -> bool:
         """
-        Determine if file should be synced (newer than database record).
+        Determine if file should be synced.
 
-        Includes conflict detection: if database was recently updated (within grace period),
-        sync is skipped to protect browser edits from being overwritten.
+        Uses content comparison (hash-based) to skip syncs when content is identical,
+        even if timestamps differ. Also includes conflict detection: if database was
+        recently updated (within grace period), sync is skipped to protect browser edits.
 
         Args:
             file_path: Relative file path
@@ -121,7 +164,25 @@ class SyncUtility:
             # New file, should sync
             return True
 
-        # Compare file modification time with database updated_at
+        # Check if content comparison is enabled (default: True)
+        enable_content_comparison = current_app.config.get(
+            "SYNC_ENABLE_CONTENT_COMPARISON", True
+        )
+
+        # Content comparison: Skip sync if content is identical
+        if enable_content_comparison:
+            file_hash = self._get_file_content_hash(file_path)
+            if file_hash:
+                db_hash = self._compute_content_hash(page.content)
+                if file_hash == db_hash:
+                    # Content is identical, skip sync regardless of timestamps
+                    current_app.logger.debug(
+                        f"Sync skipped for {file_path} (slug: {page.slug}): "
+                        "Content is identical (content hash match)."
+                    )
+                    return False
+
+        # Content differs - check timestamps and grace period
         if page.updated_at:
             db_time = page.updated_at.timestamp()
 

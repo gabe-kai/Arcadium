@@ -103,6 +103,14 @@ class Config:
         os.environ.get("SYNC_CONFLICT_GRACE_PERIOD_SECONDS", "600")
     )
 
+    # File sync content comparison
+    # Enable content hash comparison to skip syncs when file and database content are identical
+    # If enabled (default), sync is skipped when content hashes match, even if timestamps differ
+    # Default: True (enabled)
+    SYNC_ENABLE_CONTENT_COMPARISON = (
+        os.environ.get("SYNC_ENABLE_CONTENT_COMPARISON", "true").lower() == "true"
+    )
+
 
 class DevelopmentConfig(Config):
     """Development configuration"""
