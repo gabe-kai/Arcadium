@@ -602,8 +602,10 @@ def get_page(page_id):
 
         # Check for sync conflicts (only for users who can edit)
         sync_conflict = None
+        sync_status = None
         if can_edit:
             sync_conflict = PageService.check_sync_conflict(page)
+            sync_status = PageService.get_sync_status(page)
 
         # Build response
         # Parse frontmatter for HTML generation, but return full content (with frontmatter) for API
@@ -634,6 +636,10 @@ def get_page(page_id):
         # Add sync conflict information if present
         if sync_conflict:
             response_data["sync_conflict"] = sync_conflict
+
+        # Add sync status information if available
+        if sync_status:
+            response_data["sync_status"] = sync_status
 
         # Add user info if available (would come from Auth Service in production)
         # For now, just include IDs
@@ -848,8 +854,9 @@ def update_page(page_id):
             # Refresh page object to get updated data
             db.session.refresh(page)
 
-            # Check for sync conflicts after update
+            # Check for sync conflicts and status after update
             sync_conflict = PageService.check_sync_conflict(page)
+            sync_status = PageService.get_sync_status(page)
 
             response_data = {
                 "id": str(page.id),
@@ -864,6 +871,10 @@ def update_page(page_id):
             # Add sync conflict information if present
             if sync_conflict:
                 response_data["sync_conflict"] = sync_conflict
+
+            # Add sync status information if available
+            if sync_status:
+                response_data["sync_status"] = sync_status
 
             return jsonify(response_data), 200
 

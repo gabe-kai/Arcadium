@@ -858,6 +858,56 @@ class PageService:
         }
 
     @staticmethod
+    def get_sync_status(page: Page) -> Optional[Dict]:
+        """
+        Get sync status information for a page.
+
+        Tracks which source (file/database) was last updated.
+
+        Args:
+            page: Page instance to check
+
+        Returns:
+            Dictionary with sync status information, or None if file doesn't exist.
+            Status dict contains:
+            - last_updated_source: str ("file" or "database" or "synced")
+            - file_modification_time: float (Unix timestamp) or None
+            - database_updated_at: float (Unix timestamp) or None
+            - is_synced: bool (True if file and database are in sync)
+            - time_difference_seconds: float (difference between file and DB timestamps)
+        """
+        if not page.file_path:
+            return None
+
+        pages_dir = current_app.config.get("WIKI_PAGES_DIR", "data/pages")
+        file_mtime = FileScanner.get_file_modification_time(page.file_path, pages_dir)
+
+        if file_mtime is None:
+            # File doesn't exist
+            return None
+
+        db_time = page.updated_at.timestamp() if page.updated_at else 0
+
+        # Determine which source is newer
+        time_diff = file_mtime - db_time
+        is_synced = abs(time_diff) < 1.0  # Consider synced if within 1 second
+
+        if is_synced:
+            last_updated_source = "synced"
+        elif file_mtime > db_time:
+            last_updated_source = "file"
+        else:
+            last_updated_source = "database"
+
+        return {
+            "last_updated_source": last_updated_source,
+            "file_modification_time": file_mtime,
+            "database_updated_at": db_time,
+            "is_synced": is_synced,
+            "time_difference_seconds": time_diff,
+        }
+
+    @staticmethod
     def _reconstruct_content_for_hash(frontmatter: Dict, markdown_content: str) -> str:
         """
         Reconstruct full content with frontmatter for hash comparison.
