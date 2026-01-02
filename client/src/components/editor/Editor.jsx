@@ -67,6 +67,9 @@ export const Editor = forwardRef(({ content, onChange, placeholder = 'Start writ
         class: 'arc-editor-content',
       },
     },
+    onError: ({ editor, error }) => {
+      console.error('[Editor] Tiptap initialization error:', error);
+    },
   });
 
   // Expose editor instance via ref
@@ -96,6 +99,14 @@ export const Editor = forwardRef(({ content, onChange, placeholder = 'Start writ
       if (onEditorReady) {
         onEditorReady(editor);
       }
+    } else {
+      // Debug: Log if editor is null after a delay
+      const timer = setTimeout(() => {
+        if (!editor) {
+          console.warn('[Editor] Editor instance is null after initialization delay');
+        }
+      }, 3000);
+      return () => clearTimeout(timer);
     }
   }, [editor, onEditorReady]);
 
@@ -113,7 +124,16 @@ export const Editor = forwardRef(({ content, onChange, placeholder = 'Start writ
   }, [content, editor]);
 
   if (!editor || !isReady) {
-    return <div className="arc-editor-loading">Loading editor...</div>;
+    return (
+      <div className="arc-editor-loading">
+        Loading editor...
+        {!editor && (
+          <div style={{ fontSize: '0.875rem', marginTop: '0.5rem', color: 'var(--arc-text-subtle)' }}>
+            Initializing Tiptap editor...
+          </div>
+        )}
+      </div>
+    );
   }
 
   return (

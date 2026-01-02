@@ -1718,6 +1718,7 @@ body {
 .arc-edit-page-editor-wrapper {
   margin-bottom: 1.5rem;
   min-height: 400px;
+  position: relative;
 }
 
 .arc-edit-page-preview {

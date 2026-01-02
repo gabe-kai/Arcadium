@@ -398,7 +398,7 @@ export function EditPage() {
           </div>
         </div>
 
-        <div className="arc-edit-page-editor-wrapper">
+        <div className="arc-edit-page-editor-wrapper" data-testid="editor-wrapper">
           {showPreview ? (
             <div
               ref={previewRef}
