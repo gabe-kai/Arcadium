@@ -7,7 +7,8 @@ import React, { useState, useEffect, useRef } from 'react';
  * - Auto-generated from page headings (H2-H6)
  * - Click to scroll to section (smooth scroll)
  * - Highlight current section while scrolling
- * - Sticky positioning
+ * - Sticky positioning (follows viewport as user scrolls)
+ * - Auto-scrolls TOC to keep active section visible when TOC is taller than viewport
  * - Indentation for nested headings
  * - Active section highlighting
  * - Collapsible for short pages
@@ -16,6 +17,7 @@ export function TableOfContents({ toc, contentRef }) {
   const [activeSection, setActiveSection] = useState(null);
   const [isCollapsed, setIsCollapsed] = useState(false);
   const tocRef = useRef(null);
+  const tocListRef = useRef(null);
 
   // Determine if page is "short" (fewer than 5 TOC items)
   const isShortPage = toc && toc.length < 5;
@@ -82,6 +84,56 @@ export function TableOfContents({ toc, contentRef }) {
     };
   }, [toc, contentRef]);
 
+  // Auto-scroll sidebar to keep active section visible when TOC is taller than viewport
+  useEffect(() => {
+    if (!activeSection || !tocRef.current || isCollapsed) return;
+
+    const activeItem = tocRef.current.querySelector(
+      `.arc-toc-item-active`
+    );
+    if (!activeItem) return;
+
+    // Find the scrollable sidebar container (parent with overflow-y: auto)
+    let scrollContainer = tocRef.current.closest('.arc-sidebar-right');
+    if (!scrollContainer) return;
+
+    const containerRect = scrollContainer.getBoundingClientRect();
+    const itemRect = activeItem.getBoundingClientRect();
+
+    // Check if sidebar is scrollable (taller than viewport)
+    const containerHeight = scrollContainer.clientHeight;
+    const containerScrollHeight = scrollContainer.scrollHeight;
+    const isScrollable = containerScrollHeight > containerHeight;
+
+    if (!isScrollable) return; // No need to scroll if sidebar fits in viewport
+
+    // Calculate item position relative to scrollable container
+    const itemTop = itemRect.top - containerRect.top + scrollContainer.scrollTop;
+    const itemBottom = itemTop + itemRect.height;
+    const scrollTop = scrollContainer.scrollTop;
+    const scrollBottom = scrollTop + containerHeight;
+
+    // Scroll to keep active item visible with padding
+    const padding = 20; // Padding from top/bottom
+    let newScrollTop = scrollTop;
+
+    if (itemTop < scrollTop + padding) {
+      // Item is above visible area, scroll up
+      newScrollTop = itemTop - padding;
+    } else if (itemBottom > scrollBottom - padding) {
+      // Item is below visible area, scroll down
+      newScrollTop = itemBottom - containerHeight + padding;
+    }
+
+    // Only scroll if position needs to change
+    if (Math.abs(newScrollTop - scrollTop) > 1) {
+      scrollContainer.scrollTo({
+        top: Math.max(0, newScrollTop),
+        behavior: 'smooth',
+      });
+    }
+  }, [activeSection, isCollapsed]);
+
   if (!toc || toc.length === 0) {
     return null;
   }
@@ -105,7 +157,7 @@ export function TableOfContents({ toc, contentRef }) {
         )}
       </div>
       {!isCollapsed && (
-        <ul className="arc-toc-list">
+        <ul className="arc-toc-list" ref={tocListRef}>
           {toc.map((item, index) => (
             <li
               key={`${item.anchor}-${index}`}

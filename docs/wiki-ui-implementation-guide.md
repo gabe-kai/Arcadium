@@ -90,7 +90,13 @@ This guide outlines the implementation status and details for the Wiki User Inte
   - Highlight current section while scrolling
   - Indentation for nested headings
   - Active section highlighting
-  - Sticky positioning support
+  - **Sticky positioning**: TOC follows viewport as user scrolls page content
+    - TOC container uses CSS `position: sticky` with `top: 1.5rem`
+    - Container has `max-height: calc(100vh - 3rem)` to stay within viewport
+    - TOC list is scrollable when content exceeds viewport height
+    - Auto-scrolls TOC list to keep active section visible when TOC is taller than viewport
+    - Smooth scroll behavior with 20px padding from top/bottom
+    - Custom scrollbar styling for better UX
   - Collapsible for pages with < 5 TOC items
 - **Backlinks component** - Displays pages that link to current page
   - Shows backlink count
@@ -294,6 +300,33 @@ This guide outlines the implementation status and details for the Wiki User Inte
 **Files**:
 - `client/src/components/navigation/NavigationTree.jsx` - Main implementation
 - `client/src/styles.css` - Section grouping styles
+
+### Table of Contents Enhancements
+
+#### Sticky Positioning with Auto-Scroll
+
+**Feature**: Table of Contents follows viewport as user scrolls, with automatic scrolling to keep active section visible
+
+**Implementation**:
+- **Sticky Container**: TOC container uses CSS `position: sticky` with `top: 1.5rem` to stay within viewport
+- **Height Constraint**: Container has `max-height: calc(100vh - 3rem)` to prevent exceeding viewport
+- **Scrollable List**: TOC list (`arc-toc-list`) has `overflow-y: auto` when content exceeds container height
+- **Auto-Scroll Logic**: `useEffect` hook monitors `activeSection` changes and scrolls TOC list to keep active item visible
+  - Calculates if active item is above or below visible area
+  - Scrolls with 20px padding from top/bottom edges
+  - Uses smooth scroll behavior for better UX
+  - Only scrolls when TOC is taller than viewport (no unnecessary scrolling)
+- **Custom Scrollbar**: Thin, styled scrollbar for better visual appearance
+
+**Behavior**:
+- TOC container stays fixed relative to viewport as page content scrolls
+- When TOC list is taller than viewport, it becomes scrollable
+- Active section automatically scrolls into view when it changes
+- Smooth transitions prevent jarring movements
+
+**Files**:
+- `client/src/components/navigation/TableOfContents.jsx` - Main implementation with auto-scroll logic
+- `client/src/styles.css` - Sticky positioning and scrollbar styling
 
 ### Editor Enhancements
 
