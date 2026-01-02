@@ -1,10 +1,10 @@
 ---
-title: NPC Design
-slug: npc-design
-section: Mechanics
-status: published
-order: 0
 created_by: admin
+order: 0
+section: Mechanics
+slug: npc-design
+status: published
+title: NPC Design
 updated_by: admin
 ---
 # Arcadium NPC Design
