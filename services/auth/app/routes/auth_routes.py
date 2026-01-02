@@ -231,6 +231,226 @@ def verify_token():
         )
 
 
+@auth_bp.route("/auth/refresh", methods=["POST"])
+def refresh_token():
+    """
+    Refresh access token using refresh token.
+
+    Request body:
+    {
+        "token": "refresh-token-here"
+    }
+
+    Returns:
+        New access token and expiration
+    """
+    try:
+        data = request.get_json(silent=True)
+
+        if data is None:
+            return jsonify({"error": "Request body is required"}), 400
+
+        refresh_token_str = data.get("token")
+
+        if not refresh_token_str:
+            return jsonify({"error": "Refresh token is required"}), 400
+
+        # Refresh access token
+        result = AuthService.refresh_access_token(refresh_token_str)
+
+        if not result:
+            return jsonify({"error": "Invalid or expired refresh token"}), 401
+
+        new_access_token, new_refresh_token = result
+
+        # Prepare response
+        expires_in = current_app.config.get("JWT_ACCESS_TOKEN_EXPIRATION", 3600)
+
+        response_data = {
+            "token": new_access_token,
+            "expires_in": expires_in,
+        }
+
+        # Include new refresh token if it was rotated (currently returns same token)
+        if new_refresh_token != refresh_token_str:
+            response_data["refresh_token"] = new_refresh_token
+
+        return jsonify(response_data), 200
+
+    except Exception as e:
+        current_app.logger.error(f"Token refresh error: {e}")
+        return jsonify({"error": "Token refresh failed"}), 500
+
+
+@auth_bp.route("/auth/logout", methods=["POST"])
+def logout():
+    """
+    Logout user by blacklisting access token.
+
+    Request Headers:
+    Authorization: Bearer <token>
+
+    Returns:
+        Success message
+    """
+    try:
+        # Extract token from Authorization header
+        auth_header = request.headers.get("Authorization")
+        if not auth_header:
+            return jsonify({"error": "Authorization header is required"}), 401
+
+        # Handle both "Bearer <token>" and "bearer <token>" (case insensitive)
+        parts = auth_header.split(" ", 1)
+        if len(parts) != 2 or parts[0].lower() != "bearer":
+            return jsonify({"error": "Invalid Authorization header format"}), 401
+
+        token = parts[1].strip()
+        if not token:
+            return jsonify({"error": "Token is required"}), 401
+
+        # Verify token to get user ID
+        payload = TokenService.verify_token(token)
+        if not payload:
+            return jsonify({"error": "Invalid or expired token"}), 401
+
+        user_id = payload.get("user_id")
+        if not user_id:
+            return jsonify({"error": "Invalid token format"}), 401
+
+        # Logout user (blacklist token)
+        AuthService.logout_user(token, user_id)
+
+        return jsonify({"message": "Logged out successfully"}), 200
+
+    except Exception as e:
+        current_app.logger.error(f"Logout error: {e}")
+        return jsonify({"error": "Logout failed"}), 500
+
+
+@auth_bp.route("/auth/revoke", methods=["POST"])
+def revoke_token():
+    """
+    Revoke token(s).
+
+    Request Headers:
+    Authorization: Bearer <token>
+
+    Request Body (optional):
+    {
+        "token_id": "jwt-jti-claim"  // Optional: specific token to revoke
+    }
+
+    If token_id is provided, revokes that specific token.
+    If token_id is not provided and user is admin, revokes all user's tokens.
+
+    Returns:
+        Success message with revoked count
+    """
+    try:
+        # Extract token from Authorization header
+        auth_header = request.headers.get("Authorization")
+        if not auth_header:
+            return jsonify({"error": "Authorization header is required"}), 401
+
+        # Handle both "Bearer <token>" and "bearer <token>" (case insensitive)
+        parts = auth_header.split(" ", 1)
+        if len(parts) != 2 or parts[0].lower() != "bearer":
+            return jsonify({"error": "Invalid Authorization header format"}), 401
+
+        token = parts[1].strip()
+        if not token:
+            return jsonify({"error": "Token is required"}), 401
+
+        # Verify token to get user info
+        payload = TokenService.verify_token(token)
+        if not payload:
+            return jsonify({"error": "Invalid or expired token"}), 401
+
+        user_id = payload.get("user_id")
+        if not user_id:
+            return jsonify({"error": "Invalid token format"}), 401
+
+        # Get user to check role
+        from app import db
+        from app.models.user import User
+
+        user = db.session.query(User).filter_by(id=user_id).first()
+        if not user:
+            return jsonify({"error": "User not found"}), 404
+
+        # Get request body
+        data = request.get_json() or {}
+        token_id = data.get("token_id")
+
+        revoked_count = 0
+
+        if token_id:
+            # Revoke specific token
+            # token_id could be:
+            # 1. A JWT jti claim (UUID string for access token) - blacklist it
+            # 2. A refresh token hash - delete the refresh token
+            from datetime import datetime, timedelta, timezone
+
+            from app.models.refresh_token import RefreshToken
+
+            # First, try to find as refresh token
+            refresh_token = (
+                db.session.query(RefreshToken)
+                .filter_by(token_hash=token_id, user_id=user_id)
+                .first()
+            )
+
+            if refresh_token:
+                # Found as refresh token, delete it
+                db.session.delete(refresh_token)
+                db.session.commit()
+                revoked_count = 1
+            else:
+                # Not a refresh token, try as access token jti (blacklist it)
+                # token_id should be the jti claim value (UUID string)
+                # We need to blacklist it, but we need the expiration time
+                # Since we only have the jti, we'll use a default expiration time
+                # (access tokens expire in 1 hour by default)
+                expires_at = datetime.now(timezone.utc) + timedelta(
+                    seconds=current_app.config.get("JWT_ACCESS_TOKEN_EXPIRATION", 3600)
+                )
+                TokenService.blacklist_token(token_id, user_id, expires_at)
+                revoked_count = 1
+        else:
+            # Revoke all tokens (admin only)
+            if not user.is_admin():
+                return (
+                    jsonify(
+                        {"error": "Admin permission required to revoke all tokens"}
+                    ),
+                    403,
+                )
+
+            # Revoke all user's refresh tokens
+            from app.models.refresh_token import RefreshToken
+
+            refresh_tokens = (
+                db.session.query(RefreshToken).filter_by(user_id=user_id).all()
+            )
+            revoked_count = len(refresh_tokens)
+
+            AuthService.revoke_token("", user_id, revoke_all=True)
+
+        return (
+            jsonify(
+                {
+                    "message": "Token revoked successfully",
+                    "revoked_count": revoked_count,
+                }
+            ),
+            200,
+        )
+
+    except Exception as e:
+        current_app.logger.error(f"Token revocation error: {e}", exc_info=True)
+        return jsonify({"error": "Token revocation failed"}), 500
+
+
 @auth_bp.route("/logs", methods=["GET"])
 # Temporarily removed auth requirements to focus on core functionality
 # @require_auth
