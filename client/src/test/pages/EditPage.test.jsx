@@ -29,6 +29,43 @@ vi.mock('../../services/api/pages', () => ({
 vi.mock('../../utils/markdown', () => ({
   htmlToMarkdown: vi.fn((html) => html ? `markdown: ${html}` : ''),
   markdownToHtml: vi.fn((md) => md ? `<p>${md}</p>` : ''),
+  parseFrontmatter: vi.fn((content) => {
+    if (!content || !content.startsWith('---')) {
+      return { frontmatter: {}, markdown: content || '' };
+    }
+    const parts = content.split('---');
+    if (parts.length < 3) {
+      return { frontmatter: {}, markdown: content };
+    }
+    const frontmatterStr = parts[1].trim();
+    const markdown = parts.slice(2).join('---').trim();
+    const frontmatter = {};
+    if (frontmatterStr) {
+      const lines = frontmatterStr.split('\n');
+      for (const line of lines) {
+        const match = line.match(/^(\w+):\s*(.+)$/);
+        if (match) {
+          const key = match[1];
+          let value = match[2].trim();
+          if ((value.startsWith('"') && value.endsWith('"')) ||
+              (value.startsWith("'") && value.endsWith("'"))) {
+            value = value.slice(1, -1);
+          }
+          frontmatter[key] = value;
+        }
+      }
+    }
+    return { frontmatter, markdown };
+  }),
+  addFrontmatter: vi.fn((metadata, markdown, originalContent = null) => {
+    if (!metadata) return markdown || '';
+    // Simplified mock - just prepend frontmatter
+    const frontmatterLines = [];
+    if (metadata.title) frontmatterLines.push(`title: ${metadata.title}`);
+    if (metadata.slug) frontmatterLines.push(`slug: ${metadata.slug}`);
+    if (frontmatterLines.length === 0) return markdown || '';
+    return `---\n${frontmatterLines.join('\n')}\n---\n${markdown || ''}`;
+  }),
 }));
 
 // Mock Layout and Sidebar
@@ -218,6 +255,43 @@ describe('EditPage', () => {
 
     await waitFor(() => {
       expect(markdownUtils.markdownToHtml).toHaveBeenCalledWith(pageContent);
+      expect(screen.getByTestId('metadata-form')).toBeInTheDocument();
+    });
+  });
+
+  it('strips frontmatter from page content before displaying in editor', async () => {
+    const pageContentWithFrontmatter = `---
+title: "Test Page"
+slug: "test-page"
+section: "Test Section"
+---
+# Test Content
+
+This is the actual content.`;
+    const expectedMarkdown = '# Test Content\n\nThis is the actual content.';
+
+    pagesApi.usePage.mockReturnValue({
+      data: {
+        id: 'existing-page-id',
+        title: 'Test Page',
+        slug: 'test-page',
+        content: pageContentWithFrontmatter,
+        parent_id: null,
+        section: 'Test Section',
+        order: 5,
+        status: 'published',
+      },
+      isLoading: false,
+      isError: false,
+    });
+
+    renderEditPage('existing-page-id');
+
+    await waitFor(() => {
+      // Verify parseFrontmatter was called to strip frontmatter
+      expect(markdownUtils.parseFrontmatter).toHaveBeenCalledWith(pageContentWithFrontmatter);
+      // Verify markdownToHtml was called with the stripped markdown (not the full content with frontmatter)
+      expect(markdownUtils.markdownToHtml).toHaveBeenCalledWith(expectedMarkdown);
       expect(screen.getByTestId('metadata-form')).toBeInTheDocument();
     });
   });
