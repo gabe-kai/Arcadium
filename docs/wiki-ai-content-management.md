@@ -420,11 +420,31 @@ AI Agent → Markdown File → Sync Utility → Database → Wiki UI
 
 #### Feature 5.3: Three-Way Merge Capabilities
 **Priority**: Low (Nice to Have)
-**Status**: ❌ Not Implemented
-**Description**: Automatically merge conflicting edits from file and database
+**Status**: ✅ Partially Implemented (Merge Utility Ready)
+**Description**: Merge utility available for automatically merging conflicting edits from file and database
 
-**Current Behavior**: File takes precedence after grace period
-**Future Implementation**: Attempt automatic merge, flag conflicts for manual resolution
+**Implementation:**
+- Merge utility implemented (`app/sync/merge_utility.py`)
+- Two-way merge strategy using Python's `difflib.SequenceMatcher`
+- Automatically merges non-conflicting changes
+- Marks conflicts with Git-style conflict markers (`<<<<<<< FILE`, `=======`, `>>>>>>> DATABASE`)
+- Returns merged content with conflict count
+
+**Location**: `app/sync/merge_utility.py` (`MergeUtility.merge()`)
+
+**Current Behavior**:
+- Merge utility is available but not yet integrated into the sync process
+- File sync currently takes precedence after grace period expires
+- Merge utility can be called programmatically when needed
+
+**Usage:**
+```python
+from app.sync.merge_utility import MergeUtility
+
+merged_content, has_conflicts, conflict_count = MergeUtility.merge(file_content, db_content)
+```
+
+**Future Enhancement**: Integrate merge utility into sync process to automatically attempt merges when conflicts are detected (after grace period).
 
 #### Feature 5.4: Sync Status Tracking
 **Priority**: Low (Nice to Have)
