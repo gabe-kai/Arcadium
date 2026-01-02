@@ -398,11 +398,25 @@ AI Agent → Markdown File → Sync Utility → Database → Wiki UI
 
 #### Feature 5.2: Enhanced Conflict Warnings in UI
 **Priority**: Low (Nice to Have)
-**Status**: ❌ Not Implemented
-**Description**: Display conflict warnings in browser UI, not just server logs
+**Status**: ✅ Implemented
+**Description**: Display conflict warnings in browser UI when file sync conflicts are detected
 
-**Current Behavior**: Conflicts logged to server logs only
-**Future Implementation**: UI notifications when conflicts are detected
+**Implementation:**
+- Conflict detection when loading pages for editing (GET endpoint)
+- Conflict information included in API responses (GET and PUT endpoints)
+- Visual warning banner displayed in EditPage component
+- Shows conflict message, file modification time, and grace period status
+- Only displayed for users who can edit the page
+
+**Location**:
+- Backend: `app/services/page_service.py` (`check_sync_conflict()`), `app/routes/page_routes.py`
+- Frontend: `client/src/components/common/SyncConflictWarning.jsx`, `client/src/pages/EditPage.jsx`
+
+**Behavior:**
+- Warning appears when file is newer than database or content differs
+- Displays human-readable conflict message
+- Shows remaining grace period protection time (if applicable)
+- Warning persists until conflict is resolved or grace period expires
 
 #### Feature 5.3: Three-Way Merge Capabilities
 **Priority**: Low (Nice to Have)

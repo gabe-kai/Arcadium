@@ -600,6 +600,11 @@ def get_page(page_id):
         can_delete = PageService.can_delete(page, user_role, user_id)
         can_archive = PageService.can_archive(page, user_role, user_id)
 
+        # Check for sync conflicts (only for users who can edit)
+        sync_conflict = None
+        if can_edit:
+            sync_conflict = PageService.check_sync_conflict(page)
+
         # Build response
         # Parse frontmatter for HTML generation, but return full content (with frontmatter) for API
         # Frontend will parse and strip frontmatter for editor display
@@ -625,6 +630,10 @@ def get_page(page_id):
             "can_delete": can_delete,
             "can_archive": can_archive,
         }
+
+        # Add sync conflict information if present
+        if sync_conflict:
+            response_data["sync_conflict"] = sync_conflict
 
         # Add user info if available (would come from Auth Service in production)
         # For now, just include IDs
@@ -836,20 +845,27 @@ def update_page(page_id):
             if slug and slug != old_slug:
                 LinkService.handle_slug_change(old_slug, slug, page.id)
 
-            return (
-                jsonify(
-                    {
-                        "id": str(page.id),
-                        "title": page.title,
-                        "content": page.content,  # Return content with frontmatter (for AI system)
-                        "updated_at": (
-                            page.updated_at.isoformat() if page.updated_at else None
-                        ),
-                        "version": page.version,
-                    }
+            # Refresh page object to get updated data
+            db.session.refresh(page)
+
+            # Check for sync conflicts after update
+            sync_conflict = PageService.check_sync_conflict(page)
+
+            response_data = {
+                "id": str(page.id),
+                "title": page.title,
+                "content": page.content,  # Return content with frontmatter (for AI system)
+                "updated_at": (
+                    page.updated_at.isoformat() if page.updated_at else None
                 ),
-                200,
-            )
+                "version": page.version,
+            }
+
+            # Add sync conflict information if present
+            if sync_conflict:
+                response_data["sync_conflict"] = sync_conflict
+
+            return jsonify(response_data), 200
 
         except ValueError as e:
             return jsonify({"error": str(e)}), 400

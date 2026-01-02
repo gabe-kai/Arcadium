@@ -1,0 +1,43 @@
+.arc-sync-conflict-warning {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+  margin: 1rem 0;
+  background-color: var(--arc-warning-bg, #fef3c7);
+  border: 1px solid var(--arc-warning-border, #fbbf24);
+  border-left: 4px solid var(--arc-warning-accent, #f59e0b);
+  border-radius: 4px;
+  color: var(--arc-warning-text, #92400e);
+}
+
+.arc-sync-conflict-warning-icon {
+  font-size: 1.25rem;
+  line-height: 1.5;
+  flex-shrink: 0;
+}
+
+.arc-sync-conflict-warning-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.arc-sync-conflict-warning-title {
+  font-weight: 600;
+  font-size: 0.9375rem;
+  margin-bottom: 0.25rem;
+  color: var(--arc-warning-title, #78350f);
+}
+
+.arc-sync-conflict-warning-message {
+  font-size: 0.875rem;
+  line-height: 1.5;
+  margin-bottom: 0.5rem;
+}
+
+.arc-sync-conflict-warning-detail {
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  opacity: 0.9;
+  font-style: italic;
+}

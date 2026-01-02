@@ -11,6 +11,7 @@ import { htmlToMarkdown, markdownToHtml, parseFrontmatter, addFrontmatter } from
 import { highlightCodeBlocks } from '../utils/syntaxHighlight';
 import { processLinks } from '../utils/linkHandler';
 import { useNotificationContext } from '../components/common/NotificationProvider';
+import { SyncConflictWarning } from '../components/common/SyncConflictWarning';
 
 /**
  * EditPage component - WYSIWYG editor for creating/editing pages
@@ -218,6 +219,14 @@ export function EditPage() {
         queryClient.invalidateQueries({ queryKey: ['homePageId'] });
       }
       setHasUnsavedChanges(false);
+
+      // Show conflict warning if present in response
+      if (data.sync_conflict) {
+        // Conflict warning will be shown via the page data refresh
+        // Don't navigate immediately if there's a conflict, let user see the warning
+        queryClient.invalidateQueries({ queryKey: ['page', pageId] });
+      }
+
       showSuccess('Page saved successfully');
       // Navigate to view mode after successful save
       // If this is the home page (slug: "home"), navigate to home, otherwise to the page
@@ -374,6 +383,11 @@ export function EditPage() {
             </div>
           )}
         </div>
+
+        {/* Sync Conflict Warning */}
+        {!isNewPage && page?.sync_conflict && (
+          <SyncConflictWarning conflict={page.sync_conflict} />
+        )}
 
         {/* Metadata Form */}
         <div className="arc-edit-page-metadata">
