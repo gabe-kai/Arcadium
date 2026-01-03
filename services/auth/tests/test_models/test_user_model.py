@@ -89,11 +89,14 @@ class TestUserModel:
     def test_user_is_admin(self, app):
         """Test is_admin method"""
         with app.app_context():
+            import uuid
+
             from app import db
 
+            unique_id = str(uuid.uuid4())[:8]
             admin_user = User(
-                username="admin",
-                email="admin@example.com",
+                username=f"admin_{unique_id}",
+                email=f"admin_{unique_id}@example.com",
                 password_hash=PasswordService.hash_password("TestPass123"),
                 role="admin",
                 created_at=datetime.now(timezone.utc),
@@ -101,8 +104,8 @@ class TestUserModel:
             )
 
             player_user = User(
-                username="player",
-                email="player@example.com",
+                username=f"player_{unique_id}",
+                email=f"player_{unique_id}@example.com",
                 password_hash=PasswordService.hash_password("TestPass123"),
                 role="player",
                 created_at=datetime.now(timezone.utc),
@@ -119,11 +122,14 @@ class TestUserModel:
     def test_user_is_writer(self, app):
         """Test is_writer method"""
         with app.app_context():
+            import uuid
+
             from app import db
 
+            unique_id = str(uuid.uuid4())[:8]
             admin_user = User(
-                username="admin",
-                email="admin@example.com",
+                username=f"admin_{unique_id}",
+                email=f"admin_{unique_id}@example.com",
                 password_hash=PasswordService.hash_password("TestPass123"),
                 role="admin",
                 created_at=datetime.now(timezone.utc),
@@ -131,8 +137,8 @@ class TestUserModel:
             )
 
             writer_user = User(
-                username="writer",
-                email="writer@example.com",
+                username=f"writer_{unique_id}",
+                email=f"writer_{unique_id}@example.com",
                 password_hash=PasswordService.hash_password("TestPass123"),
                 role="writer",
                 created_at=datetime.now(timezone.utc),
@@ -140,8 +146,8 @@ class TestUserModel:
             )
 
             player_user = User(
-                username="player",
-                email="player@example.com",
+                username=f"player_{unique_id}",
+                email=f"player_{unique_id}@example.com",
                 password_hash=PasswordService.hash_password("TestPass123"),
                 role="player",
                 created_at=datetime.now(timezone.utc),
@@ -160,11 +166,14 @@ class TestUserModel:
     def test_user_is_player(self, app):
         """Test is_player method"""
         with app.app_context():
+            import uuid
+
             from app import db
 
+            unique_id = str(uuid.uuid4())[:8]
             admin_user = User(
-                username="admin",
-                email="admin@example.com",
+                username=f"admin_{unique_id}",
+                email=f"admin_{unique_id}@example.com",
                 password_hash=PasswordService.hash_password("TestPass123"),
                 role="admin",
                 created_at=datetime.now(timezone.utc),
@@ -172,8 +181,8 @@ class TestUserModel:
             )
 
             writer_user = User(
-                username="writer",
-                email="writer@example.com",
+                username=f"writer_{unique_id}",
+                email=f"writer_{unique_id}@example.com",
                 password_hash=PasswordService.hash_password("TestPass123"),
                 role="writer",
                 created_at=datetime.now(timezone.utc),
@@ -181,8 +190,8 @@ class TestUserModel:
             )
 
             player_user = User(
-                username="player",
-                email="player@example.com",
+                username=f"player_{unique_id}",
+                email=f"player_{unique_id}@example.com",
                 password_hash=PasswordService.hash_password("TestPass123"),
                 role="player",
                 created_at=datetime.now(timezone.utc),
@@ -201,11 +210,14 @@ class TestUserModel:
     def test_user_has_role(self, app):
         """Test has_role method with role hierarchy"""
         with app.app_context():
+            import uuid
+
             from app import db
 
+            unique_id = str(uuid.uuid4())[:8]
             admin_user = User(
-                username="admin",
-                email="admin@example.com",
+                username=f"admin_{unique_id}",
+                email=f"admin_{unique_id}@example.com",
                 password_hash=PasswordService.hash_password("TestPass123"),
                 role="admin",
                 created_at=datetime.now(timezone.utc),
@@ -213,8 +225,8 @@ class TestUserModel:
             )
 
             writer_user = User(
-                username="writer",
-                email="writer@example.com",
+                username=f"writer_{unique_id}",
+                email=f"writer_{unique_id}@example.com",
                 password_hash=PasswordService.hash_password("TestPass123"),
                 role="writer",
                 created_at=datetime.now(timezone.utc),
@@ -222,8 +234,8 @@ class TestUserModel:
             )
 
             player_user = User(
-                username="player",
-                email="player@example.com",
+                username=f"player_{unique_id}",
+                email=f"player_{unique_id}@example.com",
                 password_hash=PasswordService.hash_password("TestPass123"),
                 role="player",
                 created_at=datetime.now(timezone.utc),
