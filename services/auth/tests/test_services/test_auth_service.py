@@ -250,26 +250,45 @@ class TestRefreshAccessToken:
 
             refresh_token_str = TokenService.generate_refresh_token(user)
             expires_at = datetime.now(timezone.utc) + timedelta(seconds=3600)
+            # Convert to naive UTC for storage (PostgreSQL DateTime doesn't store timezone)
+            expires_at_naive = expires_at.replace(tzinfo=None)
 
             refresh_token = RefreshToken(
                 user_id=user.id,
                 token_hash=refresh_token_str,
-                expires_at=expires_at,
-                created_at=datetime.now(timezone.utc),
+                expires_at=expires_at_naive,
+                created_at=datetime.now(timezone.utc).replace(tzinfo=None),
             )
             db.session.add(refresh_token)
             db.session.commit()
 
-            return user, refresh_token_str
+            # Return user_id instead of user object to avoid detached instance issues
+            return user.id, refresh_token_str
 
     def test_refresh_access_token_success(self, app, test_user_with_refresh_token):
         """Test successful token refresh"""
         with app.app_context():
-            user, refresh_token_str = test_user_with_refresh_token
+            from app import db
+            from app.models.refresh_token import RefreshToken
+
+            user_id, refresh_token_str = test_user_with_refresh_token
+
+            # Verify refresh token exists and is not expired before testing
+            refresh_token_obj = (
+                db.session.query(RefreshToken)
+                .filter_by(token_hash=refresh_token_str)
+                .first()
+            )
+            assert refresh_token_obj is not None, "Refresh token should exist"
+            assert (
+                not refresh_token_obj.is_expired()
+            ), f"Refresh token should not be expired. expires_at: {refresh_token_obj.expires_at}, now: {datetime.now(timezone.utc)}"
 
             result = AuthService.refresh_access_token(refresh_token_str)
 
-            assert result is not None
+            assert (
+                result is not None
+            ), f"refresh_access_token returned None. Token hash: {refresh_token_str}"
             new_access_token, new_refresh_token = result
             assert new_access_token is not None
             assert new_refresh_token is not None
@@ -277,7 +296,7 @@ class TestRefreshAccessToken:
             # Verify new access token is valid
             payload = TokenService.verify_token(new_access_token)
             assert payload is not None
-            assert payload["user_id"] == str(user.id)
+            assert payload["user_id"] == str(user_id)
 
     def test_refresh_access_token_updates_last_used(
         self, app, test_user_with_refresh_token
@@ -286,7 +305,7 @@ class TestRefreshAccessToken:
         with app.app_context():
             from app import db
 
-            user, refresh_token_str = test_user_with_refresh_token
+            _, refresh_token_str = test_user_with_refresh_token
 
             refresh_token_obj = (
                 db.session.query(RefreshToken)
@@ -316,7 +335,7 @@ class TestRefreshAccessToken:
         with app.app_context():
             from app import db
 
-            user, refresh_token_str = test_user_with_refresh_token
+            _, refresh_token_str = test_user_with_refresh_token
 
             # Expire the refresh token
             refresh_token_obj = (
@@ -324,8 +343,10 @@ class TestRefreshAccessToken:
                 .filter_by(token_hash=refresh_token_str)
                 .first()
             )
-            refresh_token_obj.expires_at = datetime.now(timezone.utc) - timedelta(
-                hours=1
+            expired_at = datetime.now(timezone.utc) - timedelta(hours=1)
+            # Convert to naive UTC for storage
+            refresh_token_obj.expires_at = (
+                expired_at.replace(tzinfo=None) if expired_at.tzinfo else expired_at
             )
             db.session.commit()
 
@@ -406,14 +427,15 @@ class TestRevokeToken:
             db.session.add(refresh_token)
             db.session.commit()
 
-            return user, access_token, refresh_token_str
+            # Return user_id instead of user object to avoid detached instance issues
+            return user.id, access_token, refresh_token_str
 
     def test_revoke_refresh_token(self, app, test_user_with_tokens):
         """Test revoking a refresh token"""
         with app.app_context():
             from app import db
 
-            user, _, refresh_token_str = test_user_with_tokens
+            user_id, _, refresh_token_str = test_user_with_tokens
 
             # Verify refresh token exists before
             refresh_token_obj = (
@@ -424,7 +446,7 @@ class TestRevokeToken:
             assert refresh_token_obj is not None
 
             # Revoke the refresh token
-            AuthService.revoke_token(refresh_token_str, str(user.id), revoke_all=False)
+            AuthService.revoke_token(refresh_token_str, str(user_id), revoke_all=False)
 
             # Verify refresh token is deleted
             refresh_token_obj = (
@@ -439,43 +461,50 @@ class TestRevokeToken:
         with app.app_context():
             from app import db
 
-            user, _, refresh_token_str = test_user_with_tokens
+            user_id, _, refresh_token_str = test_user_with_tokens
+
+            # Get user from database to generate token
+            user = db.session.query(User).filter_by(id=user_id).first()
 
             # Create additional refresh tokens
             refresh_token_str2 = TokenService.generate_refresh_token(user)
             expires_at = datetime.now(timezone.utc) + timedelta(seconds=3600)
+            # Convert to naive UTC for storage
+            expires_at_naive = (
+                expires_at.replace(tzinfo=None) if expires_at.tzinfo else expires_at
+            )
             refresh_token2 = RefreshToken(
-                user_id=user.id,
+                user_id=user_id,
                 token_hash=refresh_token_str2,
-                expires_at=expires_at,
-                created_at=datetime.now(timezone.utc),
+                expires_at=expires_at_naive,
+                created_at=datetime.now(timezone.utc).replace(tzinfo=None),
             )
             db.session.add(refresh_token2)
             db.session.commit()
 
             # Verify we have multiple tokens
             token_count_before = (
-                db.session.query(RefreshToken).filter_by(user_id=user.id).count()
+                db.session.query(RefreshToken).filter_by(user_id=user_id).count()
             )
             assert token_count_before >= 2
 
             # Revoke all tokens
-            AuthService.revoke_token("", str(user.id), revoke_all=True)
+            AuthService.revoke_token("", str(user_id), revoke_all=True)
 
             # Verify all refresh tokens are deleted
             refresh_tokens = (
-                db.session.query(RefreshToken).filter_by(user_id=user.id).all()
+                db.session.query(RefreshToken).filter_by(user_id=user_id).all()
             )
             assert len(refresh_tokens) == 0
 
     def test_revoke_nonexistent_refresh_token(self, app, test_user_with_tokens):
         """Test revoking a refresh token that doesn't exist"""
         with app.app_context():
-            user, _, _ = test_user_with_tokens
+            user_id, _, _ = test_user_with_tokens
 
             # Should not raise exception, just do nothing
             AuthService.revoke_token(
-                "nonexistent-token-id", str(user.id), revoke_all=False
+                "nonexistent-token-id", str(user_id), revoke_all=False
             )
 
             # No tokens should be affected (method doesn't raise errors for nonexistent tokens)

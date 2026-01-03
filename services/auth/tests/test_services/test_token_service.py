@@ -225,8 +225,23 @@ class TestVerifyToken:
             expires_at = datetime.fromtimestamp(payload["exp"], tz=timezone.utc)
             TokenService.blacklist_token(token_id, str(user.id), expires_at)
 
+            # Verify entry was created
+            blacklist_entry = (
+                db.session.query(TokenBlacklist).filter_by(token_id=token_id).first()
+            )
+            assert blacklist_entry is not None, "Blacklist entry should be created"
+            assert (
+                not blacklist_entry.is_expired()
+            ), f"Entry should not be expired. expires_at: {blacklist_entry.expires_at}, now: {datetime.now(timezone.utc)}"
+
+            # Expire all objects in session to force fresh queries
+            db.session.expire_all()
+
             # Verify token is now rejected
-            assert TokenService.verify_token(token) is None
+            result = TokenService.verify_token(token)
+            assert (
+                result is None
+            ), f"Expected None but got {result}. Token ID: {token_id}. Is blacklisted: {TokenService.is_token_blacklisted(token_id)}"
 
 
 class TestTokenBlacklist:
@@ -259,6 +274,8 @@ class TestTokenBlacklist:
             expires_at = datetime.now(timezone.utc) + timedelta(hours=1)
 
             TokenService.blacklist_token(token_id, str(user.id), expires_at)
+            # Ensure session is flushed/committed so is_token_blacklisted can see the change
+            db.session.commit()
             result = TokenService.is_token_blacklisted(token_id)
             assert result is True
 

@@ -199,8 +199,10 @@ class TestTokenRefreshFlow:
                 .filter_by(token_hash=refresh_token)
                 .first()
             )
-            refresh_token_obj.expires_at = datetime.now(timezone.utc) - timedelta(
-                hours=1
+            expired_at = datetime.now(timezone.utc) - timedelta(hours=1)
+            # Convert to naive UTC for storage
+            refresh_token_obj.expires_at = (
+                expired_at.replace(tzinfo=None) if expired_at.tzinfo else expired_at
             )
             db.session.commit()
 

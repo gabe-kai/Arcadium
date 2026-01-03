@@ -136,14 +136,21 @@ class TokenService:
         if existing:
             return  # Already blacklisted
 
+        # Convert timezone-aware datetime to naive UTC for storage
+        # PostgreSQL DateTime columns don't store timezone, so we store as naive UTC
+        expires_at_naive = expires_at
+        if expires_at.tzinfo is not None:
+            expires_at_naive = expires_at.replace(tzinfo=None)
+
         blacklist_entry = TokenBlacklist(
             token_id=token_id,
             user_id=user_id,
-            expires_at=expires_at,
-            created_at=datetime.now(timezone.utc),
+            expires_at=expires_at_naive,
+            created_at=datetime.now(timezone.utc).replace(tzinfo=None),
         )
 
         db.session.add(blacklist_entry)
+        db.session.flush()  # Flush to ensure it's visible in this session
         db.session.commit()
 
     @staticmethod
