@@ -25,26 +25,24 @@ class TestRegistrationFlow:
                 password="TestPass123",
             )
 
+            # Get user fresh from database to avoid detached instance issues
+            db_user = db.session.query(User).filter_by(username="newuser").first()
+
             # Verify user was created
-            assert user is not None
-            assert user.username == "newuser"
-            assert user.email == "newuser@example.com"
-            assert user.password_hash is not None
+            assert db_user is not None
+            assert db_user.username == "newuser"
+            assert db_user.email == "newuser@example.com"
+            assert db_user.password_hash is not None
 
             # Verify password is hashed correctly
-            assert PasswordService.check_password("TestPass123", user.password_hash)
+            assert PasswordService.check_password("TestPass123", db_user.password_hash)
 
             # Verify password history was saved
             history = (
-                db.session.query(PasswordHistory).filter_by(user_id=user.id).first()
+                db.session.query(PasswordHistory).filter_by(user_id=db_user.id).first()
             )
             assert history is not None
             assert PasswordService.check_password("TestPass123", history.password_hash)
-
-            # Verify user is in database
-            db_user = db.session.query(User).filter_by(username="newuser").first()
-            assert db_user is not None
-            assert db_user.id == user.id
 
     def test_first_user_registration_becomes_admin(self, app):
         """Test that first user registration flow creates admin"""
@@ -295,27 +293,31 @@ class TestUserProfileManagementFlow:
                 password="OldPassword123",
             )
 
+            # Get user fresh from database to avoid detached instance issues
+            db_user = db.session.query(User).filter_by(username="passwordtest").first()
+            assert db_user is not None
+
             # Update password
             new_password = "NewPassword123"
             new_password_hash = PasswordService.hash_password(new_password)
-            user.password_hash = new_password_hash
-            user.updated_at = datetime.now(timezone.utc)
+            db_user.password_hash = new_password_hash
+            db_user.updated_at = datetime.now(timezone.utc).replace(tzinfo=None)
             db.session.commit()
 
             # Save to password history
-            PasswordService.save_password_history(str(user.id), new_password_hash)
+            PasswordService.save_password_history(str(db_user.id), new_password_hash)
 
             # Verify password was changed
-            db.session.refresh(user)
-            assert PasswordService.check_password(new_password, user.password_hash)
+            db.session.refresh(db_user)
+            assert PasswordService.check_password(new_password, db_user.password_hash)
             assert not PasswordService.check_password(
-                "OldPassword123", user.password_hash
+                "OldPassword123", db_user.password_hash
             )
 
             # Verify old password is in history
             history = (
                 db.session.query(PasswordHistory)
-                .filter_by(user_id=user.id)
+                .filter_by(user_id=db_user.id)
                 .order_by(PasswordHistory.created_at.desc())
                 .first()
             )
@@ -324,7 +326,7 @@ class TestUserProfileManagementFlow:
 
             # Verify password history check prevents reuse
             is_in_history = PasswordService.check_password_history(
-                str(user.id), new_password, max_history=3
+                str(db_user.id), new_password, max_history=3
             )
             assert is_in_history is True
 
