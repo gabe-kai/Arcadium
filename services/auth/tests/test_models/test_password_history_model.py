@@ -87,15 +87,22 @@ class TestPasswordHistoryModel:
 
             # Verify history entry exists
             assert history_entry.id is not None
+            history_entry_id = history_entry.id
 
-            # Delete user
-            user = db.session.query(User).filter_by(id=test_user).first()
-            db.session.delete(user)
+            # Expunge the history entry from session to avoid SQLAlchemy trying to update it
+            db.session.expunge(history_entry)
+
+            # Delete user using raw SQL to test database-level CASCADE
+            # This bypasses SQLAlchemy's relationship handling
+            db.session.execute(
+                db.text("DELETE FROM auth.users WHERE id = :user_id"),
+                {"user_id": test_user},
+            )
             db.session.commit()
 
             # Verify history entry is also deleted (due to CASCADE)
             deleted_entry = (
-                db.session.query(PasswordHistory).filter_by(id=history_entry.id).first()
+                db.session.query(PasswordHistory).filter_by(id=history_entry_id).first()
             )
             assert deleted_entry is None
 
