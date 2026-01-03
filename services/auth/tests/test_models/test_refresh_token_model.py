@@ -35,11 +35,12 @@ class TestRefreshTokenModel:
         with app.app_context():
             from app import db
 
+            expires_at = datetime.now(timezone.utc) + timedelta(days=7)
             refresh_token = RefreshToken(
                 user_id=test_user,
                 token_hash="test-token-hash-123",
-                expires_at=datetime.now(timezone.utc) + timedelta(days=7),
-                created_at=datetime.now(timezone.utc),
+                expires_at=expires_at.replace(tzinfo=None),
+                created_at=datetime.now(timezone.utc).replace(tzinfo=None),
             )
 
             db.session.add(refresh_token)
@@ -72,11 +73,13 @@ class TestRefreshTokenModel:
         with app.app_context():
             from app import db
 
+            expires_at = datetime.now(timezone.utc) - timedelta(days=1)
+            created_at = datetime.now(timezone.utc) - timedelta(days=2)
             refresh_token = RefreshToken(
                 user_id=test_user,
                 token_hash="test-token-hash",
-                expires_at=datetime.now(timezone.utc) - timedelta(days=1),
-                created_at=datetime.now(timezone.utc) - timedelta(days=2),
+                expires_at=expires_at.replace(tzinfo=None),
+                created_at=created_at.replace(tzinfo=None),
             )
 
             db.session.add(refresh_token)

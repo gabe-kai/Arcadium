@@ -35,11 +35,12 @@ class TestTokenBlacklistModel:
         with app.app_context():
             from app import db
 
+            expires_at = datetime.now(timezone.utc) + timedelta(hours=1)
             blacklist_entry = TokenBlacklist(
                 token_id="test-token-id-123",
                 user_id=test_user,
-                expires_at=datetime.now(timezone.utc) + timedelta(hours=1),
-                created_at=datetime.now(timezone.utc),
+                expires_at=expires_at.replace(tzinfo=None),
+                created_at=datetime.now(timezone.utc).replace(tzinfo=None),
             )
 
             db.session.add(blacklist_entry)
@@ -75,11 +76,13 @@ class TestTokenBlacklistModel:
         with app.app_context():
             from app import db
 
+            expires_at = datetime.now(timezone.utc) - timedelta(hours=1)
+            created_at = datetime.now(timezone.utc) - timedelta(hours=2)
             blacklist_entry = TokenBlacklist(
                 token_id="test-token-id",
                 user_id=test_user,
-                expires_at=datetime.now(timezone.utc) - timedelta(hours=1),
-                created_at=datetime.now(timezone.utc) - timedelta(hours=2),
+                expires_at=expires_at.replace(tzinfo=None),
+                created_at=created_at.replace(tzinfo=None),
             )
 
             db.session.add(blacklist_entry)
@@ -111,11 +114,12 @@ class TestTokenBlacklistModel:
         with app.app_context():
             from app import db
 
+            expires_at = datetime.now(timezone.utc) + timedelta(hours=1)
             blacklist_entry = TokenBlacklist(
                 token_id="test-token-id",
                 user_id=None,
-                expires_at=datetime.now(timezone.utc) + timedelta(hours=1),
-                created_at=datetime.now(timezone.utc),
+                expires_at=expires_at.replace(tzinfo=None),
+                created_at=datetime.now(timezone.utc).replace(tzinfo=None),
             )
 
             db.session.add(blacklist_entry)

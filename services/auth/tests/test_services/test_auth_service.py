@@ -417,12 +417,14 @@ class TestRevokeToken:
             access_token = TokenService.generate_access_token(user)
             refresh_token_str = TokenService.generate_refresh_token(user)
             expires_at = datetime.now(timezone.utc) + timedelta(seconds=3600)
+            # Convert to naive UTC for storage
+            expires_at_naive = expires_at.replace(tzinfo=None)
 
             refresh_token = RefreshToken(
                 user_id=user.id,
                 token_hash=refresh_token_str,
-                expires_at=expires_at,
-                created_at=datetime.now(timezone.utc),
+                expires_at=expires_at_naive,
+                created_at=datetime.now(timezone.utc).replace(tzinfo=None),
             )
             db.session.add(refresh_token)
             db.session.commit()
