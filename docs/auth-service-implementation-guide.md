@@ -941,7 +941,7 @@ The Auth Service is complete when:
 12. ✅ Can logout and revoke tokens
 13. ✅ Can manage user profiles
 14. ✅ Can manage user roles (admin)
-15. ❌ Rate limiting working
+15. ✅ Rate limiting working
 16. ✅ Password security working
 17. ❌ Shared auth library working
 18. ❌ Wiki Service can integrate (requires shared auth library)
