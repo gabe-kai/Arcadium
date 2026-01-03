@@ -2,14 +2,31 @@
 Authentication routes for user registration, login, and token management.
 """
 
+from app import limiter
 from app.services.auth_service import AuthService
 from app.services.token_service import TokenService
 from flask import Blueprint, current_app, jsonify, request
+from flask_limiter.util import get_remote_address
 
 auth_bp = Blueprint("auth", __name__)
 
 
+def get_email_for_rate_limit():
+    """
+    Extract email from request body for rate limiting per email.
+    Used for registration endpoint rate limiting.
+    Falls back to IP address if email is not in request body.
+    """
+    data = request.get_json(silent=True)
+    if data and isinstance(data, dict) and "email" in data:
+        email = data.get("email")
+        if email:
+            return f"email:{email}"
+    return get_remote_address()
+
+
 @auth_bp.route("/auth/register", methods=["POST"])
+@limiter.limit("3 per hour", key_func=get_email_for_rate_limit)
 def register():
     """
     Register a new user.
@@ -99,6 +116,7 @@ def register():
 
 
 @auth_bp.route("/auth/login", methods=["POST"])
+@limiter.limit("5 per 15 minutes", key_func=get_remote_address)
 def login():
     """
     Login user and get tokens.
@@ -232,6 +250,7 @@ def verify_token():
 
 
 @auth_bp.route("/auth/refresh", methods=["POST"])
+@limiter.limit("10 per hour", key_func=get_remote_address)
 def refresh_token():
     """
     Refresh access token using refresh token.

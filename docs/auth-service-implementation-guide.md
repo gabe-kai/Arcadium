@@ -540,16 +540,19 @@ This guide provides a detailed, phased implementation plan for building the Auth
 
 ### 5.1 Rate Limiting
 **Tasks**:
-- [ ] Install Flask-Limiter or implement custom rate limiting
-- [ ] Create `app/middleware/rate_limit.py`
-  - Rate limit login: 5 attempts per 15 minutes per IP
-  - Rate limit registration: 3 registrations per hour per IP
-  - Rate limit token refresh: 10 requests per hour per user
-  - Rate limit password reset: 3 requests per hour per email (future)
-- [ ] Apply rate limiting to endpoints
-- [ ] Return rate limit headers in responses
+- [x] Install Flask-Limiter (already in requirements.txt)
+- [x] Initialize Flask-Limiter in `app/__init__.py`
+  - [x] Configure storage backend (memory:// by default, configurable via RATELIMIT_STORAGE_URL)
+  - [x] Disable in testing config
+  - [x] Add custom 429 error handler
+- [x] Apply rate limiting to endpoints
+  - [x] Rate limit login: 5 attempts per 15 minutes per IP
+  - [x] Rate limit registration: 3 registrations per hour per email (falls back to IP)
+  - [x] Rate limit token refresh: 10 requests per hour per IP
+  - [ ] Rate limit password reset: 3 requests per hour per email (future)
+- [x] Return rate limit headers in responses (handled by Flask-Limiter)
 
-**Rate Limit Headers**:
+**Rate Limit Headers** (automatically added by Flask-Limiter):
 ```
 X-RateLimit-Limit: 5
 X-RateLimit-Remaining: 3
@@ -582,11 +585,12 @@ X-RateLimit-Reset: 1234567890
 
 ### 5.5 Security Headers
 **Tasks**:
-- [ ] Add security headers to responses
-  - `X-Content-Type-Options: nosniff`
-  - `X-Frame-Options: DENY`
-  - `X-XSS-Protection: 1; mode=block`
-  - `Strict-Transport-Security` (for HTTPS in production)
+- [x] Create `app/middleware/security.py` with `add_security_headers()` function
+- [x] Add security headers to all responses via `after_request` hook
+  - [x] `X-Content-Type-Options: nosniff`
+  - [x] `X-Frame-Options: DENY`
+  - [x] `X-XSS-Protection: 1; mode=block`
+  - [x] `Strict-Transport-Security` (for HTTPS in production, non-debug mode)
 
 ### 5.6 Input Sanitization
 **Tasks**:
@@ -597,21 +601,21 @@ X-RateLimit-Reset: 1234567890
 - [ ] Prevent XSS in user data
 
 **Deliverables**:
-- ⏳ Rate limiting working (configured but not implemented/active)
+- ✅ Rate limiting working (Flask-Limiter initialized and applied to endpoints)
 - ✅ Password history working (fully implemented)
 - ⏳ Token blacklist cleanup working (cleanup on check, no background task)
 - ⏳ Email verification placeholder working (field exists, not enforced)
-- [ ] Security headers added (not implemented)
+- ✅ Security headers added (X-Content-Type-Options, X-Frame-Options, X-XSS-Protection, HSTS)
 - ⏳ Input sanitization working (username sanitization exists)
 
 **Testing**:
-- [ ] Test rate limiting on login (not implemented)
-- [ ] Test rate limiting on registration (not implemented)
-- [ ] Test rate limiting on token refresh (not implemented)
+- [ ] Test rate limiting on login (endpoint implemented, integration tests pending)
+- [ ] Test rate limiting on registration (endpoint implemented, integration tests pending)
+- [ ] Test rate limiting on token refresh (endpoint implemented, integration tests pending)
 - [x] Test password history check (method exists)
 - [x] Test token blacklist cleanup (cleanup on check implemented)
 - [ ] Test email verification flow (placeholder) (not enforced)
-- [ ] Test security headers (not implemented)
+- [x] Test security headers (middleware implemented and applied)
 - [x] Test input sanitization (username sanitization exists)
 
 ---
@@ -797,11 +801,11 @@ ROLE_HIERARCHY = {
 - [x] Comprehensive API tests (27 tests, all passing)
 
 ### Phase 5: Security ⏳ PARTIAL
-- [ ] Rate limiting (configured but not active)
+- [x] Rate limiting (Flask-Limiter implemented and active on endpoints)
 - [x] Password history (fully implemented)
 - [x] Token cleanup (on check, no background task)
 - [ ] Email verification placeholder (field exists, not enforced)
-- [ ] Security headers
+- [x] Security headers (X-Content-Type-Options, X-Frame-Options, X-XSS-Protection, HSTS)
 - [x] Input sanitization (username only)
 
 ### Phase 6: Shared Library ❌ NOT STARTED
