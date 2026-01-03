@@ -2,11 +2,18 @@ import os
 
 from flask import Flask
 from flask_cors import CORS
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
 
 db = SQLAlchemy()
 migrate = Migrate()
+limiter = Limiter(
+    key_func=get_remote_address,
+    default_limits=[],
+    storage_uri="memory://",  # Default, can be overridden in config
+)
 
 
 def create_app(config_name=None):
@@ -25,6 +32,34 @@ def create_app(config_name=None):
     # Initialize extensions
     db.init_app(app)
     migrate.init_app(app, db)
+
+    # Initialize Flask-Limiter
+    storage_uri = app.config.get("RATELIMIT_STORAGE_URL", "memory://")
+    limiter.storage_uri = storage_uri
+    limiter.init_app(app)
+
+    # Disable rate limiting if RATELIMIT_ENABLED is False
+    if not app.config.get("RATELIMIT_ENABLED", True):
+        limiter.enabled = False
+
+    # Custom error handler for rate limit exceeded (429)
+    @app.errorhandler(429)
+    def rate_limit_error(e):
+        from flask import jsonify
+
+        return (
+            jsonify(
+                {
+                    "error": "Rate limit exceeded",
+                    "message": (
+                        str(e.description)
+                        if hasattr(e, "description")
+                        else "Too many requests"
+                    ),
+                }
+            ),
+            429,
+        )
 
     # Configure CORS for frontend access
     CORS(
@@ -58,6 +93,11 @@ def create_app(config_name=None):
     from app.utils.log_handler import get_log_handler
 
     get_log_handler()  # Initialize the handler
+
+    # Add security headers to all responses
+    from app.middleware.security import add_security_headers
+
+    app.after_request(add_security_headers)
 
     # Root route
     @app.route("/")
