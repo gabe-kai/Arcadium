@@ -49,8 +49,10 @@ def create_app(config_name=None):
 
     # Register blueprints
     from app.routes.auth_routes import auth_bp
+    from app.routes.user_routes import user_bp
 
     app.register_blueprint(auth_bp, url_prefix="/api")
+    app.register_blueprint(user_bp, url_prefix="/api")
 
     # Initialize in-memory log handler for log viewing
     from app.utils.log_handler import get_log_handler
@@ -71,6 +73,11 @@ def create_app(config_name=None):
                 "refresh": "/api/auth/refresh",
                 "logout": "/api/auth/logout",
                 "revoke": "/api/auth/revoke",
+                "users": "/api/users",
+                "user_profile": "/api/users/{user_id}",
+                "user_by_username": "/api/users/username/{username}",
+                "update_role": "/api/users/{user_id}/role",
+                "system_user": "/api/users/system",
             },
         }
 
