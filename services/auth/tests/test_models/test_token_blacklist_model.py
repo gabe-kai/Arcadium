@@ -60,8 +60,8 @@ class TestTokenBlacklistModel:
             blacklist_entry = TokenBlacklist(
                 token_id="test-token-id",
                 user_id=test_user,
-                expires_at=future_expires,
-                created_at=datetime.now(timezone.utc),
+                expires_at=future_expires.replace(tzinfo=None),
+                created_at=datetime.now(timezone.utc).replace(tzinfo=None),
             )
 
             db.session.add(blacklist_entry)
