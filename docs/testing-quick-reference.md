@@ -106,6 +106,21 @@ TEST_DB_NAME=arcadium_testing_wiki
 - **Frontend E2E:** 32+ tests
 - **Total:** 1,300+ tests
 
+## Running CI Tests Locally
+
+To simulate the CI/CD workflow locally without pushing to GitHub:
+
+```bash
+# Run CI simulation script (recommended)
+python scripts/run-ci-tests-local.py
+```
+
+This script:
+- Checks PostgreSQL connection
+- Creates test databases (`arcadium_testing_wiki` and `arcadium_testing_auth`)
+- Runs all backend tests with CI-like environment variables
+- Shows the same output format as GitHub Actions
+
 ## Test Logging
 
 **⚠️ IMPORTANT: Always check log files for complete test results. Terminal output may be truncated.**

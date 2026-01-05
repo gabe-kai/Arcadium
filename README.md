@@ -189,14 +189,22 @@ The project uses GitHub Actions for continuous integration. Tests run automatica
 - Push to `main` or `feature/**` branches
 - Pull requests targeting `main`
 
+**Workflows:**
+- **Backend Tests** (`.github/workflows/backend-tests.yml`) - Unified backend test workflow for Wiki, Auth, and Shared services
+- **Client Tests** (`.github/workflows/client-tests.yml`) - Frontend unit, integration, and E2E tests
+
 **To run tests locally with CI configuration:**
 ```bash
-# Set environment variables (matches CI)
+# Simulate CI locally (recommended - matches CI exactly)
+python scripts/run-ci-tests-local.py
+
+# Or run tests manually with CI environment
 export FLASK_ENV=testing
-# TEST_DATABASE_URL will be constructed from arcadium_user and arcadium_pass if not set
-# Or set explicitly: export TEST_DATABASE_URL="postgresql://${arcadium_user}:${arcadium_pass}@localhost:5432/arcadium_testing_wiki"
-cd services/wiki
-pytest
+export arcadium_user=postgres
+export arcadium_pass=your_password
+export DB_HOST=localhost
+export DB_PORT=5432
+python scripts/run-tests.py all
 ```
 
 See [CI/CD Documentation](docs/ci-cd.md) for detailed information about the CI setup and troubleshooting.
