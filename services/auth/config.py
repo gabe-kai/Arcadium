@@ -117,6 +117,25 @@ class TestingConfig(Config):
     JWT_SECRET_KEY = "test-jwt-secret-key"
     RATELIMIT_ENABLED = False  # Disable rate limiting in tests
 
+    # Override pool settings for testing - use smaller pool to avoid connection exhaustion
+    SQLALCHEMY_ENGINE_OPTIONS = {
+        "pool_size": int(os.environ.get("DB_POOL_SIZE", "1")),
+        "max_overflow": int(os.environ.get("DB_MAX_OVERFLOW", "0")),
+        "pool_timeout": int(os.environ.get("DB_POOL_TIMEOUT", "5")),
+        "pool_recycle": int(os.environ.get("DB_POOL_RECYCLE", "3600")),
+        "pool_pre_ping": True,
+        "echo": os.environ.get("DB_ECHO", "false").lower() == "true",
+    }
+    # Use minimal connection pool for tests to avoid connection exhaustion
+    SQLALCHEMY_ENGINE_OPTIONS = {
+        "pool_size": int(os.environ.get("DB_POOL_SIZE", "1")),
+        "max_overflow": int(os.environ.get("DB_MAX_OVERFLOW", "0")),
+        "pool_timeout": int(os.environ.get("DB_POOL_TIMEOUT", "5")),
+        "pool_recycle": int(os.environ.get("DB_POOL_RECYCLE", "3600")),
+        "pool_pre_ping": True,
+        "echo": False,
+    }
+
 
 config = {
     "development": DevelopmentConfig,

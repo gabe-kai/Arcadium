@@ -23,6 +23,7 @@ os.environ["FLASK_ENV"] = "testing"
 os.environ.setdefault("DB_POOL_SIZE", "1")
 os.environ.setdefault("DB_MAX_OVERFLOW", "0")
 os.environ.setdefault("DB_POOL_TIMEOUT", "5")
+os.environ.setdefault("DB_POOL_RECYCLE", "3600")
 
 # Use TEST_DATABASE_URL from .env if available
 TEST_DATABASE_URL = os.environ.get("TEST_DATABASE_URL")
@@ -91,15 +92,17 @@ def app():
                     continue
                 db.session.execute(table.delete())
             db.session.commit()
+            db.session.close()
             db.session.remove()
         except Exception:
             db.session.rollback()
+            db.session.close()
             db.session.remove()
             raise
 
     yield app
 
-    # Clean up: rollback any uncommitted transactions
+    # Clean up: ensure all connections are closed and removed
     with app.app_context():
         from app import db
 
@@ -110,6 +113,8 @@ def app():
             pass
         finally:
             db.session.remove()
+            # Close all connections in the pool
+            db.engine.dispose(close=True)
 
 
 @pytest.fixture(scope="function")
@@ -125,6 +130,10 @@ def db_session(app):
         from app import db
 
         yield db.session
-        db.session.rollback()
-        db.session.close()
-        db.session.remove()
+        try:
+            db.session.rollback()
+            db.session.close()
+        except Exception:
+            pass
+        finally:
+            db.session.remove()
