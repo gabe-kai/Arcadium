@@ -37,16 +37,18 @@ class Config:
             "Example: DATABASE_URL=postgresql://user:pass@localhost:5432/arcadium_wiki"
             "Or: arcadium_user=user, arcadium_pass=pass, DB_NAME=arcadium_wiki"
         )
-    SQLALCHEMY_DATABASE_URI = (
-        _database_url or "sqlite:///:memory:"
-    )  # Fallback for testing
+
+    # PostgreSQL is required - no SQLite fallback
+    if not _database_url:
+        raise ValueError(
+            "DATABASE_URL or (arcadium_user and arcadium_pass) environment variables are required. "
+            "PostgreSQL is required for all environments (including testing)."
+        )
+
+    SQLALCHEMY_DATABASE_URI = _database_url
 
     # Database connection pooling configuration
     # These settings optimize connection pool for production workloads
-    # Note: Some options are PostgreSQL-specific and will be filtered for SQLite
-    _final_db_url = SQLALCHEMY_DATABASE_URI
-    _is_sqlite = _final_db_url and _final_db_url.startswith("sqlite")
-
     SQLALCHEMY_ENGINE_OPTIONS = {
         "pool_size": int(
             os.environ.get("DB_POOL_SIZE", "10")
@@ -64,21 +66,6 @@ class Config:
         "echo": os.environ.get("DB_ECHO", "false").lower()
         == "true",  # Log SQL queries (for debugging)
     }
-
-    # Remove PostgreSQL-specific options for SQLite
-    if _is_sqlite:
-        SQLALCHEMY_ENGINE_OPTIONS = {
-            k: v
-            for k, v in SQLALCHEMY_ENGINE_OPTIONS.items()
-            if k
-            not in [
-                "pool_size",
-                "max_overflow",
-                "pool_timeout",
-                "pool_recycle",
-                "pool_pre_ping",
-            ]
-        }
 
     # Wiki-specific settings
     WIKI_DATA_DIR = os.environ.get("WIKI_DATA_DIR") or "data"
@@ -152,25 +139,15 @@ class TestingConfig(Config):
         db_port = os.environ.get("DB_PORT", "5432")
         if db_user and db_pass:
             _test_db_url = f"postgresql://{db_user}:{db_pass}@{db_host}:{db_port}/arcadium_testing_wiki"
-    SQLALCHEMY_DATABASE_URI = _test_db_url or "sqlite:///:memory:"
 
-    # Remove PostgreSQL-specific options for SQLite
-    _final_test_db_url = SQLALCHEMY_DATABASE_URI
-    _is_test_sqlite = _final_test_db_url and _final_test_db_url.startswith("sqlite")
-    if _is_test_sqlite:
-        SQLALCHEMY_ENGINE_OPTIONS = {
-            k: v
-            for k, v in SQLALCHEMY_ENGINE_OPTIONS.items()
-            if k
-            not in [
-                "pool_size",
-                "max_overflow",
-                "pool_timeout",
-                "pool_recycle",
-                "pool_pre_ping",
-                "connect_args",
-            ]
-        }
+    # PostgreSQL is required for testing - no SQLite fallback
+    if not _test_db_url:
+        raise ValueError(
+            "TEST_DATABASE_URL or (arcadium_user and arcadium_pass) environment variables are required for testing. "
+            "PostgreSQL is required for all tests to match production behavior."
+        )
+
+    SQLALCHEMY_DATABASE_URI = _test_db_url
 
     WIKI_DATA_DIR = "test_data"
 

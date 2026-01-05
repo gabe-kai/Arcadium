@@ -126,14 +126,61 @@ flask run
 
 ## Testing
 
-### Local Testing
+**⚠️ IMPORTANT: Test results are logged to files. Always check `logs/tests/` for complete results, not just terminal output.**
 
-Run tests for a specific service:
+### Quick Start
+
+Run all backend tests with the unified test runner:
 
 ```bash
-# Wiki service tests
-cd services/wiki
-pytest
+# Run all backend tests
+python scripts/run-tests.py all
+
+# Run specific service
+python scripts/run-tests.py wiki
+python scripts/run-tests.py auth
+python scripts/run-tests.py shared
+```
+
+### Test Organization
+
+Tests are organized into clear categories with PostgreSQL-only configuration:
+
+- **Backend:** 750+ tests across Wiki, Auth, and Shared services
+- **Frontend Unit/Integration:** 523+ tests
+- **Frontend E2E:** 32+ tests
+- **Total:** 1,300+ tests
+
+All tests use **PostgreSQL** (no SQLite) to match production behavior.
+
+### Test Documentation
+
+- **[Testing Overview](docs/testing-overview.md)** - Complete testing guide
+- **[Testing Quick Reference](docs/testing-quick-reference.md)** - Quick commands and reference
+- **[Testing Audit](docs/testing-audit.md)** - Test coverage analysis and gaps
+- **[Logging System](docs/logging-system.md)** - Complete logging documentation (⚠️ **Read this for log locations and limits**)
+
+### Local Testing
+
+**Backend Tests:**
+```bash
+# Unified test runner (recommended)
+python scripts/run-tests.py all
+
+# Individual services
+cd services/wiki && pytest
+cd services/auth && pytest
+```
+
+**Frontend Tests:**
+```bash
+cd client
+
+# Unit/Integration tests
+npm run test
+
+# E2E tests
+npm run test:e2e
 ```
 
 ### CI/CD
@@ -174,7 +221,7 @@ The web client is a React-based SPA located in `client/`. See [Client README](cl
 - ✅ Phase 15: Polish & Enhancements (Complete - Theme support, notifications, animations, print stylesheet, share functionality)
 - ✅ Authentication System (Sign In/Register UI Complete)
 
-**Test Coverage:** 523+ client tests + 560+ backend tests = 1,115+ total tests across 89+ test files
+**Test Coverage:** 523+ client tests + 750+ backend tests = 1,300+ total tests across 100+ test files
 
 ## Documentation
 

@@ -42,9 +42,15 @@ class Config:
             "Example: DATABASE_URL=postgresql://user:pass@localhost:5432/arcadium_auth"
             "Or: arcadium_user=user, arcadium_pass=pass, DB_NAME=arcadium_auth"
         )
-    SQLALCHEMY_DATABASE_URI = (
-        _database_url or "sqlite:///:memory:"
-    )  # Fallback for testing
+
+    # PostgreSQL is required - no SQLite fallback
+    if not _database_url:
+        raise ValueError(
+            "DATABASE_URL or (arcadium_user and arcadium_pass) environment variables are required. "
+            "PostgreSQL is required for all environments (including testing)."
+        )
+
+    SQLALCHEMY_DATABASE_URI = _database_url
 
     # Database connection pooling configuration
     SQLALCHEMY_ENGINE_OPTIONS = {
@@ -113,7 +119,15 @@ class TestingConfig(Config):
         db_port = os.environ.get("DB_PORT", "5432")
         if db_user and db_pass:
             _test_db_url = f"postgresql://{db_user}:{db_pass}@{db_host}:{db_port}/arcadium_testing_auth"
-    SQLALCHEMY_DATABASE_URI = _test_db_url or "sqlite:///:memory:"
+
+    # PostgreSQL is required for testing - no SQLite fallback
+    if not _test_db_url:
+        raise ValueError(
+            "TEST_DATABASE_URL or (arcadium_user and arcadium_pass) environment variables are required for testing. "
+            "PostgreSQL is required for all tests to match production behavior."
+        )
+
+    SQLALCHEMY_DATABASE_URI = _test_db_url
     JWT_SECRET_KEY = "test-jwt-secret-key"
     RATELIMIT_ENABLED = False  # Disable rate limiting in tests
 
