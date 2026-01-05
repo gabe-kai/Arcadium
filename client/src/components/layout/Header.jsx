@@ -31,7 +31,7 @@ function saveRecentSearch(query) {
   }
 }
 
-export function Header() {
+export function Header({ onMenuToggle, isLeftSidebarOpen }) {
   const navigate = useNavigate();
   const location = useLocation();
   const { isAuthenticated, user, signOut } = useAuth();
@@ -133,18 +133,29 @@ export function Header() {
   return (
     <header className="arc-header">
       <div className="arc-header-left">
+        {onMenuToggle && (
+          <button
+            className="arc-mobile-menu-toggle"
+            onClick={onMenuToggle}
+            aria-label="Toggle navigation menu"
+            aria-expanded={isLeftSidebarOpen}
+            title="Menu"
+          >
+            {isLeftSidebarOpen ? '✕' : '☰'}
+          </button>
+        )}
         <Link to="/" className="arc-logo">
           <span className="arc-logo-mark">A</span>
           <span className="arc-logo-text">Arcadium Wiki</span>
         </Link>
       </div>
-      <div className="arc-header-right">
-        <form ref={searchFormRef} onSubmit={handleSearchSubmit} className="arc-search-form">
+      <div className="arc-header-center">
+        <form ref={searchFormRef} onSubmit={handleSearchSubmit} className="arc-search-form arc-header-search">
           <div className="arc-search-input-wrapper">
             <input
               ref={searchInputRef}
               type="search"
-              className="arc-search-input"
+              className="arc-search-input arc-header-search-input"
               placeholder="Search the wiki... (Ctrl+K / Cmd+K)"
               value={searchQuery}
               onChange={handleSearchChange}
@@ -178,6 +189,8 @@ export function Header() {
             )}
           </div>
         </form>
+      </div>
+      <div className="arc-header-right">
         <ServiceStatusIndicator />
         {isAuthenticated && (user?.role === 'writer' || user?.role === 'admin') && (
           <Link

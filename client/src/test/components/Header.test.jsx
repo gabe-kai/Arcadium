@@ -487,4 +487,81 @@ describe('Header', () => {
       expect(clearButton).toHaveAttribute('aria-label', 'Clear search');
     });
   });
+
+  describe('Mobile Menu Toggle', () => {
+    it('renders mobile menu toggle when onMenuToggle prop is provided', () => {
+      const mockToggle = vi.fn();
+      render(
+        <MemoryRouter>
+          <Header onMenuToggle={mockToggle} isLeftSidebarOpen={false} />
+        </MemoryRouter>,
+      );
+
+      const menuToggle = screen.getByLabelText('Toggle navigation menu');
+      expect(menuToggle).toBeInTheDocument();
+      expect(menuToggle).toHaveAttribute('aria-expanded', 'false');
+    });
+
+    it('calls onMenuToggle when mobile menu button is clicked', async () => {
+      const user = userEvent.setup();
+      const mockToggle = vi.fn();
+      render(
+        <MemoryRouter>
+          <Header onMenuToggle={mockToggle} isLeftSidebarOpen={false} />
+        </MemoryRouter>,
+      );
+
+      const menuToggle = screen.getByLabelText('Toggle navigation menu');
+      await user.click(menuToggle);
+
+      expect(mockToggle).toHaveBeenCalledTimes(1);
+    });
+
+    it('shows close icon when sidebar is open', () => {
+      render(
+        <MemoryRouter>
+          <Header onMenuToggle={vi.fn()} isLeftSidebarOpen={true} />
+        </MemoryRouter>,
+      );
+
+      const menuToggle = screen.getByLabelText('Toggle navigation menu');
+      expect(menuToggle).toHaveAttribute('aria-expanded', 'true');
+      expect(menuToggle).toHaveTextContent('✕');
+    });
+
+    it('shows hamburger icon when sidebar is closed', () => {
+      render(
+        <MemoryRouter>
+          <Header onMenuToggle={vi.fn()} isLeftSidebarOpen={false} />
+        </MemoryRouter>,
+      );
+
+      const menuToggle = screen.getByLabelText('Toggle navigation menu');
+      expect(menuToggle).toHaveAttribute('aria-expanded', 'false');
+      expect(menuToggle).toHaveTextContent('☰');
+    });
+
+    it('does not render mobile menu toggle when onMenuToggle is not provided', () => {
+      render(
+        <MemoryRouter>
+          <Header />
+        </MemoryRouter>,
+      );
+
+      expect(screen.queryByLabelText('Toggle navigation menu')).not.toBeInTheDocument();
+    });
+
+    it('has proper accessibility attributes for mobile menu toggle', () => {
+      render(
+        <MemoryRouter>
+          <Header onMenuToggle={vi.fn()} isLeftSidebarOpen={false} />
+        </MemoryRouter>,
+      );
+
+      const menuToggle = screen.getByLabelText('Toggle navigation menu');
+      expect(menuToggle).toHaveAttribute('aria-label', 'Toggle navigation menu');
+      expect(menuToggle).toHaveAttribute('aria-expanded', 'false');
+      expect(menuToggle).toHaveAttribute('title', 'Menu');
+    });
+  });
 });

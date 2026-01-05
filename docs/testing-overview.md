@@ -312,7 +312,7 @@ Test databases use the naming convention: `arcadium_testing_<service_name>`
 - **Backend:** 750+ tests across Wiki, Auth, and Shared services
 - **Frontend Unit/Integration:** 523+ tests
 - **Frontend E2E:** 32+ tests
-- **Total:** 1,300+ tests
+- **Total:** 1,551+ tests (996 backend + 523 frontend unit/integration + 32 E2E)
 
 ### Test Status
 

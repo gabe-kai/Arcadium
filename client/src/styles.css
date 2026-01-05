@@ -144,6 +144,14 @@ body {
   font-weight: 600;
 }
 
+.arc-header-center {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  max-width: 600px;
+  margin: 0 1rem;
+}
+
 .arc-header-right {
   display: flex;
   align-items: center;
@@ -3854,3 +3862,502 @@ body {
 }
 
 /* Page Version View Styles */
+
+/* ============================================
+   RESPONSIVE DESIGN - Phase 12
+   ============================================
+   Breakpoints:
+   - Mobile: < 768px
+   - Tablet: 768px - 1024px
+   - Desktop: > 1024px
+   ============================================ */
+
+/* Mobile Menu Toggle Button */
+.arc-mobile-menu-toggle {
+  display: none;
+  background: none;
+  border: none;
+  color: var(--arc-text);
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0.5rem;
+  margin-right: 0.5rem;
+  transition: color 0.2s;
+}
+
+.arc-mobile-menu-toggle:hover {
+  color: var(--arc-accent);
+}
+
+.arc-mobile-menu-toggle:focus {
+  outline: 2px solid var(--arc-accent);
+  outline-offset: 2px;
+  border-radius: var(--arc-radius-sm);
+}
+
+/* Mobile Sidebar Overlay */
+.arc-sidebar-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 998;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.arc-sidebar-overlay.active {
+  opacity: 1;
+}
+
+/* Mobile Sidebar Drawer */
+.arc-sidebar.arc-sidebar-mobile {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  width: 280px;
+  max-width: 85vw;
+  z-index: 999;
+  transform: translateX(-100%);
+  transition: transform 0.3s ease;
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.3);
+}
+
+.arc-sidebar.arc-sidebar-mobile.active {
+  transform: translateX(0);
+}
+
+/* Right Sidebar Mobile Toggle */
+.arc-right-sidebar-toggle {
+  display: none;
+  position: fixed;
+  bottom: 1rem;
+  right: 1rem;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  background: var(--arc-primary);
+  color: var(--arc-on-primary);
+  border: none;
+  box-shadow: var(--arc-shadow-md);
+  cursor: pointer;
+  z-index: 997;
+  font-size: 1.25rem;
+  transition: transform 0.2s, background 0.2s;
+}
+
+.arc-right-sidebar-toggle:hover {
+  background: var(--arc-primary-hover);
+  transform: scale(1.1);
+}
+
+.arc-right-sidebar-toggle:active {
+  transform: scale(0.95);
+}
+
+/* Mobile Right Sidebar */
+.arc-sidebar-right.arc-sidebar-mobile {
+  position: fixed;
+  top: 0;
+  right: 0;
+  height: 100vh;
+  width: 320px;
+  max-width: 90vw;
+  z-index: 999;
+  transform: translateX(100%);
+  transition: transform 0.3s ease;
+  box-shadow: -2px 0 8px rgba(0, 0, 0, 0.3);
+}
+
+.arc-sidebar-right.arc-sidebar-mobile.active {
+  transform: translateX(0);
+}
+
+/* ============================================
+   TABLET STYLES (768px - 1024px)
+   ============================================ */
+
+@media (min-width: 768px) and (max-width: 1024px) {
+  /* Adjust main layout for tablet */
+  .arc-main {
+    grid-template-columns: 200px 1fr;
+  }
+
+  .arc-main-with-right-sidebar {
+    grid-template-columns: 200px 1fr 250px;
+  }
+
+  .arc-main-with-right-sidebar.arc-main-no-sidebar {
+    grid-template-columns: 1fr 250px;
+  }
+
+  /* Narrower sidebar */
+  .arc-sidebar {
+    padding: 1rem;
+  }
+
+  /* Adjust header spacing */
+  .arc-header {
+    padding: 0.5rem 1rem;
+  }
+
+  /* Smaller font sizes for better fit */
+  .arc-page-header h1 {
+    font-size: 1.75rem;
+  }
+
+  /* Adjust reading view max-width */
+  .arc-reading-view {
+    max-width: 700px;
+    padding: 0 1rem;
+  }
+}
+
+/* ============================================
+   MOBILE STYLES (< 768px)
+   ============================================ */
+
+@media (max-width: 767px) {
+  /* Show mobile menu toggle */
+  .arc-mobile-menu-toggle {
+    display: block;
+  }
+
+  /* Show sidebar overlay when active */
+  .arc-sidebar-overlay {
+    display: block;
+  }
+
+  /* Show right sidebar toggle button */
+  .arc-right-sidebar-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Main layout - single column on mobile */
+  .arc-main {
+    grid-template-columns: 1fr !important;
+    height: calc(100vh - 56px); /* Adjust for mobile header height */
+  }
+
+  /* Hide sidebars from main layout on mobile */
+  .arc-sidebar:not(.arc-sidebar-mobile) {
+    display: none;
+  }
+
+  /* Mobile header adjustments */
+  .arc-header {
+    padding: 0.5rem 0.75rem;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .arc-header-left {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .arc-header-center {
+    order: 3;
+    width: 100%;
+    margin-top: 0.5rem;
+  }
+
+  .arc-header-right {
+    gap: 0.5rem;
+  }
+
+  /* Compact search in header */
+  .arc-header-search {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .arc-header-search-input {
+    font-size: 0.875rem;
+    padding: 0.5rem 0.75rem;
+  }
+
+  /* Hide username on mobile, show icon only */
+  .arc-username {
+    display: none;
+  }
+
+  /* Adjust header buttons */
+  .arc-header-button {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+  }
+
+  .arc-header-button-new-page {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+  }
+
+  /* Content area adjustments */
+  .arc-content {
+    padding: 1rem 0.75rem;
+    overflow-x: hidden;
+  }
+
+  /* Page header mobile adjustments */
+  .arc-page-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 1rem 0.75rem;
+  }
+
+  .arc-page-header h1 {
+    font-size: 1.5rem;
+    line-height: 1.3;
+  }
+
+  .arc-page-header-actions {
+    width: 100%;
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .arc-edit-button {
+    flex: 1;
+    min-width: 120px;
+  }
+
+  /* Reading view mobile */
+  .arc-reading-view {
+    max-width: 100%;
+    padding: 0 0.75rem;
+  }
+
+  .arc-reading-body {
+    font-size: 1rem;
+    line-height: 1.6;
+  }
+
+  .arc-reading-body h1 {
+    font-size: 1.75rem;
+    margin-top: 1.5rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .arc-reading-body h2 {
+    font-size: 1.5rem;
+    margin-top: 1.25rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .arc-reading-body h3 {
+    font-size: 1.25rem;
+    margin-top: 1rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .arc-reading-body h4,
+  .arc-reading-body h5,
+  .arc-reading-body h6 {
+    font-size: 1.125rem;
+    margin-top: 0.75rem;
+    margin-bottom: 0.5rem;
+  }
+
+  /* Page metadata mobile */
+  .arc-page-meta {
+    font-size: 0.8125rem;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  /* Navigation tree mobile */
+  .arc-nav-tree {
+    font-size: 0.875rem;
+  }
+
+  .arc-nav-tree-search {
+    margin-bottom: 0.75rem;
+  }
+
+  /* Table of contents mobile */
+  .arc-toc {
+    font-size: 0.875rem;
+  }
+
+  .arc-toc-item {
+    padding: 0.5rem 0.75rem;
+  }
+
+  /* Backlinks mobile */
+  .arc-backlinks {
+    font-size: 0.875rem;
+  }
+
+  .arc-backlinks-item {
+    padding: 0.5rem 0.75rem;
+  }
+
+  /* Comments panel mobile */
+  .arc-comments-panel {
+    height: 50vh;
+    min-height: 300px;
+    max-height: 80vh;
+  }
+
+  .arc-comments-panel-collapsed {
+    height: 3rem;
+  }
+
+  /* Edit page mobile adjustments */
+  .arc-edit-page {
+    padding: 0.75rem;
+  }
+
+  .arc-edit-page-header {
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 0.75rem 0;
+  }
+
+  .arc-edit-page-toolbar {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .arc-edit-page-toolbar button {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+  }
+
+  /* Metadata form mobile */
+  .arc-metadata-form {
+    padding: 0.75rem;
+  }
+
+  .arc-metadata-form-group {
+    margin-bottom: 1rem;
+  }
+
+  .arc-metadata-form-status-group {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  /* Search page mobile */
+  .arc-search-results {
+    padding: 0.75rem;
+  }
+
+  .arc-search-result {
+    padding: 0.75rem;
+  }
+
+  /* Dialog mobile */
+  .arc-dialog {
+    width: 90vw;
+    max-width: 500px;
+    margin: 1rem auto;
+    max-height: 90vh;
+  }
+
+  .arc-dialog-content {
+    padding: 1rem;
+  }
+
+  /* Form inputs mobile */
+  .arc-input,
+  .arc-textarea,
+  .arc-select {
+    font-size: 1rem; /* Prevent zoom on iOS */
+    padding: 0.75rem;
+  }
+
+  /* Buttons mobile */
+  .arc-button {
+    padding: 0.75rem 1rem;
+    font-size: 0.875rem;
+    min-height: 44px; /* Touch target size */
+  }
+
+  /* Breadcrumb mobile */
+  .arc-breadcrumb {
+    font-size: 0.8125rem;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+  }
+
+  /* Page navigation mobile */
+  .arc-page-navigation {
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 1rem 0.75rem;
+  }
+
+  .arc-page-nav-item {
+    width: 100%;
+  }
+
+  /* Footer mobile */
+  .arc-footer {
+    padding: 1rem 0.75rem;
+    font-size: 0.8125rem;
+    text-align: center;
+  }
+}
+
+/* ============================================
+   LARGE MOBILE / SMALL TABLET (480px - 767px)
+   ============================================ */
+
+@media (min-width: 480px) and (max-width: 767px) {
+  /* Slightly wider sidebars on larger mobile */
+  .arc-sidebar.arc-sidebar-mobile {
+    width: 300px;
+  }
+
+  .arc-sidebar-right.arc-sidebar-mobile {
+    width: 340px;
+  }
+
+  /* Better spacing */
+  .arc-content {
+    padding: 1.25rem 1rem;
+  }
+
+  .arc-reading-view {
+    padding: 0 1rem;
+  }
+}
+
+/* ============================================
+   TOUCH DEVICE OPTIMIZATIONS
+   ============================================ */
+
+@media (hover: none) and (pointer: coarse) {
+  /* Larger touch targets */
+  .arc-button,
+  .arc-header-button,
+  .arc-edit-button {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Remove hover effects on touch devices */
+  .arc-button:hover,
+  .arc-header-button:hover {
+    transform: none;
+  }
+
+  /* Better spacing for touch */
+  .arc-nav-tree-item {
+    padding: 0.75rem 0.5rem;
+  }
+
+  .arc-toc-item {
+    padding: 0.75rem;
+  }
+}
