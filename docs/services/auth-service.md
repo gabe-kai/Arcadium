@@ -59,8 +59,9 @@ The Wiki Service depends on Auth Service for:
 4. **Admin User for AI Content**
    - Wiki sync utility needs to find/create "admin" system user
    - AI-written pages assigned to admin user
-   - **Current Implementation**: Wiki uses config-based admin user ID (`SYNC_ADMIN_USER_ID` or default UUID)
-   - **Future**: `POST /api/users/system` endpoint for system user creation (not yet implemented)
+   - **Current Implementation**:
+     - Wiki uses config-based admin user ID (`SYNC_ADMIN_USER_ID` or default UUID)
+     - `POST /api/users/system` endpoint is implemented and available for system user creation (requires service token)
 
 ### Shared Authentication Library
 

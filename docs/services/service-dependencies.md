@@ -53,8 +53,8 @@ This document outlines dependencies between services and how they integrate with
    - Wiki sync utility needs to find/create "admin" system user
    - AI-written pages assigned to admin user
    - **Current Implementation**: Wiki Service uses config-based admin user ID (`SYNC_ADMIN_USER_ID` environment variable or default UUID)
-   - **Future**: `POST /api/users/system` endpoint for system user creation (requires service token) - not yet implemented
-   - **Workaround**: Admin user must be created manually (first registered user becomes admin) or use known admin user ID
+   - **Implemented**: `POST /api/users/system` endpoint is available for system user creation (requires service token)
+   - **Current Workaround**: Wiki Service uses config-based admin user ID (`SYNC_ADMIN_USER_ID` environment variable or default UUID)
 
 **Shared Code**:
 - `shared/auth/tokens/` - Token validation utilities

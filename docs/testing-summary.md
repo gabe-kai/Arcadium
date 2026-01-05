@@ -130,13 +130,13 @@ python scripts/run-tests.py auth      # Run Auth Service tests
 ## Test Statistics
 
 ### Current Coverage
-- **Backend:** 750+ tests
-  - Wiki Service: 560+ tests
-  - Auth Service: 192 tests
-  - Shared Auth: ~20 tests
+- **Backend:** 996 tests
+  - Wiki Service: 756 tests
+  - Auth Service: 188 tests (188 passed, 4 xfailed)
+  - Shared Auth: 52 tests
 - **Frontend Unit/Integration:** 523+ tests
 - **Frontend E2E:** 32+ tests
-- **Total:** 1,300+ tests across 100+ test files
+- **Total:** 1,551+ tests across 100+ test files (996 backend + 523 frontend unit/integration + 32 E2E)
 
 ### Test Organization
 - ✅ Well organized into clear categories

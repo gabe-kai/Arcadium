@@ -13,7 +13,7 @@ This document provides a comprehensive audit of all tests in the project, identi
 #### Wiki Service (`services/wiki/tests/`)
 
 **Total Test Files:** ~85 files
-**Estimated Test Count:** 560+ tests
+**Total Test Count:** 756 tests
 
 ##### Models (`test_models/`)
 - ✅ `test_page.py` - Page model tests
@@ -121,7 +121,7 @@ This document provides a comprehensive audit of all tests in the project, identi
 #### Auth Service (`services/auth/tests/`)
 
 **Total Test Files:** ~15 files
-**Estimated Test Count:** 192 tests
+**Total Test Count:** 188 tests (188 passing, 4 expected xfailed)
 
 ##### Models (`test_models/`)
 - ✅ `test_user_model.py` - User model tests
@@ -158,8 +158,8 @@ This document provides a comprehensive audit of all tests in the project, identi
 
 #### Shared Auth (`shared/auth/tests/`)
 
-**Total Test Files:** ~3 files
-**Estimated Test Count:** ~20 tests
+**Total Test Files:** 3 files
+**Total Test Count:** 52 tests (all passing)
 
 - ✅ `test_token_validation.py` - Token validation tests
 - ✅ `test_service_tokens.py` - Service token tests
@@ -310,7 +310,7 @@ These are intentional and should be kept.
 - **Backend:** 750+ tests
 - **Frontend Unit/Integration:** 523+ tests
 - **Frontend E2E:** 32+ tests
-- **Total:** 1,300+ tests
+- **Total:** 1,551+ tests (996 backend + 523 frontend unit/integration + 32 E2E)
 
 ### Test Organization
 

@@ -104,7 +104,7 @@ TEST_DB_NAME=arcadium_testing_wiki
 - **Backend:** 750+ tests
 - **Frontend Unit/Integration:** 523+ tests
 - **Frontend E2E:** 32+ tests
-- **Total:** 1,300+ tests
+- **Total:** 1,551+ tests (996 backend + 523 frontend unit/integration + 32 E2E)
 
 ## Running CI Tests Locally
 
