@@ -4,15 +4,96 @@ This document describes the Continuous Integration and Continuous Deployment set
 
 ## Overview
 
-The project uses **GitHub Actions** for CI/CD. Currently, CI is configured for the Wiki Service, with plans to expand to other services as they are developed.
+The project uses **GitHub Actions** for CI/CD. CI is configured for all backend services (Wiki, Auth, Shared) and the frontend client.
 
 ## GitHub Actions Workflows
 
-### Wiki Service Tests (Backend)
+### Backend Tests (Unified)
+
+**Location:** `.github/workflows/backend-tests.yml`
+
+**Status:** ✅ **Primary Backend Test Workflow**
+
+**Purpose:** Runs the complete backend test suite for all services (Wiki, Auth, Shared) using our unified test runner.
+
+#### When It Runs
+
+- **Push events:**
+  - `main` branch
+  - Any `feature/**` branch
+- **Pull request events:**
+  - PRs targeting `main` branch
+
+#### What It Does
+
+1. **Sets up environment:**
+   - Ubuntu latest runner
+   - Python 3.11
+   - PostgreSQL 14 service container
+
+2. **Installs dependencies:**
+   - Upgrades pip
+   - Installs root `requirements.txt` dependencies
+   - Installs Wiki service dependencies (if `services/wiki/requirements.txt` exists)
+   - Installs Auth service dependencies (if `services/auth/requirements.txt` exists)
+   - Caches pip packages for faster subsequent runs
+
+3. **Runs code quality checks:**
+   - Installs and runs pre-commit hooks
+   - Validates code formatting (black, isort, ruff)
+   - Checks for common issues (trailing whitespace, merge conflicts, etc.)
+
+4. **Sets up PostgreSQL:**
+   - Starts PostgreSQL 14 container
+   - Installs PostgreSQL client tools
+   - Creates `arcadium_testing_wiki` database
+   - Creates `arcadium_testing_auth` database
+   - Waits for PostgreSQL to be ready
+
+5. **Runs unified backend tests:**
+   - Executes `python scripts/run-tests.py all` from project root
+   - Tests all services: Wiki (all categories), Auth, and Shared
+   - Uses PostgreSQL test databases (avoids SQLite UUID issues)
+   - Shows Wiki test category breakdown (Models, Services, API, Utils, Sync, Integration, Performance, Health)
+   - Generates comprehensive test summaries with category-level results
+   - Logs all test output to `logs/tests/` directory
+
+#### Environment Variables
+
+The workflow sets:
+- `FLASK_ENV=testing`
+- `TEST_DATABASE_URL=postgresql://postgres:Le555ecure@localhost:5432/arcadium_testing_wiki`
+- `arcadium_user=postgres`
+- `arcadium_pass=Le555ecure`
+- `DB_HOST=localhost`
+- `DB_PORT=5432`
+
+Note: CI uses hardcoded credentials for the PostgreSQL service container. Locally, you can use `arcadium_user` and `arcadium_pass` from your `.env` files (will construct TEST_DATABASE_URL automatically).
+
+#### Test Configuration
+
+Tests use PostgreSQL (not SQLite) to:
+- Avoid UUID compatibility issues
+- Match production database behavior
+- Ensure accurate test results
+
+The unified test runner (`scripts/run-tests.py`) automatically:
+- Verifies PostgreSQL configuration before running tests
+- Runs tests by service and category
+- Provides detailed progress tracking and statistics
+- Logs all output to files in `logs/tests/`
+
+See `scripts/run-tests.py` and `docs/testing-overview.md` for more details.
+
+---
+
+### Wiki Service Tests (Legacy - Deprecated)
 
 **Location:** `.github/workflows/wiki-service-tests.yml`
 
-**Purpose:** Runs the complete Wiki Service test suite on every push and pull request.
+**Status:** ⚠️ **DEPRECATED** - Use `backend-tests.yml` instead
+
+**Purpose:** Legacy workflow that only tests the Wiki Service. This workflow is deprecated in favor of the unified `backend-tests.yml` workflow which tests all backend services.
 
 #### When It Runs
 
@@ -190,11 +271,17 @@ To verify tests will pass in CI before pushing, replicate the CI environment loc
    - Port: `5432`
    - User: `arcadium_user` (or `postgres` if using default)
    - Password: Set via `arcadium_pass` environment variable (or your PostgreSQL password)
-   - Test database: `arcadium_testing_wiki` (will be created automatically if missing)
+   - Test databases:
+     - `arcadium_testing_wiki` (will be created automatically if missing)
+     - `arcadium_testing_auth` (will be created automatically if missing)
 
 2. **Python environment:**
    - Python 3.11+
    - Virtual environment activated
+
+3. **Environment variables:**
+   - Set `arcadium_user` and `arcadium_pass` in your `.env` files (or as environment variables)
+   - Or set `TEST_DATABASE_URL` explicitly for Wiki service
 
 ### Steps
 
@@ -205,15 +292,16 @@ To verify tests will pass in CI before pushing, replicate the CI environment loc
    pip install -r requirements.txt
    ```
 
-2. **Ensure test database exists:**
+2. **Ensure test databases exist:**
    ```sql
    -- Connect to PostgreSQL as postgres user (or arcadium_user)
    CREATE DATABASE arcadium_testing_wiki;
+   CREATE DATABASE arcadium_testing_auth;
    ```
 
-   Or let the test setup create it automatically (see `services/wiki/tests/conftest.py`).
+   Or let the test setup create them automatically (see `services/wiki/tests/conftest.py` and `services/auth/tests/conftest.py`).
 
-3. **Run tests with CI environment variables:**
+3. **Run tests with CI environment (recommended - uses unified test runner):**
 
    **Windows (PowerShell):**
    ```powershell
@@ -221,8 +309,12 @@ To verify tests will pass in CI before pushing, replicate the CI environment loc
    # TEST_DATABASE_URL will be constructed from arcadium_user and arcadium_pass if not set
    # Or set explicitly:
    $env:TEST_DATABASE_URL = "postgresql://$env:arcadium_user:$env:arcadium_pass@localhost:5432/arcadium_testing_wiki"
-   cd services/wiki
-   pytest
+   $env:arcadium_user = "postgres"  # or your local user
+   $env:arcadium_pass = "Le555ecure"  # or your local password
+   $env:DB_HOST = "localhost"
+   $env:DB_PORT = "5432"
+   # Run all backend tests (matches CI)
+   python scripts/run-tests.py all
    ```
 
    **Linux/Mac (Bash):**
@@ -231,32 +323,33 @@ To verify tests will pass in CI before pushing, replicate the CI environment loc
    # TEST_DATABASE_URL will be constructed from arcadium_user and arcadium_pass if not set
    # Or set explicitly:
    export TEST_DATABASE_URL="postgresql://${arcadium_user}:${arcadium_pass}@localhost:5432/arcadium_testing_wiki"
-   cd services/wiki
-   pytest
+   export arcadium_user="postgres"  # or your local user
+   export arcadium_pass="Le555ecure"  # or your local password
+   export DB_HOST="localhost"
+   export DB_PORT="5432"
+   # Run all backend tests (matches CI)
+   python scripts/run-tests.py all
    ```
 
 ### Quick Test Script
 
-You can create a simple script to run tests like CI:
+The unified test runner (`scripts/run-tests.py`) is the recommended way to run tests locally, as it matches CI exactly. You can also run individual services:
 
-**`scripts/test-ci-local.sh` (Linux/Mac):**
 ```bash
-#!/bin/bash
-export FLASK_ENV=testing
-# TEST_DATABASE_URL will be constructed from arcadium_user and arcadium_pass if not set
-# Or set explicitly: export TEST_DATABASE_URL="postgresql://${arcadium_user}:${arcadium_pass}@localhost:5432/arcadium_testing_wiki"
-cd services/wiki
-pytest "$@"
+# Run all backend tests (matches CI)
+python scripts/run-tests.py all
+
+# Run specific service
+python scripts/run-tests.py wiki
+python scripts/run-tests.py auth
+python scripts/run-tests.py shared
+
+# Run specific Wiki category
+python scripts/run-tests.py wiki api
+python scripts/run-tests.py wiki models
 ```
 
-**`scripts/test-ci-local.ps1` (Windows PowerShell):**
-```powershell
-$env:FLASK_ENV = "testing"
-# TEST_DATABASE_URL will be constructed from arcadium_user and arcadium_pass if not set
-# Or set explicitly: $env:TEST_DATABASE_URL = "postgresql://$env:arcadium_user:$env:arcadium_pass@localhost:5432/arcadium_testing_wiki"
-Set-Location services/wiki
-pytest $args
-```
+See `docs/testing-quick-reference.md` for more details.
 
 ## Viewing CI Results
 
@@ -286,8 +379,9 @@ Replace `USERNAME` and `REPO` with your GitHub username and repository name.
 
 1. **Check database configuration:**
    - Ensure you're using PostgreSQL (not SQLite)
-   - Verify `TEST_DATABASE_URL` matches CI exactly
+   - Verify `TEST_DATABASE_URL` matches CI exactly (or that `arcadium_user`/`arcadium_pass` are set)
    - Check PostgreSQL version (CI uses PostgreSQL 14)
+   - Ensure both test databases exist: `arcadium_testing_wiki` and `arcadium_testing_auth`
 
 2. **Check Python version:**
    - CI uses Python 3.11
@@ -296,10 +390,16 @@ Replace `USERNAME` and `REPO` with your GitHub username and repository name.
 3. **Check dependencies:**
    - Ensure all dependencies from `requirements.txt` are installed
    - Check for version mismatches
+   - Ensure service-specific dependencies are installed (Wiki, Auth)
 
 4. **Check environment variables:**
    - Verify `FLASK_ENV=testing` is set
-   - Verify `TEST_DATABASE_URL` is set correctly
+   - Verify `TEST_DATABASE_URL` is set correctly (or `arcadium_user`/`arcadium_pass`)
+   - Verify `DB_HOST` and `DB_PORT` match CI (localhost:5432)
+
+5. **Use the unified test runner:**
+   - Run `python scripts/run-tests.py all` locally to match CI exactly
+   - Check logs in `logs/tests/` for detailed output
 
 ### PostgreSQL Connection Issues in CI
 
@@ -311,13 +411,13 @@ If tests fail with PostgreSQL connection errors:
    - Ensure port 5432 is exposed
 
 2. **Check database creation:**
-   - Verify `arcadium_testing_wiki` database is created
+   - Verify both `arcadium_testing_wiki` and `arcadium_testing_auth` databases are created
    - Check PostgreSQL logs in CI output
-   - Database is created automatically in the workflow
+   - Databases are created automatically in the workflow
 
 3. **Check credentials:**
    - CI uses hardcoded credentials: `postgres:Le555ecure` for the service container
-   - Locally, use `arcadium_user` and `arcadium_pass` or set `TEST_DATABASE_URL` explicitly
+   - Locally, use `arcadium_user` and `arcadium_pass` from your `.env` files or set `TEST_DATABASE_URL` explicitly
    - Verify password matches your local PostgreSQL configuration
 
 ### Slow CI Runs
@@ -335,9 +435,8 @@ If tests fail with PostgreSQL connection errors:
 ### Planned CI/CD Features
 
 - [x] **Multi-service testing:**
-  - ✅ Wiki Service tests (backend) - Full test suite with reporting
+  - ✅ Unified backend tests (Wiki, Auth, Shared) - Full test suite with category breakdown
   - ✅ Client tests (frontend) - Unit, integration, and E2E tests
-  - [ ] Auth Service tests (when test suite is implemented)
   - [ ] Game Server tests (when implemented)
 
 - [x] **Code quality checks:**
@@ -370,7 +469,8 @@ If tests fail with PostgreSQL connection errors:
 ```
 .github/
 └── workflows/
-    ├── wiki-service-tests.yml    # Wiki Service (backend) test workflow
+    ├── backend-tests.yml         # Unified backend tests (Wiki, Auth, Shared) - PRIMARY
+    ├── wiki-service-tests.yml   # Wiki Service only (DEPRECATED - use backend-tests.yml)
     └── client-tests.yml         # Client (frontend) test workflow
 ```
 

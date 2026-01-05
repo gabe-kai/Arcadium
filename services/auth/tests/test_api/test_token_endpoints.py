@@ -9,13 +9,18 @@ from app.services.token_service import TokenService
 
 @pytest.fixture
 def test_user_id(app):
-    """Create a test user and return user ID"""
+    """Create a test user and return user info dict"""
+    import uuid
+
+    unique_id = str(uuid.uuid4())[:8]
+    username = f"testuser_{unique_id}"
+    email = f"test_{unique_id}@example.com"
     with app.app_context():
         user, _ = AuthService.register_user(
-            username="testuser", email="test@example.com", password="TestPass123"
+            username=username, email=email, password="TestPass123"
         )
         db.session.commit()
-        return str(user.id)
+        return {"user_id": str(user.id), "username": username, "email": email}
 
 
 @pytest.fixture
@@ -23,7 +28,8 @@ def test_user_with_tokens(app, test_user_id):
     """Create a test user and generate tokens"""
     with app.app_context():
         # Login to get tokens
-        result = AuthService.login_user("testuser", "TestPass123")
+        username = test_user_id["username"]
+        result = AuthService.login_user(username, "TestPass123")
         if result:
             user, access_token, refresh_token = result
             db.session.commit()

@@ -89,15 +89,63 @@ All tables are in the `auth` schema:
 
 ## Testing
 
+The Auth Service has comprehensive test coverage with 192 tests organized into the following test suites:
+
+### Test Organization
+
+- **`tests/test_services/`** - Unit tests for service layer
+  - `test_password_service.py` - PasswordService tests (20 tests)
+  - `test_token_service.py` - TokenService tests (20 tests)
+  - `test_auth_service.py` - AuthService tests (23 tests)
+
+- **`tests/test_models/`** - Unit tests for database models
+  - `test_user_model.py` - User model tests (13 tests)
+  - `test_refresh_token_model.py` - RefreshToken model tests (6 tests)
+  - `test_token_blacklist_model.py` - TokenBlacklist model tests (4 tests)
+  - `test_password_history_model.py` - PasswordHistory model tests (4 tests)
+
+- **`tests/test_utils/`** - Unit tests for utility functions
+  - `test_validators.py` - Validator tests (33 tests)
+
+- **`tests/test_integration/`** - Integration tests for complete user flows
+  - `test_auth_flows.py` - Full authentication and user management flows (10 tests)
+
+- **`tests/test_api/`** - API endpoint tests
+  - Token management endpoints (Phase 3: 16 tests)
+  - User management endpoints (Phase 4: 27 tests)
+  - Rate limiting and security headers (Phase 5: 14 tests)
+
+### Running Tests
+
 ```bash
 # Set test environment
 export FLASK_ENV=testing
 # TEST_DATABASE_URL will be constructed from arcadium_user and arcadium_pass if not set
 # Or set explicitly: export TEST_DATABASE_URL=postgresql://user:pass@localhost:5432/arcadium_testing_auth
 
-# Run tests
+# Run all tests
+cd services/auth
 pytest
+
+# Run specific test suite
+pytest tests/test_services/        # Service layer tests
+pytest tests/test_models/          # Model tests
+pytest tests/test_utils/           # Validator tests
+pytest tests/test_integration/     # Integration tests
+pytest tests/test_api/             # API endpoint tests
+
+# Run with verbose output
+pytest -v
+
+# Run with coverage
+pytest --cov=app --cov-report=html
 ```
+
+### Test Status
+
+- **Total Tests**: 192 tests
+- **Passing**: 136 tests
+- **Known Issues**: ~56 tests with session isolation, timezone comparison, and blacklist verification issues (to be fixed in cleanup round)
 
 ## Documentation
 

@@ -27,8 +27,8 @@ class PasswordHistory(db.Model):
         DateTime, default=lambda: datetime.now(timezone.utc), nullable=False, index=True
     )
 
-    # Relationship
-    user = relationship("User", backref="password_history")
+    # Relationship - passive_deletes=True lets database handle CASCADE
+    user = relationship("User", backref="password_history", passive_deletes=True)
 
     def __repr__(self):
         return f"<PasswordHistory {self.user_id}>"

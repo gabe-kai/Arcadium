@@ -23,6 +23,7 @@ os.environ["FLASK_ENV"] = "testing"
 os.environ.setdefault("DB_POOL_SIZE", "1")
 os.environ.setdefault("DB_MAX_OVERFLOW", "0")
 os.environ.setdefault("DB_POOL_TIMEOUT", "5")
+os.environ.setdefault("DB_POOL_RECYCLE", "3600")
 
 # Use TEST_DATABASE_URL from .env if available
 TEST_DATABASE_URL = os.environ.get("TEST_DATABASE_URL")
@@ -70,36 +71,75 @@ def app():
         from app import db
 
         # Create schema if it doesn't exist
+        # Use explicit connection to ensure schema is created with proper permissions
         try:
-            db.session.execute(db.text("CREATE SCHEMA IF NOT EXISTS auth"))
-            db.session.commit()
+            # Check if schema exists first
+            schema_check = db.session.execute(
+                db.text(
+                    "SELECT 1 FROM information_schema.schemata WHERE schema_name = 'auth'"
+                )
+            ).fetchone()
+
+            if not schema_check:
+                # Create schema with explicit owner (use current user)
+                db.session.execute(db.text("CREATE SCHEMA auth"))
+                db.session.commit()
         except Exception:
-            # Schema might already exist, continue
+            # Schema might already exist or permission issue
             db.session.rollback()
+            # Try to continue - schema might exist but check failed
+            # If schema doesn't exist and we can't create it, db.create_all() will fail with a clearer error
 
         # Ensure tables exist - don't drop, just create if missing
         # This avoids DROP TABLE timeout issues entirely
         try:
+            # Set search_path to include auth schema for this session
+            db.session.execute(db.text("SET search_path TO auth, public"))
+            db.session.commit()
+
+            # Create all tables
             db.create_all()
             db.session.commit()
+
+            # Verify tables were created
+            tables_check = db.session.execute(
+                db.text(
+                    """
+                    SELECT table_name
+                    FROM information_schema.tables
+                    WHERE table_schema = 'auth'
+                    AND table_name IN ('users', 'refresh_tokens', 'token_blacklist', 'password_history')
+                """
+                )
+            ).fetchall()
+
+            if not tables_check:
+                raise RuntimeError(
+                    "Tables were not created in auth schema. Check permissions and schema setup."
+                )
+
             db.session.close()
             db.session.remove()
 
             # Clean all data for isolation (preserve alembic_version)
+            # Re-establish connection with schema
+            db.session.execute(db.text("SET search_path TO auth, public"))
             for table in reversed(db.metadata.sorted_tables):
                 if table.name == "alembic_version":
                     continue
                 db.session.execute(table.delete())
             db.session.commit()
+            db.session.close()
             db.session.remove()
-        except Exception:
+        except Exception as e:
             db.session.rollback()
+            db.session.close()
             db.session.remove()
-            raise
+            raise RuntimeError(f"Failed to create tables in auth schema: {e}") from e
 
     yield app
 
-    # Clean up: rollback any uncommitted transactions
+    # Clean up: ensure all connections are closed and removed
     with app.app_context():
         from app import db
 
@@ -110,6 +150,8 @@ def app():
             pass
         finally:
             db.session.remove()
+            # Close all connections in the pool
+            db.engine.dispose(close=True)
 
 
 @pytest.fixture(scope="function")
@@ -125,6 +167,10 @@ def db_session(app):
         from app import db
 
         yield db.session
-        db.session.rollback()
-        db.session.close()
-        db.session.remove()
+        try:
+            db.session.rollback()
+            db.session.close()
+        except Exception:
+            pass
+        finally:
+            db.session.remove()

@@ -31,8 +31,8 @@ class RefreshToken(db.Model):
     )
     last_used_at = Column(DateTime, nullable=True)
 
-    # Relationship
-    user = relationship("User", backref="refresh_tokens")
+    # Relationship - passive_deletes=True lets database handle CASCADE
+    user = relationship("User", backref="refresh_tokens", passive_deletes=True)
 
     def __repr__(self):
         return f"<RefreshToken {self.user_id}>"

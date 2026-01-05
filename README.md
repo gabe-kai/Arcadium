@@ -126,14 +126,61 @@ flask run
 
 ## Testing
 
-### Local Testing
+**⚠️ IMPORTANT: Test results are logged to files. Always check `logs/tests/` for complete results, not just terminal output.**
 
-Run tests for a specific service:
+### Quick Start
+
+Run all backend tests with the unified test runner:
 
 ```bash
-# Wiki service tests
-cd services/wiki
-pytest
+# Run all backend tests
+python scripts/run-tests.py all
+
+# Run specific service
+python scripts/run-tests.py wiki
+python scripts/run-tests.py auth
+python scripts/run-tests.py shared
+```
+
+### Test Organization
+
+Tests are organized into clear categories with PostgreSQL-only configuration:
+
+- **Backend:** 750+ tests across Wiki, Auth, and Shared services
+- **Frontend Unit/Integration:** 523+ tests
+- **Frontend E2E:** 32+ tests
+- **Total:** 1,300+ tests
+
+All tests use **PostgreSQL** (no SQLite) to match production behavior.
+
+### Test Documentation
+
+- **[Testing Overview](docs/testing-overview.md)** - Complete testing guide
+- **[Testing Quick Reference](docs/testing-quick-reference.md)** - Quick commands and reference
+- **[Testing Audit](docs/testing-audit.md)** - Test coverage analysis and gaps
+- **[Logging System](docs/logging-system.md)** - Complete logging documentation (⚠️ **Read this for log locations and limits**)
+
+### Local Testing
+
+**Backend Tests:**
+```bash
+# Unified test runner (recommended)
+python scripts/run-tests.py all
+
+# Individual services
+cd services/wiki && pytest
+cd services/auth && pytest
+```
+
+**Frontend Tests:**
+```bash
+cd client
+
+# Unit/Integration tests
+npm run test
+
+# E2E tests
+npm run test:e2e
 ```
 
 ### CI/CD
@@ -142,14 +189,22 @@ The project uses GitHub Actions for continuous integration. Tests run automatica
 - Push to `main` or `feature/**` branches
 - Pull requests targeting `main`
 
+**Workflows:**
+- **Backend Tests** (`.github/workflows/backend-tests.yml`) - Unified backend test workflow for Wiki, Auth, and Shared services
+- **Client Tests** (`.github/workflows/client-tests.yml`) - Frontend unit, integration, and E2E tests
+
 **To run tests locally with CI configuration:**
 ```bash
-# Set environment variables (matches CI)
+# Simulate CI locally (recommended - matches CI exactly)
+python scripts/run-ci-tests-local.py
+
+# Or run tests manually with CI environment
 export FLASK_ENV=testing
-# TEST_DATABASE_URL will be constructed from arcadium_user and arcadium_pass if not set
-# Or set explicitly: export TEST_DATABASE_URL="postgresql://${arcadium_user}:${arcadium_pass}@localhost:5432/arcadium_testing_wiki"
-cd services/wiki
-pytest
+export arcadium_user=postgres
+export arcadium_pass=your_password
+export DB_HOST=localhost
+export DB_PORT=5432
+python scripts/run-tests.py all
 ```
 
 See [CI/CD Documentation](docs/ci-cd.md) for detailed information about the CI setup and troubleshooting.
@@ -174,7 +229,7 @@ The web client is a React-based SPA located in `client/`. See [Client README](cl
 - ✅ Phase 15: Polish & Enhancements (Complete - Theme support, notifications, animations, print stylesheet, share functionality)
 - ✅ Authentication System (Sign In/Register UI Complete)
 
-**Test Coverage:** 523+ client tests + 560+ backend tests = 1,115+ total tests across 89+ test files
+**Test Coverage:** 523+ client tests + 750+ backend tests = 1,300+ total tests across 100+ test files
 
 ## Documentation
 

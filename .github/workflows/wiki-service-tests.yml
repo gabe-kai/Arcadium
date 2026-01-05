@@ -1,4 +1,9 @@
-name: Wiki Service - Tests
+# DEPRECATED: This workflow is deprecated in favor of the unified backend-tests.yml workflow
+# which tests all backend services (Wiki, Auth, Shared) using our new test runner.
+# This workflow will be removed in a future update.
+# Use .github/workflows/backend-tests.yml instead.
+
+name: Wiki Service - Tests (Deprecated)
 
 on:
   push:

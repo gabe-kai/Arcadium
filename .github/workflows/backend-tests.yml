@@ -1,0 +1,318 @@
+name: Backend Tests
+
+on:
+  push:
+    branches:
+      - main
+      - feature/**
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  backend-tests:
+    name: Run All Backend Tests
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        shell: bash
+        working-directory: .
+
+    services:
+      postgres:
+        image: postgres:14
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: Le555ecure
+          POSTGRES_DB: postgres
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('requirements.txt', 'services/wiki/requirements.txt', 'services/auth/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install dependencies (root)
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Install Wiki service dependencies
+        working-directory: services/wiki
+        run: |
+          if [ -f requirements.txt ]; then
+            pip install -r requirements.txt
+          fi
+
+      - name: Install Auth service dependencies
+        working-directory: services/auth
+        run: |
+          if [ -f requirements.txt ]; then
+            pip install -r requirements.txt
+          fi
+
+      - name: Install pre-commit
+        run: |
+          pip install pre-commit
+
+      - name: Run pre-commit checks
+        run: |
+          pre-commit run --all-files
+
+      - name: Install PostgreSQL client
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+
+      - name: Create test databases
+        env:
+          PGHOST: localhost
+          PGPORT: 5432
+          PGUSER: postgres
+          PGPASSWORD: Le555ecure
+        run: |
+          # Wait for PostgreSQL to be ready
+          until pg_isready -h localhost -p 5432 -U postgres; do
+            echo "Waiting for PostgreSQL..."
+            sleep 2
+          done
+
+          # Create Wiki test database
+          psql -h localhost -U postgres -tc "SELECT 1 FROM pg_database WHERE datname = 'arcadium_testing_wiki'" | grep -q 1 || \
+          psql -h localhost -U postgres -c "CREATE DATABASE arcadium_testing_wiki"
+
+          # Create Auth test database
+          psql -h localhost -U postgres -tc "SELECT 1 FROM pg_database WHERE datname = 'arcadium_testing_auth'" | grep -q 1 || \
+          psql -h localhost -U postgres -c "CREATE DATABASE arcadium_testing_auth"
+
+      - name: Set up test environment
+        env:
+          FLASK_ENV: testing
+          TEST_DATABASE_URL: postgresql://postgres:Le555ecure@localhost:5432/arcadium_testing_wiki
+          arcadium_user: postgres
+          arcadium_pass: Le555ecure
+          DB_HOST: localhost
+          DB_PORT: 5432
+        run: |
+          echo "Test environment configured"
+          echo "TEST_DATABASE_URL set for Wiki: $TEST_DATABASE_URL"
+          echo "arcadium_user: $arcadium_user"
+          echo "arcadium_pass: [REDACTED]"
+
+      - name: Run unified backend tests
+        id: run_tests
+        env:
+          FLASK_ENV: testing
+          TEST_DATABASE_URL: postgresql://postgres:Le555ecure@localhost:5432/arcadium_testing_wiki
+          arcadium_user: postgres
+          arcadium_pass: Le555ecure
+          DB_HOST: localhost
+          DB_PORT: 5432
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          python scripts/run-tests.py all 2>&1 | tee test-output.txt
+          echo "TEST_EXIT_CODE=$?" >> $GITHUB_OUTPUT
+
+      - name: Parse test results
+        if: always()
+        run: |
+          python3 << 'PYTHON_SCRIPT'
+          import re
+          import os
+          import sys
+          from collections import defaultdict
+
+          output_file = 'test-output.txt'
+          if not os.path.exists(output_file):
+              print("No test output file found", file=sys.stderr)
+              sys.exit(1)
+
+          with open(output_file, 'r', encoding='utf-8', errors='ignore') as f:
+              content = f.read()
+
+          # Extract test results
+          results = defaultdict(dict)
+          total_passed = 0
+          total_failed = 0
+
+          # Find Wiki category results with test counts
+          wiki_category_pattern = r'Wiki - (\w+)\s+(✓ PASSED|✗ FAILED)(?:\s+\((\d+)\s+tests\))?'
+          for match in re.finditer(wiki_category_pattern, content):
+              category = match.group(1)
+              status = match.group(2)
+              test_count = match.group(3) if match.group(3) else "?"
+              results['wiki_categories'][category] = {
+                  'status': 'PASSED' if 'PASSED' in status else 'FAILED',
+                  'count': test_count
+              }
+              if 'FAILED' in status:
+                  total_failed += 1
+              else:
+                  total_passed += 1
+
+          # Find service-level results
+          service_pattern = r'(Wiki \(all categories\)|Auth|Shared)(?:\s+-\s+(\d+)\s+tests\s+total)?\s+(✓ PASSED|✗ FAILED)(?:\s+\(([^)]+)\))?'
+          for match in re.finditer(service_pattern, content):
+              service = match.group(1)
+              total_tests = match.group(2) if match.group(2) else None
+              status = match.group(3)
+              details = match.group(4) if match.group(4) else None
+              results['services'][service] = {
+                  'status': 'PASSED' if 'PASSED' in status else 'FAILED',
+                  'total_tests': total_tests,
+                  'details': details
+              }
+
+          # Find pytest test counts
+          pytest_pattern = r'(\d+)\s+passed(?:,\s+(\d+)\s+xfailed)?(?:,\s+(\d+)\s+failed)?'
+          pytest_matches = re.findall(pytest_pattern, content)
+
+          # Write comprehensive summary
+          with open('test-summary.txt', 'w', encoding='utf-8') as f:
+              f.write("=" * 80 + "\n")
+              f.write("BACKEND TEST EXECUTION SUMMARY\n")
+              f.write("=" * 80 + "\n\n")
+
+              # Overall status
+              if "All tests passed!" in content:
+                  f.write("✅ All backend tests passed!\n\n")
+              elif "Some tests failed" in content:
+                  f.write("❌ Some backend tests failed\n\n")
+
+              # Service-level results
+              if 'services' in results:
+                  f.write("Service Results:\n")
+                  f.write("-" * 80 + "\n")
+                  for service, data in results['services'].items():
+                      status_icon = "✅" if data['status'] == 'PASSED' else "❌"
+                      f.write(f"{status_icon} {service}")
+                      if data['total_tests']:
+                          f.write(f" - {data['total_tests']} tests")
+                      if data['details']:
+                          f.write(f" ({data['details']})")
+                      f.write("\n")
+                  f.write("\n")
+
+              # Wiki category breakdown
+              if 'wiki_categories' in results:
+                  f.write("Wiki Service Categories:\n")
+                  f.write("-" * 80 + "\n")
+                  for category, data in sorted(results['wiki_categories'].items()):
+                      status_icon = "✅" if data['status'] == 'PASSED' else "❌"
+                      f.write(f"  {status_icon} {category:20} - {data['count']} tests\n")
+                  f.write("\n")
+
+              # Pytest summary
+              if pytest_matches:
+                  f.write("Pytest Summary:\n")
+                  f.write("-" * 80 + "\n")
+                  total_pytest_tests = 0
+                  total_pytest_passed = 0
+                  total_pytest_failed = 0
+                  total_pytest_xfailed = 0
+
+                  for match in pytest_matches:
+                      passed = int(match[0])
+                      xfailed = int(match[1]) if match[1] else 0
+                      failed = int(match[2]) if match[2] else 0
+                      total = passed + failed
+
+                      total_pytest_tests += total
+                      total_pytest_passed += passed
+                      total_pytest_failed += failed
+                      total_pytest_xfailed += xfailed
+
+                  f.write(f"Total tests: {total_pytest_tests}\n")
+                  f.write(f"✅ Passed: {total_pytest_passed}\n")
+                  if total_pytest_failed > 0:
+                      f.write(f"❌ Failed: {total_pytest_failed}\n")
+                  if total_pytest_xfailed > 0:
+                      f.write(f"⏭️  Expected failures: {total_pytest_xfailed}\n")
+                  f.write("\n")
+
+              f.write("See test-output.txt and logs/tests/ for full details\n")
+
+          PYTHON_SCRIPT
+
+      - name: Display test summary
+        if: always()
+        run: |
+          echo ""
+          echo "═══════════════════════════════════════════════════════════════════════════════"
+          echo "BACKEND TEST SUMMARY"
+          echo "═══════════════════════════════════════════════════════════════════════════════"
+          echo ""
+
+          if [ -f test-summary.txt ]; then
+            cat test-summary.txt
+          fi
+
+          # Show last part of test output for context
+          if [ -f test-output.txt ]; then
+            echo ""
+            echo "═══════════════════════════════════════════════════════════════════════════════"
+            echo "TEST OUTPUT (LAST 100 LINES)"
+            echo "═══════════════════════════════════════════════════════════════════════════════"
+            echo ""
+            tail -100 test-output.txt
+          fi
+
+      - name: Check test results
+        id: test_results
+        if: always()
+        run: |
+          # Check exit code from test runner
+          TEST_EXIT_CODE="${{ steps.run_tests.outputs.TEST_EXIT_CODE }}"
+
+          if [ -z "$TEST_EXIT_CODE" ]; then
+            # Fallback: check output file
+            if grep -q "Some tests failed" test-output.txt 2>/dev/null; then
+              TEST_EXIT_CODE=1
+            elif grep -q "All tests passed!" test-output.txt 2>/dev/null; then
+              TEST_EXIT_CODE=0
+            else
+              TEST_EXIT_CODE=1
+            fi
+          fi
+
+          if [ "$TEST_EXIT_CODE" -eq 0 ]; then
+            echo "✅ All backend tests passed"
+            echo "status=success" >> $GITHUB_OUTPUT
+            exit 0
+          else
+            echo "❌ Backend tests failed (exit code: $TEST_EXIT_CODE)"
+            echo "status=failure" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-test-results
+          path: |
+            test-output.txt
+            test-summary.txt
+            logs/tests/*.log
+          retention-days: 7
+          if-no-files-found: ignore

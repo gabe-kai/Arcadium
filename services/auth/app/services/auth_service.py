@@ -131,13 +131,17 @@ class AuthService:
         expires_at = datetime.now(timezone.utc) + timedelta(
             seconds=current_app.config.get("JWT_REFRESH_TOKEN_EXPIRATION", 604800)
         )
+        # Convert to naive UTC for storage (PostgreSQL DateTime doesn't store timezone)
+        expires_at_naive = (
+            expires_at.replace(tzinfo=None) if expires_at.tzinfo else expires_at
+        )
 
         refresh_token = RefreshToken(
             user_id=user.id,
             token_hash=refresh_token_str,  # In production, hash this
-            expires_at=expires_at,
-            created_at=datetime.now(timezone.utc),
-            last_used_at=datetime.now(timezone.utc),
+            expires_at=expires_at_naive,
+            created_at=datetime.now(timezone.utc).replace(tzinfo=None),
+            last_used_at=datetime.now(timezone.utc).replace(tzinfo=None),
         )
 
         db.session.add(refresh_token)
@@ -207,8 +211,8 @@ class AuthService:
         if not user:
             return None
 
-        # Update refresh token last_used_at
-        refresh_token.last_used_at = datetime.now(timezone.utc)
+        # Update refresh token last_used_at (store as naive UTC)
+        refresh_token.last_used_at = datetime.now(timezone.utc).replace(tzinfo=None)
         db.session.commit()
 
         # Generate new access token

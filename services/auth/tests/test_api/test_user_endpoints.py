@@ -9,37 +9,49 @@ from app.services.token_service import TokenService
 
 @pytest.fixture
 def admin_user_id(app):
-    """Create an admin user (first user) and return user ID"""
+    """Create an admin user (first user) and return user info dict"""
+    import uuid
+
+    unique_id = str(uuid.uuid4())[:8]
+    username = f"admin_{unique_id}"
+    email = f"admin_{unique_id}@example.com"
     with app.app_context():
         user, _ = AuthService.register_user(
-            username="admin", email="admin@example.com", password="AdminPass123"
+            username=username, email=email, password="AdminPass123"
         )
         db.session.commit()
-        return str(user.id)
+        return {"user_id": str(user.id), "username": username, "email": email}
 
 
 @pytest.fixture
 def test_user_id(app, admin_user_id):
-    """Create a test user (non-admin, second user) and return user ID"""
+    """Create a test user (non-admin, second user) and return user info dict"""
+    import uuid
+
+    unique_id = str(uuid.uuid4())[:8]
+    username = f"testuser_{unique_id}"
+    email = f"test_{unique_id}@example.com"
     with app.app_context():
         user, _ = AuthService.register_user(
-            username="testuser", email="test@example.com", password="TestPass123"
+            username=username, email=email, password="TestPass123"
         )
         db.session.commit()
-        return str(user.id)
+        return {"user_id": str(user.id), "username": username, "email": email}
 
 
 @pytest.fixture
 def test_user_with_token(app, admin_user_id, test_user_id):
     """Create a test user (non-admin) and return user info with access token"""
     with app.app_context():
-        result = AuthService.login_user("testuser", "TestPass123")
+        username = test_user_id["username"]
+        result = AuthService.login_user(username, "TestPass123")
         if result:
             user, access_token, refresh_token = result
             db.session.commit()
             return {
                 "user_id": str(user.id),
                 "username": user.username,
+                "email": test_user_id["email"],
                 "access_token": access_token,
             }
         return None
@@ -49,13 +61,15 @@ def test_user_with_token(app, admin_user_id, test_user_id):
 def admin_user_with_token(app, admin_user_id):
     """Get admin user token (reuses admin_user_id fixture)"""
     with app.app_context():
-        result = AuthService.login_user("admin", "AdminPass123")
+        username = admin_user_id["username"]
+        result = AuthService.login_user(username, "AdminPass123")
         if result:
             admin_user, access_token, refresh_token = result
             db.session.commit()
             return {
                 "user_id": str(admin_user.id),
                 "username": admin_user.username,
+                "email": admin_user_id["email"],
                 "access_token": access_token,
             }
         return None
@@ -82,9 +96,9 @@ class TestGetUserProfile:
             assert response.status_code == 200
             data = response.get_json()
             assert data["id"] == user_id
-            assert data["username"] == "testuser"
+            assert data["username"] == tokens["username"]
             assert "email" in data  # Email included for self
-            assert data["email"] == "test@example.com"
+            assert data["email"] == tokens["email"]
 
     def test_get_user_profile_as_admin(
         self, client, app, admin_user_with_token, test_user_id
@@ -98,16 +112,16 @@ class TestGetUserProfile:
             admin_token = admin_tokens["access_token"]
 
             response = client.get(
-                f"/api/users/{test_user_id}",
+                f"/api/users/{test_user_id['user_id']}",
                 headers={"Authorization": f"Bearer {admin_token}"},
             )
 
             assert response.status_code == 200
             data = response.get_json()
-            assert data["id"] == test_user_id
-            assert data["username"] == "testuser"
+            assert data["id"] == test_user_id["user_id"]
+            assert data["username"] == test_user_id["username"]
             assert "email" in data  # Email included for admin
-            assert data["email"] == "test@example.com"
+            assert data["email"] == test_user_id["email"]
 
     def test_get_user_profile_unauthorized(
         self, client, app, test_user_with_token, admin_user_with_token
@@ -169,7 +183,7 @@ class TestGetUserProfile:
 
     def test_get_user_profile_no_auth(self, client, app, test_user_id):
         """Test getting user profile without authentication"""
-        response = client.get(f"/api/users/{test_user_id}")
+        response = client.get(f"/api/users/{test_user_id['user_id']}")
 
         assert response.status_code == 401
         data = response.get_json()
@@ -243,7 +257,7 @@ class TestUpdateUserProfile:
             admin_token = admin_tokens["access_token"]
 
             response = client.put(
-                f"/api/users/{test_user_id}",
+                f"/api/users/{test_user_id['user_id']}",
                 headers={"Authorization": f"Bearer {admin_token}"},
                 json={"email": "adminupdated@example.com"},
                 content_type="application/json",
@@ -289,7 +303,7 @@ class TestUpdateUserProfile:
 
             user_token = tokens["access_token"]
             user_id = tokens["user_id"]
-            admin_email = "admin@example.com"  # From admin_user_with_token fixture
+            admin_email = admin_tokens["email"]  # From admin_user_with_token fixture
 
             response = client.put(
                 f"/api/users/{user_id}",
@@ -353,11 +367,12 @@ class TestGetUserByUsername:
 
     def test_get_user_by_username_success(self, client, app, test_user_id):
         """Test getting user by username (public endpoint)"""
-        response = client.get("/api/users/username/testuser")
+        username = test_user_id["username"]
+        response = client.get(f"/api/users/username/{username}")
 
         assert response.status_code == 200
         data = response.get_json()
-        assert data["username"] == "testuser"
+        assert data["username"] == username
         assert "email" not in data  # Email not included in public endpoint
 
     def test_get_user_by_username_not_found(self, client, app):
@@ -384,7 +399,7 @@ class TestUpdateUserRole:
             admin_token = admin_tokens["access_token"]
 
             response = client.put(
-                f"/api/users/{test_user_id}/role",
+                f"/api/users/{test_user_id['user_id']}/role",
                 headers={"Authorization": f"Bearer {admin_token}"},
                 json={"role": "writer"},
                 content_type="application/json",
@@ -395,7 +410,7 @@ class TestUpdateUserRole:
             assert data["role"] == "writer"
 
             # Verify in database
-            user = db.session.query(User).filter_by(id=test_user_id).first()
+            user = db.session.query(User).filter_by(id=test_user_id["user_id"]).first()
             assert user.role == "writer"
 
     def test_update_user_role_unauthorized(
@@ -410,7 +425,7 @@ class TestUpdateUserRole:
             user_token = tokens["access_token"]
 
             response = client.put(
-                f"/api/users/{test_user_id}/role",
+                f"/api/users/{test_user_id['user_id']}/role",
                 headers={"Authorization": f"Bearer {user_token}"},
                 json={"role": "writer"},
                 content_type="application/json",
@@ -432,7 +447,7 @@ class TestUpdateUserRole:
             admin_token = admin_tokens["access_token"]
 
             response = client.put(
-                f"/api/users/{test_user_id}/role",
+                f"/api/users/{test_user_id['user_id']}/role",
                 headers={"Authorization": f"Bearer {admin_token}"},
                 json={"role": "invalid-role"},
                 content_type="application/json",
