@@ -694,10 +694,10 @@ body {
   list-style-type: disc !important;
 }
 
-/* Nested bullet lists - each level indented more */
+/* Nested bullet lists - reset padding to prevent cumulative indentation */
 .arc-reading-body ul ul {
   margin: 0.5rem 0 !important;
-  padding-left: 2rem !important;
+  padding-left: 1.5rem !important; /* Additional indent for nested level */
   list-style-type: circle !important;
   display: block !important;
 }
@@ -708,7 +708,7 @@ body {
 
 .arc-reading-body ul ul ul {
   margin: 0.5rem 0 !important;
-  padding-left: 2rem !important;
+  padding-left: 1.5rem !important; /* Additional indent for nested level */
   list-style-type: square !important;
   display: block !important;
 }
@@ -719,7 +719,7 @@ body {
 
 .arc-reading-body ul ul ul ul {
   margin: 0.5rem 0 !important;
-  padding-left: 2rem !important;
+  padding-left: 1.5rem !important; /* Additional indent for nested level */
   list-style-type: disc !important;
   display: block !important;
 }
@@ -737,10 +737,10 @@ body {
   list-style-type: decimal !important;
 }
 
-/* Nested numbered lists */
+/* Nested numbered lists - reset padding to prevent cumulative indentation */
 .arc-reading-body ol ol {
   margin: 0.5rem 0 !important;
-  padding-left: 2rem !important;
+  padding-left: 1.5rem !important; /* Additional indent for nested level */
   list-style-type: lower-alpha !important;
   display: block !important;
 }
@@ -751,7 +751,7 @@ body {
 
 .arc-reading-body ol ol ol {
   margin: 0.5rem 0 !important;
-  padding-left: 2rem !important;
+  padding-left: 1.5rem !important; /* Additional indent for nested level */
   list-style-type: lower-roman !important;
   display: block !important;
 }
@@ -762,7 +762,7 @@ body {
 
 .arc-reading-body ol ol ol ol {
   margin: 0.5rem 0 !important;
-  padding-left: 2rem !important;
+  padding-left: 1.5rem !important; /* Additional indent for nested level */
   list-style-type: decimal !important;
   display: block !important;
 }
@@ -771,29 +771,20 @@ body {
   list-style-type: decimal !important;
 }
 
-/* Mixed nested lists */
+/* Mixed nested lists - reset padding to prevent cumulative indentation */
 .arc-reading-body ul ol,
 .arc-reading-body ol ul {
   margin: 0.5rem 0 !important;
-  padding-left: 2rem !important;
+  padding-left: 1.5rem !important; /* Additional indent for nested level */
   display: block !important;
 }
 
-/* Nested lists inside list items - ensure they're properly indented */
+/* Nested lists inside list items - only direct children, reset padding to prevent cumulative indentation */
 .arc-reading-body li > ul,
 .arc-reading-body li > ol {
   margin-top: 0.5rem !important;
   margin-bottom: 0.5rem !important;
-  padding-left: 2rem !important;
-  display: block !important;
-}
-
-/* Ensure nested lists maintain their structure */
-.arc-reading-body li ul,
-.arc-reading-body li ol {
-  margin-top: 0.5rem !important;
-  margin-bottom: 0.5rem !important;
-  padding-left: 2rem !important;
+  padding-left: 1.5rem !important; /* Additional indent for nested level */
   display: block !important;
 }
 

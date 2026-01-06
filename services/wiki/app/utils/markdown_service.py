@@ -82,7 +82,9 @@ def _parse_lists(lines: list) -> list:
 
         # Check if this is a list item (bullet or numbered)
         bullet_match = re.match(r"^(\s*)[-*+]\s+(.+)$", stripped)
-        numbered_match = re.match(r"^(\s*)(\d+)\.\s+(.+)$", stripped)
+        # Match numbered lists: "1. " or "2.1 " or "3.4.2 " etc.
+        # Pattern matches: digits, then period, then optional more digits/periods, then space
+        numbered_match = re.match(r"^(\s*)(\d+\.(?:\d+\.?)*)\s+(.+)$", stripped)
 
         if bullet_match or numbered_match:
             # Start of a list - collect all list items at this level
@@ -112,12 +114,30 @@ def _parse_lists(lines: list) -> list:
                     if re.match(r"^([-*_])\1{2,}\s*$", next_stripped):
                         # List ends at horizontal rule
                         break
-                    # Check if next line is a list item at same or deeper level
+                    # Check if next line is a list item
                     next_bullet = re.match(r"^(\s*)[-*+]\s+", next_stripped)
-                    next_numbered = re.match(r"^(\s*)(\d+)\.\s+", next_stripped)
+                    next_numbered = re.match(
+                        r"^(\s*)(\d+\.(?:\d+\.?)*)\s+", next_stripped
+                    )
                     if next_bullet or next_numbered:
                         next_indent = len(lines[i]) - len(lines[i].lstrip())
-                        if next_indent >= base_indent:
+                        # Get the actual list item indent (spaces before bullet/number)
+                        if next_bullet:
+                            next_item_indent = len(next_bullet.group(1))
+                        elif next_numbered:
+                            next_item_indent = len(next_numbered.group(1))
+                        else:
+                            next_item_indent = next_indent
+                        # Check if it's the same list type at same indent
+                        is_same_type = (list_type == "ul" and next_bullet) or (
+                            list_type == "ol" and next_numbered
+                        )
+                        # List continues if:
+                        # 1. Same list type at same indent (sibling)
+                        # 2. More indented (will be collected as nested content)
+                        if (
+                            next_item_indent == base_indent and is_same_type
+                        ) or next_item_indent > base_indent:
                             # List continues
                             continue
                     # List ends
@@ -132,59 +152,128 @@ def _parse_lists(lines: list) -> list:
 
                 # Check if this is a list item
                 item_bullet = re.match(r"^(\s*)[-*+]\s+(.+)$", stripped)
-                item_numbered = re.match(r"^(\s*)(\d+)\.\s+(.+)$", stripped)
+                # Match numbered lists: "1. " or "2.1 " or "3.4.2 " etc.
+                item_numbered = re.match(r"^(\s*)(\d+\.(?:\d+\.?)*)\s+(.+)$", stripped)
 
                 if not item_bullet and not item_numbered:
                     # Not a list item, end the list
                     break
 
-                # Get indent level
-                item_indent = (
-                    len(item_bullet.group(1))
-                    if item_bullet
-                    else len(item_numbered.group(1))
-                )
+                # Get indent level from original line (before stripping)
+                # The regex matches against stripped line, so group(1) is empty
+                # Calculate indent from original line instead
+                item_indent = len(line) - len(line.lstrip())
 
                 if item_indent < base_indent:
                     # Indent decreased, we're done with this list
                     break
 
+                # Check if this is the same list type
+                is_same_type = (bullet_match and item_bullet) or (
+                    numbered_match and item_numbered
+                )
+
                 if item_indent > base_indent:
-                    # Nested item - should be handled by recursive call
+                    # Nested item encountered in main loop
+                    # This should NOT happen - nested items should be collected during
+                    # nested content collection (lines 235-315), not encountered in main loop
+                    #
+                    # If we're seeing a nested item here, it means:
+                    # 1. We've processed at least one item at base_indent
+                    # 2. We've collected its nested content (which should have consumed nested items)
+                    # 3. Now we're seeing another nested item, which means we should break
+                    #    (nested items are handled recursively in nested content collection)
+                    #
+                    # However, if list_items is empty, we haven't processed any items yet.
+                    # This shouldn't happen, but if it does, the nested item will be handled
+                    # when _parse_lists is called on the parent's nested content.
+                    #
+                    # The fix: Break to finish the current list. The nested items should have
+                    # been collected as nested content of the previous item.
                     break
 
-                # Same level item
+                if item_indent == base_indent:
+                    if not is_same_type:
+                        # Different list type at same indent - end current list
+                        break
+                    # Same list type at same indent - process as sibling
+                else:
+                    # This shouldn't happen
+                    break
+
+                # Same level item of same type
                 content = (
                     item_bullet.group(2) if item_bullet else item_numbered.group(3)
                 )
                 i += 1
 
                 # Collect nested content (deeper indented lines)
+                # IMPORTANT: Only collect lines that are MORE indented than base_indent
+                # Stop when we see a list item at the same indent level (sibling)
                 nested_lines = []
                 while i < len(lines):
                     next_line = lines[i]
                     next_stripped = next_line.strip()
 
                     if not next_stripped:
-                        # Empty line - check if list continues
+                        # Empty line - add to nested content and continue
                         nested_lines.append("")
                         i += 1
-                        if i < len(lines):
-                            peek_stripped = lines[i].strip()
-                            if peek_stripped:
-                                peek_indent = len(lines[i]) - len(lines[i].lstrip())
-                                if peek_indent <= base_indent:
-                                    # Next item is at same or higher level
-                                    break
+                        # Don't break on empty lines - they're part of nested content
+                        # The next non-empty line will be checked in the next iteration
                         continue
 
                     next_indent = len(next_line) - len(next_line.lstrip())
 
+                    # Check if this is a list item at the same level (sibling of current list)
+                    next_bullet = re.match(r"^(\s*)[-*+]\s+", next_stripped)
+                    next_numbered = re.match(
+                        r"^(\s*)(\d+\.(?:\d+\.?)*)\s+", next_stripped
+                    )
+                    if next_bullet or next_numbered:
+                        next_item_indent = (
+                            len(next_bullet.group(1))
+                            if next_bullet
+                            else len(next_numbered.group(1))
+                        )
+                        # If it's a list item at same indent level AND same list type, it's a sibling, stop collecting
+                        if next_item_indent == base_indent:
+                            # Check if it's the same list type
+                            is_same_list_type = (list_type == "ul" and next_bullet) or (
+                                list_type == "ol" and next_numbered
+                            )
+                            if is_same_list_type:
+                                break
+                        # If it's less indented, we're done with this list item
+                        if next_item_indent < base_indent:
+                            break
+                        # If it's more indented, it's nested content, continue collecting
+                        # (This handles bullet items nested under numbered items)
+
+                    # Check if this line should end nested content collection
+                    # Only break if we see a list item at same indent AND same type as parent list
+                    # OR if it's a non-list item at same/higher indent level
                     if next_indent <= base_indent:
-                        # Next line is at same or higher level, done with nested content
+                        # Check if it's a list item at same indent level
+                        if next_bullet or next_numbered:
+                            next_item_indent = (
+                                len(next_bullet.group(1))
+                                if next_bullet
+                                else len(next_numbered.group(1))
+                            )
+                            if next_item_indent == base_indent:
+                                # Check if it's the same list type as parent
+                                is_same_list_type = (
+                                    list_type == "ul" and next_bullet
+                                ) or (list_type == "ol" and next_numbered)
+                                if is_same_list_type:
+                                    # Same list type at same indent - sibling, stop collecting
+                                    break
+                        # Not a list item or different type/indent - done with nested content
                         break
 
-                    # This line is nested
+                    # This line is nested (more indented than base_indent)
+                    # Add it to nested_lines and continue collecting
                     nested_lines.append(next_line)
                     i += 1
 
