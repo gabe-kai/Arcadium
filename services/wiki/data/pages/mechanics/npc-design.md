@@ -1,10 +1,10 @@
 ---
-created_by: admin
-order: 0
-section: Mechanics
-slug: npc-design
-status: published
 title: NPC Design
+slug: npc-design
+section: Mechanics
+status: published
+order: 0
+created_by: admin
 updated_by: admin
 ---
 # Arcadium NPC Design
@@ -89,6 +89,14 @@ A quick reference for consistent vocabulary.
 
     -   **Black Market**: Risk-based alternative access.
 
+-   **Economic Profile**: Bounded NPC-facing economic state (wallet + obligations + eligibility + risk posture) used for feasibility and intent resolution.
+
+-   **Economic Channel**: A concrete acquisition path for satisfying an intent (market venue, ration pickup, corporate canteen, patron invitation, illicit vendor). Channels are selected by eligibility and context.
+
+-   **Entitlement/Voucher**: A scoped, issuer-bound claim (uses or quota) that substitutes for cash in specific channels.
+
+-   **Eligibility**: A compact set of access rules (membership, legal status, permits, time windows) that gates which channels the NPC can use.
+
 -   **Multi-asset Wallet**: NPC holdings across cash, vouchers/entitlements, reputation credit, access rights.
 
 -   **Obligation**: Persistent pressure (rent, debt, quotas, dependents, duties) that shapes behavior across regimes.
@@ -126,29 +134,160 @@ A quick reference for consistent vocabulary.
 
 2.  Overview & Principles
 
+    2.1 Linked & Implied Documents
+
 3.  Core Entities & Interfaces
+
+    3.1 NPC
+
+    3.2 Cohort
+
+    3.3 Place (building/venue)
+
+    3.4 Business
+
+    3.5 Economic Institution
 
 4.  NPC Fidelity Tiers
 
+    4.1 Tier 0 — Population Mass
+
+    4.2 Tier 1 — Cohort Agents
+
+    4.3 Tier 2 — Thin NPCs
+
+    4.4 Tier 3 — Thick NPCs
+
+    4.5 Tier 4 — Narrative / Named NPCs
+
 5.  Promotion, Demotion, and Continuity
+
+    5.1 Interaction model (promotion triggers)
+
+    5.2 Demotion behavior (static history)
+
+    5.3 Demotion triggers
+
+    5.4 Continuity guarantee
 
 6.  NPC State & Information Panels
 
+    6.1 Thin NPC state (conceptual)
+
+    6.2 Basic NPC info panel (Tier 2)
+
+    6.3 Needs vector (v1)
+
 7.  Places, Buildings, and Environment
+
+    7.1 Place anchors
+
+    7.2 Building/venue qualities
+
+    7.3 Environment ("right here, right now")
+
+    7.4 Cascading effects via places
+
+    7.5 Place state for aggregation and environment
+
+    7.6 Environment computation model
+
+    7.7 Action gating via Environment
 
 8.  Intent System
 
+    8.1 Intent structure (common fields)
+
+    8.2 Intent generation (Thin NPC rules)
+
+    8.3 Thin NPC minimum intent set
+
+    8.4 Intent failure & carryover
+
 9.  Intent Arbitration & Scheduling
+
+    9.1 Arbitration timing (Thin NPCs)
+
+    9.2 Priority scoring (Thin NPCs)
+
+    9.3 Obligation dominance
+
+    9.4 Scheduling model (Thin NPCs)
+
+    9.5 Failure feedback
+
+    9.6 Performance guarantees
+
+    9.7 Thin NPC core loop validation targets
 
 10.  Aggregate Behavior Systems
 
+    10.1 Consumption & culture
+
+    10.2 Society-wide outputs
+
+    10.3 Demand aggregation
+
+    10.4 Demand resolution baseline
+
+    10.5 Baseline intent resolution utility
+
+    10.6 Candidate sets for intent resolution
+
+
 11.  Movement, Flows, and Infrastructure Growth
+
+    11.1 Movement intent
+
+    11.2 Flow aggregation
+
+    11.3 Infrastructure response (scope boundary)
+
+    11.4 Time bucketing
+
+    11.5 Flow representations
+
+    11.6 Flow solvers
+
+    11.7 Congestion and travel-time proxies
+
 
 12.  Economic Agency
 
+    12.1 Businesses, ownership, and pricing
+
+    12.2 Business competence & adaptation
+
+    12.3 Economy institutions (system-agnostic layer)
+
+    12.4 Cascades (how decisions affect many NPCs)
+
+
 13.  Social Graph, Relationships, and Memory
 
+    13.1 Social graph compression
+
+    13.2 Relationship book ("people I've met")
+
+    13.3 Memory model ("significant things")
+
+    13.4 Fading and reinforcement
+
+    13.5 Trickle-down attention (interaction propagation)
+
+
 14.  Persistence & Save/Load
+
+    14.1 Persisted (all NPC tiers)
+
+    14.2 Persisted when generated (monotonic)
+
+    14.3 Ephemeral / recomputable
+
+    14.4 World save contents
+
+    14.5 Load behavior
+
 
 15.  Deterministic Backfilling
 
@@ -177,6 +316,66 @@ A quick reference for consistent vocabulary.
 Core rule:
 
 > NPCs express intent; systems resolve outcomes.
+
+### 2.1 Linked & Implied Documents
+
+This NPC design implies several companion documents. The NPC document defines **contracts** (what NPCs emit/consume) and high-level policies; detailed algorithms and progression rules live in specialized docs.
+
+**Already created**
+
+-   **Arcadium** [**Movement, Routing, and Infrastructure**](/pages/603585e2-d7f7-43d2-96fd-f1763e98144c): Flow aggregation, routing services, queue estimation, travel-time/transfer proxies, and the infrastructure upgrade/decay planner (tier ladders, budgets, hysteresis, disruptions).
+
+
+**Implied next documents to start**
+
+-   **Arcadium Place, Buildings, and Generation**
+
+    -   Place taxonomy (building vs venue vs unit), procedural generation requirements, quality/problem models, and how anchors map to generated spaces.
+
+    -   Contract: what Place qualities/states exist for Environment and candidate filtering.
+
+-   **Arcadium Economy & Institutions**
+
+    -   A deeper spec for institutional composition (market/ration/assignment/patronage/corporate/illicit), conflict resolution between channels, enforcement/"heat" mechanics, and price/availability indices.
+
+    -   Contract: institution query surface (Section 12.3.6) plus region-level rules.
+
+-   **Arcadium Business Simulation**
+
+    -   Business lifecycle (closure/acquisition/franchise/insolvency), owner/operator transitions, hiring/retention models, inventory lead times, and reputation dynamics.
+
+    -   Contract: business → place signals (`service_capacity`, `service_quality_proxy`, cleanliness) and business → economy signals (prices, wages, orders).
+
+-   **Arcadium Social Systems**
+
+    -   Relationship formation, bundled-tie expansion/collapse policies, interaction types, gossip/retelling mechanics, group dynamics, and memory reinforcement triggers.
+
+    -   Contract: how interactions emit micro-events and how relationship/memory updates are budgeted.
+
+-   **Arcadium Persistence & Save Format**
+
+    -   Save-file targets, chunking/streaming strategy, monotonic append policies, downsampling rules for aggregates, and deterministic backfill integration.
+
+    -   Contract: what is persisted vs recomputed for NPCs, places, businesses, and macro indices.
+
+-   **Arcadium Time, Events, and Calendars**
+
+    -   Event boundary definitions, bucket schedules, event calendars (arrivals, holidays), determinism/jitter policy, and how external events inject demand/flow forecasts.
+
+    -   Contract: time bucket alignment used across solvers and UI.
+
+-   **Arcadium Player Levers and Governance**
+
+    -   What the player can directly control (budgets, zoning, pricing policy, labor rules, institution rules, transit priority) and at what cadence; what is advisory vs authoritative.
+
+    -   Contract: inputs into business/institution/infrastructure planners.
+
+-   **Arcadium Metrics, Debugging, and Validation**
+
+    -   Instrumentation, dashboards/overlays, scenario tests (daily rhythms, shock propagation), regression harnesses, and determinism checks.
+
+    -   Contract: what each subsystem must expose for tuning and troubleshooting.
+
 
 * * *
 
@@ -444,12 +643,16 @@ To compute Environment and support aggregate solvers, each Place maintains light
 
     -   queue estimate (waiting)
 
+    -   **service\_capacity** (throughput capacity proxy; influenced by staffing and service mode)
+
+    -   **service\_quality\_proxy** (bounded quality signal; influences satisfaction and repeat visits)
+
     -   noise/crowd proxy
 
     -   cleanliness/maintenance proxy
 
 
-Dynamic state is not tracked per individual; it is derived from aggregated demand/flow outputs.
+Dynamic state is not tracked per individual; it is derived from aggregated demand/flow outputs and business signals.
 
 ### 7.6 Environment computation model
 
@@ -1168,7 +1371,7 @@ Thin NPCs do not pathfind. Thick NPCs only request route plans while relevant.
 -   Thick NPCs (and player-facing UI) may request an explicit **route plan**.
 
 
-(See linked document: **Arcadium** [**Movement, Routing, and Infrastructure**](/pages/814b2d54-8e20-45eb-ade8-68f333c7c2a8).)
+(See linked document: **Arcadium** [**Movement, Routing, and Infrastructure**](/pages/603585e2-d7f7-43d2-96fd-f1763e98144c).)
 
 ### 11.2 Flow aggregation
 
@@ -1185,18 +1388,31 @@ Movement intents aggregate into flow fields:
 
 Tracked by time, season, and origin–destination pairs.
 
-### 11.3 Infrastructure response
+### 11.3 Infrastructure response (scope boundary)
 
-Infrastructure systems use flows to:
+**NPC scope:** NPCs express a desire to travel to a destination and provide preferences/constraints; they do not choose or design infrastructure.
 
--   size roads and paths
+NPCs emit travel intent (Section 11.1) and consume routing outputs:
 
--   add or remove transit
+-   travel-time proxies
 
--   justify upgrades or decay
+-   congestion proxies
+
+-   transfer-wait proxies
+
+-   accessibility changes
+
+-   temporary disruption tags (construction, closures)
 
 
-NPCs experience these changes via Environment and accessibility.
+**System scope:** Infrastructure growth/decay is determined by aggregate movement demand and queue signals (OD volumes, edge/node volumes, hub queue pressure) using a slow, budgeted, hysteresis-driven planner.
+
+This document defines the **interface contract** only (inputs/outputs relevant to NPC behavior). The full upgrade/decay policy, tier ladders, budgets, and forecasting live in:
+
+-   **Arcadium Movement, Routing, and Infrastructure**.
+
+
+NPCs experience infrastructure changes indirectly via Environment and accessibility.
 
 ### 11.4 Time bucketing
 
@@ -1419,40 +1635,250 @@ Competence vector (0–1):
 -   risk tolerance
 
 
-Shift decision cycle (event boundaries):
+#### 12.2.1 Business decision surface (control surface)
 
--   demand & positioning
+Businesses act on the world through a bounded set of decision outputs (the **control surface**). These are the primary "knobs" the simulation allows.
 
--   pricing & offers
+**Access & hours**
 
--   staffing
+-   `hours_schedule` (open/close windows, days, planned closures)
 
--   inventory/inputs
-
--   service level & quality
-
--   incident response
-
--   reinvestment (owner-heavy)
+-   `access_rules` (members-only, employee-only, reservations, age restrictions)
 
 
-Decision outputs (signals):
+**Capacity & service**
 
--   `price_schedule`, `wage_policy`, `staffing_plan`, `service_capacity`, `quality_level_target`, `inventory_orders`, `access_rules`
+-   `service_capacity_target` (intended throughput per bucket)
+
+-   `service_mode` (counter/table/pickup-only/appointment-only)
+
+-   `queue_policy` (priority classes, max queue before throttling/stop-taking-new)
 
 
-Adaptation inputs:
+**Pricing & offers**
 
--   revenue
+-   `price_schedule` (base prices + time-of-day modifiers)
 
--   queue time / congestion
+-   `promo_schedule` (bundles, discounts, loyalty offers)
 
--   complaint / incident rates
 
--   turnover/absences
+**Labor**
 
--   competitor pressure
+-   `wage_policy` (base wage, overtime rules, bonuses)
 
+-   `staffing_plan` (headcount targets by role by bucket)
+
+-   `shift_assignments` (if business has authority; otherwise an institution provides assignments)
+
+
+**Quality**
+
+-   `quality_target` (service quality proxy target)
+
+-   `quality_spend_bias` (how much cost the operator tolerates to hit quality)
+
+
+**Inventory / inputs**
+
+-   `inventory_orders` (quantities + cadence)
+
+-   `substitution_policy` (what substitutions are acceptable on shortage)
+
+
+**Investment & maintenance**
+
+-   `reinvestment_rate` (share of surplus reinvested)
+
+-   `maintenance_priority` (cleanliness, equipment uptime, ambiance)
+
+
+Design rule: the control surface stays **small** and (where possible) **discrete** to reduce oscillation.
+
+#### 12.2.2 Observation surface (what the business can see)
+
+Businesses operate on bounded observables, not omniscient demand.
+
+**Internal telemetry (always available)**
+
+-   revenue/cost/profit proxy
+
+-   throughput (served per bucket)
+
+-   queue and wait-time history
+
+-   stockouts and substitutions
+
+-   refunds/complaints/incidents
+
+
+**Labor telemetry**
+
+-   attendance/absence
+
+-   turnover risk proxy
+
+-   staff stress proxy (optional derived)
+
+
+**Local context (imperfect)**
+
+-   competitor price/queue snapshots (limited/noisy)
+
+-   district demand signals (coarse)
+
+-   event calendar flags (arrivals, holidays, station events)
+
+
+**Institution signals**
+
+-   labor scarcity / wage pressure indices
+
+-   input price indices
+
+-   regulatory constraints and enforcement "heat"
+
+
+#### 12.2.3 Objectives and constraints
+
+Businesses choose actions by balancing a small set of objectives under hard constraints.
+
+**Common objectives (weighted mix)**
+
+-   surplus/profit
+
+-   reliability (stay open, avoid stockouts)
+
+-   service level (queues under threshold)
+
+-   reputation/satisfaction
+
+-   compliance (avoid fines/shutdown)
+
+-   resilience (recover after shocks)
+
+
+**Hard constraints (examples)**
+
+-   cannot exceed physical capacity
+
+-   cannot staff beyond available labor pool
+
+-   cannot sell restricted goods without eligibility
+
+-   cannot operate outside permitted hours when regulated
+
+-   cannot price outside imposed ceilings/floors (if present)
+
+
+#### 12.2.4 Decision cadence (owner vs operator)
+
+Decisions occur at three cadences to keep behavior stable:
+
+-   **Strategic (Owner):** weekly/monthly
+
+    -   reinvestment, long-run pricing posture, expansion/closure decisions, brand positioning
+
+-   **Tactical (Operator):** daily/shift
+
+    -   staffing, hours adjustments, promo toggles, reorder choices, service mode changes
+
+-   **Reactive (Incident):** immediate but bounded
+
+    -   stop-taking-new, pickup-only switch, emergency closure, emergency restock request
+
+
+#### 12.2.5 Response delays and inertia (anti-oscillation)
+
+To avoid flapping:
+
+-   prices/promos have minimum hold times (days)
+
+-   staffing changes only at shift boundaries
+
+-   inventory has lead times (deliveries arrive later)
+
+-   reputation updates slowly (EWMA)
+
+
+These delays make competence and forecasting meaningful.
+
+#### 12.2.6 Competence vector mapping (how skill changes behavior)
+
+Competence influences _how_ a business uses the same surface:
+
+-   **signal quality:** noisier vs cleaner demand inference
+
+-   **planning horizon:** reactive vs forecast-driven
+
+-   **exploration rate:** tries new prices/promos vs sticks to habit
+
+-   **recovery speed:** how quickly it stabilizes after shocks
+
+-   **constraint discipline:** compliance and quality consistency
+
+
+#### 12.2.7 Cascading integration points (how decisions affect the world)
+
+Business decisions propagate primarily through shared systems and place state:
+
+-   **Place dynamic state (Section 7.5):**
+
+    -   `service_capacity` derives from staffing fill rate + service\_mode
+
+    -   `service_quality_proxy` derives from quality\_target + staffing stress
+
+    -   cleanliness proxy is influenced by maintenance\_priority + staffing
+
+-   **Demand resolution (Sections 10.4–10.6):**
+
+    -   prices/promos contribute to the price/quality proxy
+
+    -   hours/access\_rules are feasibility gates
+
+    -   queues and environment feed back into demand distribution
+
+-   **Labor demand (Section 10.3):**
+
+    -   staffing\_plan emits labor demand by role and time bucket
+
+    -   wage\_policy influences fill rates and retention pressure (later detail)
+
+-   **Movement & flows (Section 11):**
+
+    -   inventory\_orders emit freight/service travel demand (coarse)
+
+    -   promos/events shift customer flows and hub loads
+
+
+#### 12.2.8 Minimal v1 business surface (recommended)
+
+A minimal, high-impact first slice:
+
+**v1 knobs**
+
+-   `hours_schedule`
+
+-   `staffing_plan` (coarse headcount by role)
+
+-   `price_multiplier` (single scalar over baseline prices)
+
+-   `quality_target` (single scalar)
+
+-   `reorder_threshold` + `reorder_quantity`
+
+
+**v1 observables**
+
+-   queue/wait EWMA
+
+-   revenue EWMA
+
+-   stockout count
+
+-   staff absence rate
+
+
+This is sufficient to create believable queues, environment shifts, and cascading demand changes.
 
 ### 12.3 Economy institutions (system-agnostic layer)
 
@@ -1471,18 +1897,201 @@ Institution types (minimum set):
 -   Black market (risk-based access)
 
 
-NPC-facing economic interface (stable across regimes):
+The goal is **economic portability**: the same NPC can function across different institutional mixes.
 
--   assets/entitlements (multi-asset "wallet")
+#### 12.3.1 Economic Profile (NPC-facing data contract)
 
--   obligations (rent/quotas/debt/favors/dependents)
+Each NPC exposes a compact **Economic Profile** used by intent feasibility and resolution. It is **not** a full accounting simulation.
 
--   access constraints (membership, legality, distance, time)
+Contained fields:
 
--   risk posture (willingness to use illegal/uncertain channels)
+-   **Wallet** (multi-asset holdings)
+
+-   **Obligations** (recurring payments/quotas/duties)
+
+-   **Eligibility** (what channels are available)
+
+-   **Risk posture** (willingness to use uncertain/illegal channels)
+
+-   **Price sensitivity / substitution tolerance** (how strongly cost influences choices)
+
+
+Design rule:
+
+> NPCs do not "solve the economy." They present constraints and preferences; institutions and resolvers determine outcomes.
+
+#### 12.3.2 Multi-asset wallet (assets and entitlements)
+
+Wallets support multiple asset categories so NPC behavior works under many regimes.
+
+**Recommended minimum universal categories:**
+
+-   **Liquid value** (cash/credits)
+
+-   **Entitlements/Vouchers** (food quota, transit pass, healthcare voucher, housing permit)
+
+-   **Access rights** (membership badges, employee privileges, restricted-zone access)
+
+-   **Reputation credit** (favors, patronage standing; category-scoped)
+
+-   **Debt capacity** (bounded credit line / tab)
+
+
+**Wallet item properties (design-level):**
+
+-   `amount` or `remaining_uses`
+
+-   `validity_window` (expiry)
+
+-   `scope` (what it can purchase: food-only, transit-only, etc.)
+
+-   `issuer` (which institution honors it)
+
+-   `transferability` (sell/gift/trade?)
+
+-   `visibility` (institution-visible vs private stash)
+
+
+**Bounding rules (scale constraint):**
+
+-   cap the number of active wallet items per category
+
+-   bundle like items (merge small vouchers into a single line)
+
+-   consolidate long-tail holdings on demotion
+
+
+#### 12.3.3 Obligations and recurring pressures
+
+Obligations create regime-independent pressure and drive intent generation.
+
+Obligation representation (bounded list):
+
+-   `type` (rent, debt, quota duty, dependents, fees, legal duty, workplace duty)
+
+-   `due_window` (time horizon)
+
+-   `severity` (consequence magnitude)
+
+-   `enforcement_strength` (likelihood and strength of enforcement)
+
+-   `satisfaction_modes` (cash, voucher, labor hours, reporting/compliance, favors)
+
+
+Behavioral effects:
+
+-   obligations spawn/boost intents ("pay rent", "report-in", "meet quota")
+
+-   missed obligations increase failure pressure and may trigger higher-level adaptations (migration, job change)
+
+
+#### 12.3.4 Access constraints (eligibility and channel rules)
+
+Eligibility decides which acquisition channels appear during candidate selection (Section 10.6.6) and feasibility gating (Section 10.5.1).
+
+Common constraint families:
+
+-   memberships/affiliations (corp employee, union, residency district, faction)
+
+-   legal status (permits, restrictions)
+
+-   geographic limits (district-only distribution points)
+
+-   time gates (pickup windows, shift-only cafeterias)
+
+-   institution rule flags (ration-only, assignment-only, badge-required)
+
+
+Constraints should remain cheap to evaluate in hard gates.
+
+#### 12.3.5 Risk posture and illicit channels
+
+Risk posture governs when NPCs consider uncertain or illegal channels.
+
+Suggested fields:
+
+-   `risk_tolerance` (0–1)
+
+-   `lawfulness_bias` (separate from risk)
+
+-   `desperation_mod` (derived from unmet needs + obligation pressure)
+
+-   `exposure` (whether the NPC has access to illicit channels in this region)
+
+
+Policy:
+
+-   illicit channels are considered only when exposure exists (or desperation is extreme)
+
+-   enforcement/"heat" is a world signal that can suppress or amplify illicit availability
+
+
+#### 12.3.6 Institution query surface (what resolvers must answer)
+
+Economic institutions and resolvers should provide bounded, queryable outputs (no full ledger required).
+
+Recommended query outputs:
+
+-   **Feasibility:** can the NPC satisfy intent X within time window T?
+
+-   **Available channels:** what acquisition channels are valid right now (market, ration pickup, corp canteen, patronage, illicit)?
+
+-   **Cost proxies:** expected costs in relevant assets (cash, voucher use, favor/reputation, risk)
+
+-   **Outcome options:** a small menu of tradeoffs (cheap/slow vs pricey/fast; safe vs risky)
+
+-   **Consequences of deferral/failure:** fines, reputation loss, enforcement risk, need penalties
+
+
+These outputs feed:
+
+-   feasibility gates (Section 10.5.1)
+
+-   utility scoring (Section 10.5.2: price/quality proxy + risk proxy)
+
+-   candidate channels (Section 10.6.6)
+
+
+#### 12.3.7 Canonical examples across regimes
+
+Short examples ensure the interface remains regime-agnostic.
+
+**Example A — Lunch acquisition (Food & Drink intent)**
+
+-   Market: pay cash; choose among venues by price/quality/queue.
+
+-   Ration: consume voucher use; pickup windows; limited eligible venues.
+
+-   Corporate: canteen access; subsidized; tied to shift/employee status.
+
+-   Patronage: invitation-based; costs/benefits paid in favor/reputation.
+
+-   Illicit: cash + risk; availability varies with enforcement heat.
+
+
+**Example B — Housing pressure (Obligation + access)**
+
+-   Market: rent as recurring cash obligation; choose location by accessibility and affordability.
+
+-   Assignment: housing allocated; compliance/reporting obligations replace rent.
+
+-   Patronage: access via favors; obligations are social and enforcement is relational.
+
+
+**Example C — Healthcare (channel eligibility)**
+
+-   Voucher: clinic access via entitlement; limited providers.
+
+-   Employer: corporate clinic available to employees/dependents.
+
+-   Market: cash payment.
+
+-   Illicit: counterfeit meds or unlicensed care with higher risk.
 
 
 ### 12.4 Cascades (how decisions affect many NPCs)
+
+Cascades happen through signals and shared systems. **Business knobs** (hours, access, pricing, staffing, quality, ordering) are the primary actuation inputs that change place state and therefore influence many NPCs at once.
 
 Cascades happen through signals and shared systems:
 
@@ -1748,29 +2357,29 @@ Budget pressure triggers graceful demotion.
 
 This section is a **document worklist**: what to add, expand, or tighten next to keep the design coherent.
 
-1.  **Baseline economic interface details**
-
-    -   Expand assets/entitlements, obligations, access constraints, and risk posture with clear examples across multiple regimes.
-
-2.  **Business decision surface**
-
-    -   Expand owner/operator decision outputs and adaptation metrics (what is observable, how fast adaptation occurs, what is bounded).
-
-3.  **Infrastructure response policy**
-
-    -   Define how sustained flow fields translate into construction/upgrade/decay decisions (thresholds, hysteresis, budgets).
-
-4.  **Fallback behaviors and shock handling**
+1.  **Fallback behaviors and shock handling**
 
     -   Define standard fallbacks for closures, outages, special events, and shortages (how demand/flows reroute; how Environment responds; what intents are deferred vs replaced).
 
-5.  **Aggregate history retention policy**
+2.  **Aggregate history retention policy**
 
     -   Define retention horizons, downsampling rules, and what aggregate history is persisted vs recomputed on load.
 
-6.  **Routing integration notes**
+3.  **Routing integration notes**
 
     -   Keep NPC design and movement design aligned: what Thin NPCs can query (cost proxies only), what Thick NPCs can request (route plans), and where transfer waits/queues enter utility scoring.
+
+4.  **Economic consequences and failure modes**
+
+    -   Define what happens when obligations or acquisitions fail (penalties, enforcement, reputational damage, forced substitutions) and how those consequences feed back into intents and migration/job-change pressures.
+
+5.  **Business lifecycle and ownership transitions**
+
+    -   Define closure, acquisition, franchising, insolvency, and how owner/operator roles transfer (including what persists as history).
+
+6.  **Player leverage**
+
+    -   Clarify which levers the player can directly influence (budgets, zoning, pricing policy, labor rules, transit priority, institution rules) and at what cadence.
 
 
 * * *
@@ -1805,7 +2414,7 @@ This section is a **document worklist**: what to add, expand, or tighten next to
 
 -   **Stress / mood model:** Whether stress remains implicit (derived from failures) or becomes an explicit tracked state.
 
--   **Business learning rate tuning:** How fast adaptation should occur to avoid oscillation or stagnation.
+-   **Business learning rate tuning:** How fast operator/owner adaptation should occur (and minimum hold times) to avoid oscillation or stagnation.
 
 -   **Time bucket size:** What bucket length (5–60 min) balances stability vs responsiveness?
 
@@ -1817,9 +2426,9 @@ This section is a **document worklist**: what to add, expand, or tighten next to
 
 -   **Environment calibration:** How thresholds, nonlinear transforms, and tag rules should be tuned per culture/district/place type beyond the defaults.
 
--   **Economic institution set:** Minimum viable institution types and how they compose within a region.
+-   **Economic institution composition:** How institution mixes vary by district/culture and how conflicts are resolved when multiple channels apply.
 
--   **Multi-asset wallet:** Which assets/entitlements are universal (cash, vouchers, reputation, access rights) and how they are bounded.
+-   **Multi-asset wallet bounds:** Caps, bundling/consolidation rules, and which categories are universal vs culture/institution-specific.
 
 -   **Illicit channels:** How risk, enforcement, and black markets interact with place/environment.
 
